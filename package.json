@@ -1,0 +1,35 @@
+{
+  "name": "vizthink-ai",
+  "version": "0.1.0",
+  "private": true,
+  "description": "VizThink AI desktop application",
+  "main": "electron_main.js",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "electron": "electron .",
+    "start": "concurrently -k \"npm:backend\" \"npm:dev\"",
+    "backend": "python -m uvicorn server.main:app --reload"
+  },
+  "dependencies": {
+    "@chakra-ui/react": "^2.9.0",
+    "@emotion/react": "^11.11.0",
+    "@emotion/styled": "^11.11.0",
+    "axios": "^1.6.2",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "reactflow": "^11.11.4",
+    "zustand": "^4.4.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.6.0",
+    "@types/react": "^18.3.23",
+    "@types/react-dom": "^18.3.7",
+    "@vitejs/plugin-react": "^4.6.0",
+    "concurrently": "^8.2.0",
+    "electron": "^27.0.0",
+    "typescript": "^5.2.2",
+    "vite": "^5.0.0"
+  }
+}
