@@ -4,15 +4,56 @@ const { spawn } = require('child_process');
 
 let backendProcess;
 
-function startBackend() {
-  const pythonExec = process.env.PYTHON_EXEC || 'python';
-  backendProcess = spawn(pythonExec, [path.join(__dirname, 'server', 'main.py')], {
-    stdio: 'inherit',
+function startBackend(onReady) {
+  console.log('Attempting to start backend...');
+  // Point directly to the virtual environment's Python executable for consistency.
+  const pythonExec = path.join(__dirname, '.venv', 'bin', 'python');
+  const args = ['-m', 'uvicorn', 'server.main:app', '--host', '127.0.0.1', '--port', '8000'];
+  console.log(`Spawning command: ${pythonExec} ${args.join(' ')} in ${__dirname}`);
+
+  backendProcess = spawn(pythonExec, args, {
+    cwd: __dirname, // stdio is not inherited so we can read from it
   });
+
+  // Track when backend is ready so we only create the window once.
+  let backendReady = false;
+  const markBackendReady = () => {
+    if (!backendReady) {
+      backendReady = true;
+      console.log('Backend is ready. Creating window.');
+      if (onReady) onReady();
+    }
+  };
+
+  backendProcess.stdout.on('data', (data) => {
+    const output = data.toString();
+    console.log(`[Backend]: ${output}`);
+    if (output.includes('Uvicorn running on') || output.includes('Application startup complete')) {
+      markBackendReady();
+    }
+    if (output.includes('Uvicorn running on')) {
+      console.log('Backend is ready. Creating window.');
+      if (onReady) onReady();
+    }
+  });
+
+  backendProcess.stderr.on('data', (data) => {
+    const errOutput = data.toString();
+    console.error(`[Backend ERR]: ${errOutput}`);
+    if (errOutput.includes('Uvicorn running on') || errOutput.includes('Application startup complete')) {
+      markBackendReady();
+    }
+  });
+
+  backendProcess.on('error', (err) => {
+    console.error('Failed to start backend process:', err);
+  });
+
   backendProcess.on('exit', (code) => {
+    console.error(`Backend process exited with code: ${code}`);
     if (code !== 0) {
-      console.error(`Backend exited with code ${code}, restarting...`);
-      startBackend();
+      console.log('Restarting backend in 3 seconds...');
+      setTimeout(() => startBackend(onReady), 3000);
     }
   });
 }
@@ -31,17 +72,20 @@ function createWindow() {
   if (app.isPackaged) {
     win.loadFile(path.join(__dirname, 'dist', 'index.html'));
   } else {
-    win.loadURL('http://localhost:5173');
+    win.loadURL('http://localhost:8000');
     win.webContents.openDevTools();
   }
 }
 
 app.whenReady().then(() => {
-  startBackend();
-  createWindow();
+  // Pass createWindow as a callback to be executed once the backend is ready.
+  startBackend(createWindow);
 
   app.on('activate', () => {
-    if (BrowserWindow.getAllWindows().length === 0) createWindow();
+    // This handles creating a new window if the app is active but all windows are closed (e.g., on macOS).
+    if (BrowserWindow.getAllWindows().length === 0) {
+      startBackend(createWindow);
+    }
   });
 });
 
