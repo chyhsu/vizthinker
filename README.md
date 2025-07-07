@@ -32,30 +32,31 @@ Dependencies:
 - Electron
 - SQLite
 
-- **1. Clone the repository and enter the directory**
+- **1. Clone the repository**
   ```bash
   git clone https://github.com/jasoncyhsu/vizthinker.git
   cd vizthinker
   ```
 
-- **2. Install dependencies**
-  
-  First, install the Node.js packages:
+- **2. Install all dependencies**
+  This single command will verify your setup, create a Python virtual environment, and install all required Node.js and Python packages.
   ```bash
-  npm install
-  ```
-  
-  Next, set up a Python virtual environment and install the required packages:
-  ```bash
-  python -m venv .venv
-  source .venv/bin/activate
-  pip install -r res/requirements.txt
+  make install
   ```
 
 - **3. Run the application**
+  This command starts the backend server, frontend development server, and the Electron application all at once.
   ```bash
-  npm run build
-  npm run electron
+  make run
+  ```
+
+  For more control, you can also run the components separately:
+  ```bash
+  # In one terminal, run the backend and frontend servers:
+  make dev
+
+  # In another terminal, start the Electron app:
+  make start
   ```
 
 
