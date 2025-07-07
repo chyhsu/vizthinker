@@ -25,11 +25,39 @@ Traditional chatbots like ChatGPT are stuck in a top-down, scroll-heavy rut. Tha
 - As a VizThinker, I want to branch off a specific point in an LLM response to dig into it without losing the main thread.
 - As a VizThinker, I want to save my idea graph locally and revisit it later.
 
-## Tech Stack
+## Installation( Development Stage)
+Dependencies:
+- Node.js
+- Python
+- Electron
+- SQLite
 
+- **1. Clone the repository and enter the directory**
+  ```bash
+  git clone https://github.com/jasoncyhsu/vizthinker.git
+  cd vizthinker
+  ```
 
+- **2. Install dependencies**
+  
+  First, install the Node.js packages:
+  ```bash
+  npm install
+  ```
+  
+  Next, set up a Python virtual environment and install the required packages:
+  ```bash
+  python -m venv .venv
+  source .venv/bin/activate
+  pip install -r res/requirements.txt
+  ```
 
-## Setup
+- **3. Run the application**
+  ```bash
+  npm run build
+  npm run electron
+  ```
+
 
 ## Roadmap
 
