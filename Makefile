@@ -10,16 +10,14 @@ PYTHON = $(VENV_DIR)/bin/python
 PIP = $(VENV_DIR)/bin/pip
 
 # Phony targets prevent conflicts with files of the same name
-.PHONY: help setup install run dev start build backend frontend clean
+.PHONY: help setup install run dev build backend frontend clean
 
 help:
-	@echo "Makefile for VizThinker"
 	@echo ""
 	@echo "Usage:"
 	@echo "  make install      - Set up project and install all dependencies."
-	@echo "  make run          - Run the complete application (backend, frontend, and Electron)."
-	@echo "  make dev          - Run backend and frontend servers for development."
-	@echo "  make start        - Run the Electron app (use after 'make dev')."
+	@echo "  make run          - Run the complete application (backend and frontend)."
+	@echo "  make dev          - Run backend and frontend servers for development (same as run)."
 	@echo "  make build        - Build the frontend application for production."
 	@echo "  make backend      - Run the Python backend server."
 	@echo "  make frontend     - Run the Vite frontend dev server."
@@ -60,17 +58,18 @@ dev:
 	@echo "Starting backend and frontend development servers..."
 	@npx concurrently -k -n "BACKEND,FRONTEND" -c "yellow,blue" "make backend" "make frontend"
 
-# Target to start the Electron application
+# Target to open the application in a browser
 start:
 	@echo "Waiting for frontend dev server to be ready on http://localhost:5173..."
 	@npx wait-on http://localhost:5173 -t 30000
-	@echo "Frontend is ready. Starting Electron application..."
-	@npm run electron
+	@echo "Frontend is ready. Opening in your default browser..."
+	@open http://localhost:5173
 
 # Target to run the entire application stack
 run:
-	@echo "Starting the entire VizThinker application..."
-	@npx concurrently -k -n "DEV,ELECTRON" -c "cyan,magenta" "make dev" "make start"
+	@echo "Starting the VizThinker..."
+	@npx concurrently -k -n "BACKEND,FRONTEND" -c "yellow,blue" "make backend" "make frontend"
+	@echo "Once servers are running, open http://localhost:5173 in your browser."
 
 # Target to build the frontend application
 build:

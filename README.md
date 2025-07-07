@@ -29,8 +29,8 @@ Traditional chatbots like ChatGPT are stuck in a top-down, scroll-heavy rut. Tha
 Dependencies:
 - Node.js
 - Python
-- Electron
 - SQLite
+- Modern web browser (Chrome, Firefox, Safari, Edge)
 
 - **1. Clone the repository**
   ```bash
@@ -45,18 +45,23 @@ Dependencies:
   ```
 
 - **3. Run the application**
-  This command starts the backend server, frontend development server, and the Electron application all at once.
+  This command starts the backend server and frontend development server.
   ```bash
   make run
   ```
 
+  Once the servers are running, open your browser and navigate to:
+  ```
+  http://localhost:5173
+  ```
+
   For more control, you can also run the components separately:
   ```bash
-  # In one terminal, run the backend and frontend servers:
-  make dev
+  # Run just the backend server:
+  make backend
 
-  # In another terminal, start the Electron app:
-  make start
+  # Run just the frontend development server:
+  make frontend
   ```
 
 
