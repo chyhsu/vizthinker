@@ -1,5 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Box, VStack, Input, Button, Flex, Text, Avatar, Heading } from '@chakra-ui/react';
+import axios from 'axios';
+import { useGraphStore } from './store';
 
 interface Message {
   id: number;
@@ -23,18 +25,59 @@ const ChatWindow: React.FC = () => {
   ]);
   const [inputValue, setInputValue] = useState('');
   const endOfMessagesRef = useRef<HTMLDivElement>(null);
+  const { addNode, addEdge } = useGraphStore();
 
-  const handleSendMessage = () => {
+    const handleSendMessage = async () => {
     if (inputValue.trim() === '') return;
 
-    const newMessage: Message = {
+    const userMessage: Message = {
       id: messages.length + 1,
       text: inputValue,
       sender: 'user',
     };
 
-    setMessages([...messages, newMessage]);
+    // Update the UI immediately with the user's message
+    const updatedMessages = [...messages, userMessage];
+    setMessages(updatedMessages);
+    const currentInput = inputValue;
     setInputValue('');
+
+    try {
+      // Send the whole conversation to the backend
+      const response = await axios.post('http://127.0.0.1:8000/process_message', {
+        messages: updatedMessages.map(m => ({ text: m.text, sender: m.sender }))
+      });
+
+      const { reply, graph } = response.data;
+
+      // Add the AI's reply to the chat
+      const aiMessage: Message = {
+        id: updatedMessages.length + 1,
+        text: reply,
+        sender: 'ai',
+      };
+      setMessages(prevMessages => [...prevMessages, aiMessage]);
+
+      // Update the global graph state
+      if (graph) {
+        if (graph.nodes) {
+          graph.nodes.forEach(addNode);
+        }
+        if (graph.edges) {
+          graph.edges.forEach(addEdge);
+        }
+      }
+
+    } catch (error) {
+      console.error('Error communicating with the backend:', error);
+      // Optionally, add an error message to the chat
+      const errorMessage: Message = {
+        id: updatedMessages.length + 1,
+        text: 'Sorry, I am having trouble connecting to the server.',
+        sender: 'ai',
+      };
+      setMessages(prevMessages => [...prevMessages, errorMessage]);
+    }
   };
 
   const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
