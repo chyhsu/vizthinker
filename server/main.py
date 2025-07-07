@@ -26,8 +26,10 @@ app = FastAPI(title="VizThink AI Backend", lifespan=lifespan)
 
 # Allow React (vite / CRA) dev server & Electron renderer process
 ALLOWED_ORIGINS = [
-    "http://localhost:3000",
+    "http://localhost:3000",      # For create-react-app
     "http://127.0.0.1:3000",
+    "http://localhost:5173",      # For Vite dev server
+    "http://127.0.0.1:5173",
 ]
 
 app.add_middleware(

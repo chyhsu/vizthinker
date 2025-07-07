@@ -62,7 +62,9 @@ dev:
 
 # Target to start the Electron application
 start:
-	@echo "Starting Electron application..."
+	@echo "Waiting for frontend dev server to be ready on http://localhost:5173..."
+	@npx wait-on http://localhost:5173 -t 30000
+	@echo "Frontend is ready. Starting Electron application..."
 	@npm run electron
 
 # Target to run the entire application stack

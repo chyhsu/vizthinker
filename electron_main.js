@@ -72,19 +72,29 @@ function createWindow() {
   if (app.isPackaged) {
     win.loadFile(path.join(__dirname, 'dist', 'index.html'));
   } else {
-    win.loadURL('http://localhost:8000');
+    // In development, load from the Vite dev server, not the backend URL.
+    win.loadURL('http://localhost:5173');
     win.webContents.openDevTools();
   }
 }
 
 app.whenReady().then(() => {
-  // Pass createWindow as a callback to be executed once the backend is ready.
-  startBackend(createWindow);
+  if (app.isPackaged) {
+    // In production, the Electron app is responsible for starting the backend.
+    startBackend(createWindow);
+  } else {
+    // In development, we assume `make dev` is running the backend, so we just create the window.
+    createWindow();
+  }
 
   app.on('activate', () => {
     // This handles creating a new window if the app is active but all windows are closed (e.g., on macOS).
     if (BrowserWindow.getAllWindows().length === 0) {
-      startBackend(createWindow);
+      if (app.isPackaged) {
+        startBackend(createWindow);
+      } else {
+        createWindow();
+      }
     }
   });
 });
