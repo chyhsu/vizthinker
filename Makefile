@@ -8,6 +8,8 @@ default: help
 VENV_DIR = .venv
 PYTHON = $(VENV_DIR)/bin/python
 PIP = $(VENV_DIR)/bin/pip
+CONFIG_DIR = config
+NPM = /usr/local/bin/npm
 
 # Phony targets prevent conflicts with files of the same name
 .PHONY: help setup install run dev build backend frontend clean
@@ -38,7 +40,7 @@ install: setup
 	@echo "Checking for Node.js and npm..."
 	@command -v npm >/dev/null 2>&1 || { echo "Error: npm is not installed. Please install Node.js (which includes npm) and try again."; exit 1; }
 	@echo "Installing Node.js dependencies..."
-	@npm install
+	@$(NPM) install
 	@echo "Installing Python dependencies..."
 	@$(PIP) install -r res/requirements.txt
 	@echo "All dependencies installed successfully."
@@ -51,7 +53,7 @@ backend:
 # Target to run the frontend dev server
 frontend:
 	@echo "Starting Vite frontend dev server..."
-	@npm run dev
+	@$(NPM) run dev
 
 # Target to run both dev servers concurrently
 dev:
@@ -74,7 +76,7 @@ run:
 # Target to build the frontend application
 build:
 	@echo "Building the frontend application..."
-	@npm run build
+	@$(NPM) run build
 
 # Target to clean up the project
 clean:

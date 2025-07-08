@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Box, VStack, Input, Button, Flex, Text, Avatar, Heading } from '@chakra-ui/react';
 import axios from 'axios';
-import { useGraphStore } from './store';
+import { useGraphStore } from '../typejs/store';
 
 interface Message {
   id: number;
