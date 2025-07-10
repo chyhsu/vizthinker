@@ -10,11 +10,12 @@ import os
 import uuid
 from typing import List
 from contextlib import asynccontextmanager
-try:
-    from openai import OpenAI
-    OPENAI_AVAILABLE = True
-except ImportError:
-    OPENAI_AVAILABLE = False
+from server.service import call_llm
+from dotenv import load_dotenv
+import logging
+from fastapi import Request
+load_dotenv()
+logging.basicConfig(level=logging.INFO)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -34,7 +35,7 @@ ALLOWED_ORIGINS = [
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=ALLOWED_ORIGINS,
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -74,6 +75,7 @@ class Graph(BaseModel):
 DB_PATH = os.getenv("VIZTHINK_DB", "vizthink.db")
 
 async def init_db() -> None:
+    logging.info(f"Initializing database at {DB_PATH}")
     async with aiosqlite.connect(DB_PATH) as db:
         await db.execute(
             """
@@ -91,13 +93,7 @@ async def init_db() -> None:
 # Utility
 # -----------------------------
 
-def get_openai_client():
-    if not OPENAI_AVAILABLE:
-        raise RuntimeError("openai package not installed. Install it to enable LLM queries.")
-    api_key = os.getenv("OPENAI_API_KEY")
-    if not api_key:
-        raise RuntimeError("OPENAI_API_KEY environment variable not set.")
-    return OpenAI(api_key=api_key)
+
 
 # -----------------------------
 # Routes
@@ -145,49 +141,26 @@ async def list_graphs():
         ids = [r[0] async for r in cursor]
     return {"graph_ids": ids}
 
-class LLMRequest(BaseModel):
-    node_id: str
-    prompt: str
 
-@app.post("/graphs/{graph_id}/llm")
-async def query_llm(graph_id: str, body: LLMRequest):
+
+@app.post("/llm")
+async def query_llm(request: Request):
     """Send a prompt to the LLM and return its response (and optionally save it)."""
-    client = get_openai_client()
-    response = client.chat.completions.create(
-        model="gpt-4o",  # change to any model you have access to
-        messages=[{"role": "user", "content": body.prompt}],
-    )
-    content = response.choices[0].message.content
-
-    # prepare Node & Edge to return
-    response_node = Node(
-        id=str(uuid.uuid4()),
-        content=content,
-        type="response",
-        position=Position(x=0, y=0),
-        parent_id=body.node_id,
-    )
-
-    # load existing graph & append
-    async with aiosqlite.connect(DB_PATH) as db:
-        cursor = await db.execute("SELECT data FROM graphs WHERE id = ?", (graph_id,))
-        row = await cursor.fetchone()
-        if row:
-            graph_data = Graph.model_validate_json(row[0])
-            graph_data.nodes.append(response_node)
-            graph_data.edges.append(
-                Edge(
-                    id=str(uuid.uuid4()),
-                    source=body.node_id,
-                    target=response_node.id,
-                    type="vertical",
-                )
-            )
-            await db.execute(
-                "UPDATE graphs SET data = ? WHERE id = ?", (graph_data.model_dump_json(), graph_id)
-            )
-            await db.commit()
-    return response_node.model_dump()
+    data = await request.json()
+    logging.info(f"Received request data: {data}")
+    system_prompt = "You are a LLM chat box. Give resposnse within 300 tokens."
+    try:
+        logging.info("Sending prompt to LLM...")
+        content = call_llm(
+            system_prompt=system_prompt,
+            user_prompt=data['prompt'],
+            provider="google",
+        )
+        logging.info(f"Received response from LLM, length: {len(content)}")
+    except RuntimeError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+        
+    return {"response": content}
 
 
 # Catch-all route to serve the main index.html for any other path.

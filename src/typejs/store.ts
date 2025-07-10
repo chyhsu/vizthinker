@@ -2,11 +2,11 @@ import { create } from 'zustand';
 import { Edge, Node } from 'reactflow';
 
 interface GraphState {
-  nodes: Node[];
+  nodes: Node<ChatNodeData>[];
   edges: Edge[];
-  addNode: (node: Node) => void;
+  addNode: (node: Node<ChatNodeData>) => void;
   addEdge: (edge: Edge) => void;
-  setNodes: (nodes: Node[]) => void;
+  setNodes: (nodes: Node<ChatNodeData>[]) => void;
   setEdges: (edges: Edge[]) => void;
 }
 
@@ -18,3 +18,9 @@ export const useGraphStore = create<GraphState>((set) => ({
   setNodes: (nodes) => set({ nodes }),
   setEdges: (edges) => set({ edges }),
 }));
+
+interface ChatNodeData {
+  sys_prompt?: string;
+  user_prompt?: string;
+  response?: string;
+}

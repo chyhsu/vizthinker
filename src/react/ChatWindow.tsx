@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import ReactMarkdown from 'react-markdown';
 import { Box, VStack, Input, Button, Flex, Text, Avatar, Heading } from '@chakra-ui/react';
 import axios from 'axios';
 import { useGraphStore } from '../typejs/store';
@@ -10,22 +11,10 @@ interface Message {
 }
 
 const ChatWindow: React.FC = () => {
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: 1,
-      text: 'Hello! I am VizThink AI. How can I help you visualize your ideas today?',
-      sender: 'ai',
-    },
-    { id: 2, text: 'I need to create a flowchart for my new project.', sender: 'user' },
-    {
-      id: 3,
-      text: 'Great! Please describe the steps, and I will generate the graph for you.',
-      sender: 'ai',
-    },
-  ]);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [inputValue, setInputValue] = useState('');
   const endOfMessagesRef = useRef<HTMLDivElement>(null);
-  const { addNode, addEdge } = useGraphStore();
+  // const { addNode, addEdge } = useGraphStore();
 
     const handleSendMessage = async () => {
     if (inputValue.trim() === '') return;
@@ -39,37 +28,41 @@ const ChatWindow: React.FC = () => {
     // Update the UI immediately with the user's message
     const updatedMessages = [...messages, userMessage];
     setMessages(updatedMessages);
-    const currentInput = inputValue;
     setInputValue('');
 
     try {
-      // Send the whole conversation to the backend
-      const response = await axios.post('http://127.0.0.1:8000/process_message', {
-        messages: updatedMessages.map(m => ({ text: m.text, sender: m.sender }))
+      // Send the whole conversation to the backend, get response
+      const response = await axios.post('http://127.0.0.1:8000/llm', {
+        prompt: userMessage.text,
       });
 
-      const { reply, graph } = response.data;
-
+      let aiResponse = response.data.response;
+  
+      console.log('AI Response:', aiResponse);
+      
       // Add the AI's reply to the chat
       const aiMessage: Message = {
         id: updatedMessages.length + 1,
-        text: reply,
+        text: aiResponse,
         sender: 'ai',
       };
       setMessages(prevMessages => [...prevMessages, aiMessage]);
 
-      // Update the global graph state
-      if (graph) {
-        if (graph.nodes) {
-          graph.nodes.forEach(addNode);
-        }
-        if (graph.edges) {
-          graph.edges.forEach(addEdge);
-        }
+    } catch (error: any) {
+      if (error.response) {
+        // The request was made and the server responded with a status code
+        // that falls out of the range of 2xx
+        console.error('Error data:', error.response.data);
+        console.error('Error status:', error.response.status);
+        console.error('Error headers:', error.response.headers);
+      } else if (error.request) {
+        // The request was made but no response was received
+        console.error('Error request:', error.request);
+      } else {
+        // Something happened in setting up the request that triggered an Error
+        console.error('Error message:', error.message);
       }
-
-    } catch (error) {
-      console.error('Error communicating with the backend:', error);
+      console.error('Error config:', error.config);
       // Optionally, add an error message to the chat
       const errorMessage: Message = {
         id: updatedMessages.length + 1,
@@ -112,7 +105,16 @@ const ChatWindow: React.FC = () => {
               borderRadius="lg"
               maxWidth="70%"
             >
-              <Text>{message.text}</Text>
+              <ReactMarkdown
+                components={{
+                  p: ({ children }) => <Text>{children}</Text>,
+                  strong: ({ children }) => <Text as="strong">{children}</Text>,
+                  em: ({ children }) => <Text as="em">{children}</Text>,
+                  li: ({ children }) => <Text as="li" ml={4} listStyleType="disc">{children}</Text>,
+                }}
+              >
+                {message.text}
+              </ReactMarkdown>
             </Box>
             {message.sender === 'user' && <Avatar size="sm" ml={2} name="You" bg="blue.500" />}
           </Flex>
