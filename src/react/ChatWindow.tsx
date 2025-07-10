@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { Box, VStack, Input, Button, Flex, Text, Avatar, Heading } from '@chakra-ui/react';
 import axios from 'axios';
-import { useGraphStore } from '../typejs/store';
+// import { useGraphStore } from '../typejs/store';
 
 interface Message {
   id: number;

@@ -1,13 +1,15 @@
 import os
 import google.generativeai as genai
 import logging
+from dotenv import load_dotenv
 
 # Configure logging if not already configured
 if not logging.getLogger().handlers:
-    logging.basicConfig(level=logging.INFO)
+    logging.basicConfig(format="%(asctime)s %(levelname)s %(name)s %(filename)s:%(lineno)d - %(message)s", level=logging.INFO)
 
+load_dotenv()
 api_key_map={
-    "google": os.getenv("GOOGLE_API_KEY"),
+    "google": os.getenv("GEMINI_API_KEY"),
     "openai": os.getenv("OPENAI_API_KEY"),
     "x": os.getenv("GROK_API_KEY"),
     "anthropic": os.getenv("CLAUDE_API_KEY"),
@@ -32,12 +34,12 @@ def call_llm(system_prompt, user_prompt, provider):
                 model_name='gemini-1.5-flash',  # Can be choosed in future
                 system_instruction=system_prompt
             )
-            logging.info(f"Sending prompt to Google Gemini: '{user_prompt[:50]}...'" if len(user_prompt) > 50 else f"Sending prompt: '{user_prompt}'" )
+            logging.info(f"Sending prompt to Google Gemini: {len(user_prompt)} tokens")
+
             response = model.generate_content(user_prompt)
             
-            if not response or not hasattr(response, 'text'):
-                raise RuntimeError("Received empty response from LLM")
-            logging.info(f"Received response from LLM: '{response.text[:50]}...'" if len(response.text) > 50 else f"Received response: '{response.text}'")
+            logging.info(f"Received response from LLM: {len(response.text)} tokens")
+
             return response.text
             
         except ValueError as ve:

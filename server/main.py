@@ -11,11 +11,19 @@ import uuid
 from typing import List
 from contextlib import asynccontextmanager
 from server.service import call_llm
-from dotenv import load_dotenv
 import logging
 from fastapi import Request
-load_dotenv()
-logging.basicConfig(level=logging.INFO)
+
+##########################################
+# ADD YOUR API KEY INTO .env FILE
+# GEMINI_API_KEY={your_gemini_api_key} 
+# (Only Support Google Gemini for now)
+#########################################
+
+
+# Configure logging if not already configured
+if not logging.getLogger().handlers:
+    logging.basicConfig(format="%(asctime)s %(levelname)s %(name)s %(filename)s:%(lineno)d - %(message)s", level=logging.INFO)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -150,16 +158,13 @@ async def query_llm(request: Request):
     logging.info(f"Received request data: {data}")
     system_prompt = "You are a LLM chat box. Give resposnse within 300 tokens."
     try:
-        logging.info("Sending prompt to LLM...")
         content = call_llm(
             system_prompt=system_prompt,
             user_prompt=data['prompt'],
             provider="google",
         )
-        logging.info(f"Received response from LLM, length: {len(content)}")
     except RuntimeError as e:
         raise HTTPException(status_code=400, detail=str(e))
-        
     return {"response": content}
 
 
