@@ -80,6 +80,18 @@ const ChatWindow: React.FC = () => {
   };
 
   useEffect(() => {
+    const clearHistory = async () => {
+      try {
+        await axios.post('http://127.0.0.1:8000/chat/clear');
+        console.log('Chat history cleared on component mount.');
+      } catch (error) {
+        console.error('Failed to clear chat history:', error);
+      }
+    };
+    clearHistory();
+  }, []);
+
+  useEffect(() => {
     endOfMessagesRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 

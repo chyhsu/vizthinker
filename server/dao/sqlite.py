@@ -1,5 +1,4 @@
 import os
-import logging
 import aiosqlite
 from dotenv import load_dotenv
 load_dotenv()
@@ -22,7 +21,6 @@ async def init_db() -> None:
         await db.commit()
 
 async def store_chatrecord(prompt: str, response: str):
-    logger.info(f"Storing chatrecord: {prompt}, {response}")
     async with aiosqlite.connect(DB_PATH) as db:
         await db.execute("INSERT INTO chatrecord (prompt, response) VALUES (?, ?)", (prompt, response))
         await db.commit()
@@ -31,6 +29,7 @@ async def get_chatrecord():
     async with aiosqlite.connect(DB_PATH) as db:
         cursor = await db.execute("SELECT * FROM chatrecord")
         rows = await cursor.fetchall()
+        logger.info(f"Retrieved chatrecord: {rows}")
         return rows
 
 async def delete_chatrecord():

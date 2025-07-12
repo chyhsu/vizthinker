@@ -2,7 +2,7 @@ import os
 import google.generativeai as genai
 from dotenv import load_dotenv
 from server.logger import logger
-from server.dao.sqlite import get_chatrecord
+from server.dao.sqlite import get_chatrecord, store_chatrecord
 
 load_dotenv()
 api_key_map={
@@ -35,7 +35,7 @@ async def call_llm(user_prompt, provider):
                 user_prompt,
                 request_options={"timeout": 10}
             )
-            
+            await store_chatrecord(user_prompt, response.text)
             logger.info(f"Received response from LLM: {len(response.text)} tokens")
 
             return response.text

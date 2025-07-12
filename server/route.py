@@ -5,10 +5,7 @@ from fastapi.responses import FileResponse
 from pathlib import Path
 from server.llm import call_llm
 from server.logger import logger
-from server.dao.sqlite import store_chatrecord, get_chatrecord
-
-# Import DB_PATH from sqlite
-from server.dao.sqlite import DB_PATH
+from server.dao.sqlite import delete_chatrecord
 
 # Define the directory for static files (the 'dist' folder)
 static_files_dir = Path(__file__).resolve().parent.parent / "dist"
@@ -38,11 +35,20 @@ def setup_routes(app: FastAPI):
                 user_prompt=data['prompt'],
                 provider="google",
             )
-            await store_chatrecord(data['prompt'], content)
-
+    
         except RuntimeError as e:
             raise HTTPException(status_code=400, detail=str(e))
         return {"response": content}
+
+    @app.post("/chat/clear")
+    async def clear_chat_history():
+        """Deletes all chat records from the database."""
+        try:
+            await delete_chatrecord()
+            return {"message": "Chat history cleared successfully."}
+        except Exception as e:
+            logger.error(f"Failed to clear chat history: {e}", exc_info=True)
+            raise HTTPException(status_code=500, detail="Failed to clear chat history.")
     
     # Catch-all route to serve the main index.html for any other path.
     # This is crucial for single-page applications (SPAs) like React.
