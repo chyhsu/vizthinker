@@ -2,10 +2,7 @@ import os
 import google.generativeai as genai
 import logging
 from dotenv import load_dotenv
-
-# Configure logging if not already configured
-if not logging.getLogger().handlers:
-    logging.basicConfig(format="%(asctime)s %(levelname)s %(name)s %(filename)s:%(lineno)d - %(message)s", level=logging.INFO)
+from server.logger import logger
 
 load_dotenv()
 api_key_map={
@@ -22,10 +19,6 @@ def call_llm(system_prompt, user_prompt, provider):
     if not api_key:
         raise RuntimeError(provider+" API key not set.")
 
-    # Validate user prompt
-    if not user_prompt or len(user_prompt.strip()) < 3:
-        raise ValueError("Prompt is too short. Please provide a more detailed prompt.")
-
     # For each Provider
     if provider == "google":
         try:
@@ -34,11 +27,11 @@ def call_llm(system_prompt, user_prompt, provider):
                 model_name='gemini-1.5-flash',  # Can be choosed in future
                 system_instruction=system_prompt
             )
-            logging.info(f"Sending prompt to Google Gemini: {len(user_prompt)} tokens")
+            logger.info(f"Calling LLM with system_prompt: {system_prompt}, user_prompt: {user_prompt}, provider: {provider}")
 
             response = model.generate_content(user_prompt)
             
-            logging.info(f"Received response from LLM: {len(response.text)} tokens")
+            logger.info(f"Received response from LLM: {len(response.text)} tokens")
 
             return response.text
             
