@@ -5,6 +5,7 @@ from fastapi.responses import FileResponse
 from pathlib import Path
 from server.llm import call_llm
 from server.logger import logger
+from server.dao.sqlite import store_chatrecord, get_chatrecord
 
 # Import DB_PATH from sqlite
 from server.dao.sqlite import DB_PATH
@@ -31,13 +32,14 @@ def setup_routes(app: FastAPI):
         """Send a prompt to the LLM and return its response (and optionally save it)."""
         data = await request.json()
         logger.info(f"Received request data: {data}")
-        system_prompt = "You are a LLM chat box. Give resposnse within 300 tokens."
+
         try:
-            content = call_llm(
-                system_prompt=system_prompt,
+            content = await call_llm(
                 user_prompt=data['prompt'],
                 provider="google",
             )
+            await store_chatrecord(data['prompt'], content)
+
         except RuntimeError as e:
             raise HTTPException(status_code=400, detail=str(e))
         return {"response": content}
