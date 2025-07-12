@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { Box, VStack, Input, Button, Flex, Text, Avatar, Heading } from '@chakra-ui/react';
 import axios from 'axios';
+import backgroundImage from '../asset/images/20200916_174140.jpg';
 // import { useGraphStore } from '../typejs/store';
 
 interface Message {
@@ -96,9 +97,25 @@ const ChatWindow: React.FC = () => {
   }, [messages]);
 
   return (
-    <Flex direction="column" h="100vh" w="100%" bg="gray.50">
-      <Box p={4} borderBottomWidth="1px" bg="white" w="100%">
-        <Heading size="md">VizThink AI Assistant</Heading>
+    <Flex
+      direction="column"
+      h="100vh"
+      w="100%"
+      bgImage={`linear-gradient(rgba(75, 71, 71, 0.4), rgba(75, 71, 71, 0.4)), url(${backgroundImage})`}
+      bgPosition="center"
+      bgRepeat="no-repeat"
+      bgSize="cover"
+    >
+      <Box
+        p={4}
+        w="100%"
+        sx={{
+          backgroundColor: 'rgba(255, 255, 255, 0.1)',
+          backdropFilter: 'blur(10px)',
+          borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+        }}
+      >
+        <Heading size="md" color="white">VizThink AI Assistant</Heading>
       </Box>
 
       <VStack flex={1} p={4} spacing={4} overflowY="auto">
@@ -110,23 +127,31 @@ const ChatWindow: React.FC = () => {
           >
             {message.sender === 'ai' && <Avatar size="sm" mr={2} name="VizThink AI" />}
             <Box
-              bg={message.sender === 'user' ? 'blue.500' : 'white'}
-              color={message.sender === 'user' ? 'white' : 'black'}
               px={4}
               py={2}
               borderRadius="lg"
               maxWidth="70%"
+              sx={{
+                backgroundColor: message.sender === 'user' ? 'rgba(44, 122, 244, 0.5)' : 'rgba(255, 255, 255, 0.2)',
+                backdropFilter: 'blur(10px)',
+                border: '1px solid rgba(255, 255, 255, 0.1)',
+              }}
+              color="white"
             >
-              <ReactMarkdown
-                components={{
-                  p: ({ children }) => <Text>{children}</Text>,
-                  strong: ({ children }) => <Text as="strong">{children}</Text>,
-                  em: ({ children }) => <Text as="em">{children}</Text>,
-                  li: ({ children }) => <Text as="li" ml={4} listStyleType="disc">{children}</Text>,
-                }}
-              >
-                {message.text}
-              </ReactMarkdown>
+              {message.sender === 'ai' ? (
+                <ReactMarkdown
+                  components={{
+                    p: ({ children }) => <Text>{children}</Text>,
+                    strong: ({ children }) => <Text as="strong">{children}</Text>,
+                    em: ({ children }) => <Text as="em">{children}</Text>,
+                    li: ({ children }) => <Text as="li" ml={4} listStyleType="disc">{children}</Text>,
+                  }}
+                >
+                  {message.text}
+                </ReactMarkdown>
+              ) : (
+                <Text>{message.text}</Text>
+              )}
             </Box>
             {message.sender === 'user' && <Avatar size="sm" ml={2} name="You" bg="blue.500" />}
           </Flex>
@@ -134,13 +159,29 @@ const ChatWindow: React.FC = () => {
         <div ref={endOfMessagesRef} />
       </VStack>
 
-      <Flex p={4} borderTopWidth="1px" bg="white">
+      <Flex
+        p={4}
+        sx={{
+          backgroundColor: 'rgba(0, 0, 0, 0.2)',
+          backdropFilter: 'blur(10px)',
+          borderTop: '1px solid rgba(255, 255, 255, 0.1)',
+        }}
+      >
         <Input
           value={inputValue}
           onChange={(e) => setInputValue(e.target.value)}
           onKeyPress={handleKeyPress}
           placeholder="Type your message here..."
           mr={2}
+          bg="transparent"
+          color="white"
+          borderColor="rgba(255, 255, 255, 0.3)"
+          _placeholder={{ color: 'gray.300' }}
+          _hover={{ borderColor: 'rgba(255, 255, 255, 0.5)' }}
+          _focus={{
+            borderColor: 'rgba(255, 255, 255, 0.7)',
+            boxShadow: '0 0 0 1px rgba(255, 255, 255, 0.7)',
+          }}
         />
         <Button onClick={handleSendMessage} colorScheme="blue">
           Send

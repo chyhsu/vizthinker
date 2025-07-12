@@ -45,6 +45,7 @@ def setup_routes(app: FastAPI):
         """Deletes all chat records from the database."""
         try:
             await delete_chatrecord()
+            logger.info("Chat history cleared successfully.")
             return {"message": "Chat history cleared successfully."}
         except Exception as e:
             logger.error(f"Failed to clear chat history: {e}", exc_info=True)
