@@ -44,7 +44,9 @@ install: setup
 	@npm install
 	@echo "Installing Python dependencies..."
 	@$(PIP) install -r res/requirements.txt
-	@echo "All dependencies installed successfully."
+	@echo "Building frontend application..."
+	@npm run build
+	@echo "All dependencies installed and frontend built successfully."
 
 # Target to run the backend server
 backend:
