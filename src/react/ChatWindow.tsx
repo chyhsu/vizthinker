@@ -1,33 +1,60 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { Box, VStack, Input, Button, Flex, Heading } from '@chakra-ui/react';
+import React, { useState, useCallback, useMemo, useEffect } from 'react';
+import { Box, Input, Button, Flex, Heading } from '@chakra-ui/react';
 import axios from 'axios';
-import backgroundImage from '../asset/images/20200916_174140.jpg';
-import ChatNode from './ChatNode';
+import ReactFlow, {
+  useNodesState,
+  useEdgesState,
+  addEdge,
+  Connection,
+  Edge,
+} from 'reactflow';
+import 'reactflow/dist/style.css';
 
-interface ChatTurn {
-  id: number;
-  prompt: string;
-  response: string;
-}
+import ChatNode from './ChatNode';
+import backgroundImage from '../asset/images/20200916_174140.jpg';
+
+const initialNodes = [];
+const initialEdges = [];
 
 const ChatWindow: React.FC = () => {
-  const [chatTurns, setChatTurns] = useState<ChatTurn[]>([]);
+  const nodeTypes = useMemo(() => ({ chatNode: ChatNode }), []);
+  const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
+  const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
   const [inputValue, setInputValue] = useState('');
-  const endOfMessagesRef = useRef<HTMLDivElement>(null);
+
+  const onConnect = useCallback(
+    (params: Edge | Connection) => setEdges((eds) => addEdge(params, eds)),
+    [setEdges],
+  );
 
   const handleSendMessage = async () => {
     if (inputValue.trim() === '') return;
 
-    const newTurnId = chatTurns.length + 1;
-    const newTurn: ChatTurn = {
-      id: newTurnId,
-      prompt: inputValue,
-      response: '...', // Placeholder for AI response
-    };
-
-    setChatTurns(prevTurns => [...prevTurns, newTurn]);
     const currentInput = inputValue;
     setInputValue('');
+
+    const newNodeId = (nodes.length + 1).toString();
+    const lastNode = nodes[nodes.length - 1];
+    
+    const newNode = {
+      id: newNodeId,
+      type: 'chatNode',
+      position: { 
+        x: lastNode ? lastNode.position.x : 250, 
+        y: lastNode ? lastNode.position.y + 400 : 50
+      },
+      data: { prompt: currentInput, response: '...' },
+    };
+    setNodes((nds) => nds.concat(newNode));
+
+    if (lastNode) {
+      const newEdge = {
+        id: `e${lastNode.id}-${newNodeId}`,
+        source: lastNode.id,
+        target: newNodeId,
+      };
+      setEdges((eds) => eds.concat(newEdge));
+    }
 
     try {
       const response = await axios.post('http://127.0.0.1:8000/llm', {
@@ -37,17 +64,23 @@ const ChatWindow: React.FC = () => {
       let aiResponse = response.data.response;
       console.log('AI Response:', aiResponse);
 
-      setChatTurns(prevTurns =>
-        prevTurns.map(turn =>
-          turn.id === newTurnId ? { ...turn, response: aiResponse } : turn
-        )
+      setNodes((nds) =>
+        nds.map((node) => {
+          if (node.id === newNodeId) {
+            return { ...node, data: { ...node.data, response: aiResponse } };
+          }
+          return node;
+        }),
       );
     } catch (error: any) {
       console.error('Error fetching AI response:', error);
-      setChatTurns(prevTurns =>
-        prevTurns.map(turn =>
-          turn.id === newTurnId ? { ...turn, response: 'Sorry, I am having trouble connecting to the server.' } : turn
-        )
+      setNodes((nds) =>
+        nds.map((node) => {
+          if (node.id === newNodeId) {
+            return { ...node, data: { ...node.data, response: 'Sorry, an error occurred.' } };
+          }
+          return node;
+        }),
       );
     }
   };
@@ -57,7 +90,7 @@ const ChatWindow: React.FC = () => {
       handleSendMessage();
     }
   };
-
+  
   useEffect(() => {
     const clearHistory = async () => {
       try {
@@ -69,10 +102,6 @@ const ChatWindow: React.FC = () => {
     };
     clearHistory();
   }, []);
-
-  useEffect(() => {
-    endOfMessagesRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [chatTurns]);
 
   return (
     <Flex
@@ -91,17 +120,23 @@ const ChatWindow: React.FC = () => {
           backgroundColor: 'rgba(255, 255, 255, 0.1)',
           backdropFilter: 'blur(10px)',
           borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+          zIndex: 10
         }}
       >
         <Heading size="md" color="white">VizThink AI Assistant</Heading>
       </Box>
 
-      <VStack flex={1} spacing={4} overflowY="auto">
-        {chatTurns.map(turn => (
-          <ChatNode key={turn.id} prompt={turn.prompt} response={turn.response} />
-        ))}
-        <div ref={endOfMessagesRef} />
-      </VStack>
+      <Box flex={1} w="100%">
+        <ReactFlow
+          nodes={nodes}
+          edges={edges}
+          onNodesChange={onNodesChange}
+          onEdgesChange={onEdgesChange}
+          onConnect={onConnect}
+          nodeTypes={nodeTypes}
+          fitView
+        />
+      </Box>
 
       <Flex
         p={4}
@@ -109,6 +144,7 @@ const ChatWindow: React.FC = () => {
           backgroundColor: 'rgba(0, 0, 0, 0.2)',
           backdropFilter: 'blur(10px)',
           borderTop: '1px solid rgba(255, 255, 255, 0.1)',
+          zIndex: 10
         }}
       >
         <Input

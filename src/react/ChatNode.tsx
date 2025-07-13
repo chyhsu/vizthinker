@@ -1,15 +1,14 @@
 import React from 'react';
 import ReactMarkdown from 'react-markdown';
 import { Box, Flex, Text, Avatar, VStack } from '@chakra-ui/react';
+import { Handle, Position } from 'reactflow';
 
-interface ChatNodeProps {
-  prompt: string;
-  response: string;
-}
-
-const ChatNode: React.FC<ChatNodeProps> = ({ prompt, response }) => {
+const ChatNode = ({ data }) => {
+  const { prompt, response } = data;
   return (
-    <VStack
+    <>
+      <Handle type="target" position={Position.Top} />
+      <VStack
       spacing={4}
       align="stretch"
       w="70%"
@@ -57,6 +56,8 @@ const ChatNode: React.FC<ChatNodeProps> = ({ prompt, response }) => {
         </Box>
       </Flex>
     </VStack>
+      <Handle type="source" position={Position.Bottom} />
+    </>
   );
 };
 
