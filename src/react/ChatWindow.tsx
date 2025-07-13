@@ -1,76 +1,54 @@
 import React, { useState, useRef, useEffect } from 'react';
-import ReactMarkdown from 'react-markdown';
-import { Box, VStack, Input, Button, Flex, Text, Avatar, Heading } from '@chakra-ui/react';
+import { Box, VStack, Input, Button, Flex, Heading } from '@chakra-ui/react';
 import axios from 'axios';
 import backgroundImage from '../asset/images/20200916_174140.jpg';
-// import { useGraphStore } from '../typejs/store';
+import ChatNode from './ChatNode';
 
-interface Message {
+interface ChatTurn {
   id: number;
-  text: string;
-  sender: 'user' | 'ai';
+  prompt: string;
+  response: string;
 }
 
 const ChatWindow: React.FC = () => {
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [chatTurns, setChatTurns] = useState<ChatTurn[]>([]);
   const [inputValue, setInputValue] = useState('');
   const endOfMessagesRef = useRef<HTMLDivElement>(null);
-  // const { addNode, addEdge } = useGraphStore();
 
-    const handleSendMessage = async () => {
+  const handleSendMessage = async () => {
     if (inputValue.trim() === '') return;
 
-    const userMessage: Message = {
-      id: messages.length + 1,
-      text: inputValue,
-      sender: 'user',
+    const newTurnId = chatTurns.length + 1;
+    const newTurn: ChatTurn = {
+      id: newTurnId,
+      prompt: inputValue,
+      response: '...', // Placeholder for AI response
     };
 
-    // Update the UI immediately with the user's message
-    const updatedMessages = [...messages, userMessage];
-    setMessages(updatedMessages);
+    setChatTurns(prevTurns => [...prevTurns, newTurn]);
+    const currentInput = inputValue;
     setInputValue('');
 
     try {
-      // Send the whole conversation to the backend, get response
       const response = await axios.post('http://127.0.0.1:8000/llm', {
-        prompt: userMessage.text,
+        prompt: currentInput,
       });
 
       let aiResponse = response.data.response;
-  
       console.log('AI Response:', aiResponse);
-      
-      // Add the AI's reply to the chat
-      const aiMessage: Message = {
-        id: updatedMessages.length + 1,
-        text: aiResponse,
-        sender: 'ai',
-      };
-      setMessages(prevMessages => [...prevMessages, aiMessage]);
 
+      setChatTurns(prevTurns =>
+        prevTurns.map(turn =>
+          turn.id === newTurnId ? { ...turn, response: aiResponse } : turn
+        )
+      );
     } catch (error: any) {
-      if (error.response) {
-        // The request was made and the server responded with a status code
-        // that falls out of the range of 2xx
-        console.error('Error data:', error.response.data);
-        console.error('Error status:', error.response.status);
-        console.error('Error headers:', error.response.headers);
-      } else if (error.request) {
-        // The request was made but no response was received
-        console.error('Error request:', error.request);
-      } else {
-        // Something happened in setting up the request that triggered an Error
-        console.error('Error message:', error.message);
-      }
-      console.error('Error config:', error.config);
-      // Optionally, add an error message to the chat
-      const errorMessage: Message = {
-        id: updatedMessages.length + 1,
-        text: 'Sorry, I am having trouble connecting to the server.',
-        sender: 'ai',
-      };
-      setMessages(prevMessages => [...prevMessages, errorMessage]);
+      console.error('Error fetching AI response:', error);
+      setChatTurns(prevTurns =>
+        prevTurns.map(turn =>
+          turn.id === newTurnId ? { ...turn, response: 'Sorry, I am having trouble connecting to the server.' } : turn
+        )
+      );
     }
   };
 
@@ -94,7 +72,7 @@ const ChatWindow: React.FC = () => {
 
   useEffect(() => {
     endOfMessagesRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
+  }, [chatTurns]);
 
   return (
     <Flex
@@ -118,43 +96,9 @@ const ChatWindow: React.FC = () => {
         <Heading size="md" color="white">VizThink AI Assistant</Heading>
       </Box>
 
-      <VStack flex={1} p={4} spacing={4} overflowY="auto">
-        {messages.map((message) => (
-          <Flex
-            key={message.id}
-            w="100%"
-            justify={message.sender === 'user' ? 'flex-end' : 'flex-start'}
-          >
-            {message.sender === 'ai' && <Avatar size="sm" mr={2} name="VizThink AI" />}
-            <Box
-              px={4}
-              py={2}
-              borderRadius="lg"
-              maxWidth="70%"
-              sx={{
-                backgroundColor: message.sender === 'user' ? 'rgba(44, 122, 244, 0.5)' : 'rgba(255, 255, 255, 0.2)',
-                backdropFilter: 'blur(10px)',
-                border: '1px solid rgba(255, 255, 255, 0.1)',
-              }}
-              color="white"
-            >
-              {message.sender === 'ai' ? (
-                <ReactMarkdown
-                  components={{
-                    p: ({ children }) => <Text>{children}</Text>,
-                    strong: ({ children }) => <Text as="strong">{children}</Text>,
-                    em: ({ children }) => <Text as="em">{children}</Text>,
-                    li: ({ children }) => <Text as="li" ml={4} listStyleType="disc">{children}</Text>,
-                  }}
-                >
-                  {message.text}
-                </ReactMarkdown>
-              ) : (
-                <Text>{message.text}</Text>
-              )}
-            </Box>
-            {message.sender === 'user' && <Avatar size="sm" ml={2} name="You" bg="blue.500" />}
-          </Flex>
+      <VStack flex={1} spacing={4} overflowY="auto">
+        {chatTurns.map(turn => (
+          <ChatNode key={turn.id} prompt={turn.prompt} response={turn.response} />
         ))}
         <div ref={endOfMessagesRef} />
       </VStack>
