@@ -1,5 +1,6 @@
 import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { Box, Input, Button, Flex, Heading } from '@chakra-ui/react';
+import {Link} from 'react-router-dom';
 import axios from 'axios';
 import ReactFlow, {
   useNodesState,
@@ -123,7 +124,19 @@ const ChatWindow: React.FC = () => {
           zIndex: 10
         }}
       >
-        <Heading size="md" color="white">VizThink AI Assistant</Heading>
+        <Flex justify="space-between">
+          <Heading size="md" color="white">VizThink AI Assistant</Heading>
+          <Button
+            as={Link}
+            to="/settings"
+            variant="ghost"
+            size="sm"
+            color="white"
+            _hover={{ bg: 'rgba(255, 255, 255, 0.15)' }}
+          >
+            Settings
+          </Button>
+        </Flex>
       </Box>
 
       <Box flex={1} w="100%">

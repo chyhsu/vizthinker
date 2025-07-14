@@ -12,6 +12,7 @@ const ChatNode = ({ data }) => {
       spacing={4}
       align="stretch"
       w="70%"
+      minW="300px"
       p={4}
       borderRadius="2xl"
       sx={{
