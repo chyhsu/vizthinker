@@ -55,6 +55,7 @@ const Settings: React.FC = () => {
     setChatNodeColor(defaultColor);
     setFontColor('#ffffff');
     setProvider('google');
+
   };
 
   const backgroundOptions = [
