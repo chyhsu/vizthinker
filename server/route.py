@@ -32,9 +32,12 @@ def setup_routes(app: FastAPI):
         logger.info(f"Received request data: {data}")
 
         try:
+            # Get provider from request data, default to "google" if not specified
+            provider = data.get('provider', 'google')
+            
             content = await call_llm(
                 user_prompt=data['prompt'],
-                provider="google",
+                provider=provider,
             )
         except RuntimeError as e:
             raise HTTPException(status_code=400, detail=str(e))

@@ -13,9 +13,11 @@ const Settings: React.FC = () => {
     backgroundImage,
     chatNodeColor,
     fontColor,
+    provider,
     setBackgroundImage,
     setChatNodeColor,
     setFontColor,
+    setProvider,
   } = useSettings();
 
   // local draft state
@@ -23,6 +25,7 @@ const Settings: React.FC = () => {
   const [draftColor, setDraftColor] = React.useState(chatNodeColor);
   const [draftOpacity, setDraftOpacity] = React.useState<number>(0.2);
   const [draftFontColor, setDraftFontColor] = React.useState<string>(fontColor);
+  const [draftProvider, setDraftProvider] = React.useState(provider);
 
   // util to blend opacity
   const hexToRgba = (hex: string, opacity: number) => {
@@ -39,16 +42,20 @@ const Settings: React.FC = () => {
     setBackgroundImage(draftBg);
     setChatNodeColor(rgbaColor);
     setFontColor(draftFontColor);
+    setProvider(draftProvider);
   };
 
   const resetDefaults = () => {
     setDraftBg(defaultBg);
     setDraftColor(defaultColor);
     setDraftOpacity(0.2);
-    setDraftFontColor('#000000');
+    setDraftFontColor('#ffffff');
+    setDraftProvider('google');
     setBackgroundImage(defaultBg);
     setChatNodeColor(defaultColor);
-    setFontColor('#000000');
+    setFontColor('#ffffff');
+    setProvider('google');
+
   };
 
   const backgroundOptions = [
@@ -56,6 +63,14 @@ const Settings: React.FC = () => {
     { label: 'Default', value: defaultBg },
     { label: 'Forest', value: bg3995 },
     { label: 'Sea', value: bg4013 },
+  ];
+
+  const providerOptions = [
+    { label: 'Google Gemini', value: 'google' },
+    { label: 'Ollama (Local)', value: 'ollama' },
+    { label: 'OpenAI', value: 'openai' },
+    { label: 'X (Grok)', value: 'x' },
+    { label: 'Anthropic (Claude)', value: 'anthropic' },
   ];
 
   return (
@@ -81,6 +96,21 @@ const Settings: React.FC = () => {
         p={8}
       >
       <Heading mb={6} size="lg">Settings</Heading>
+
+      {/* AI Provider Selection */}
+      <FormControl mb={6}>
+        <FormLabel>AI Provider</FormLabel>
+        <Select
+          value={draftProvider}
+          onChange={(e) => setDraftProvider(e.target.value as any)}
+        >
+          {providerOptions.map((opt) => (
+            <option key={opt.value} value={opt.value}>
+              {opt.label}
+            </option>
+          ))}
+        </Select>
+      </FormControl>
 
       {/* Background Image Selection */}
       <FormControl mb={6}>
