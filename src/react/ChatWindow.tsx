@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo, useEffect } from 'react';
+import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import { Box, Input, Button, Flex, Heading } from '@chakra-ui/react';
 import {Link} from 'react-router-dom';
 import axios from 'axios';
@@ -8,6 +8,8 @@ import ReactFlow, { Background, BackgroundVariant,
   addEdge,
   Connection,
   Edge,
+  NodeChange,
+  applyNodeChanges,
 } from 'reactflow';
 import 'reactflow/dist/style.css';
 
@@ -22,9 +24,65 @@ const ChatWindow: React.FC = () => {
   const { backgroundImage } = useSettings();
   const isGrid = backgroundImage === 'grid';
   const nodeTypes = useMemo(() => ({ chatNode: ChatNode }), []);
-  const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
+  const [nodes, setNodes, _onNodesChange] = useNodesState(initialNodes);
+
+    // Debounce timer ref so we only send positions after user stops dragging
+  const debounceRef = useRef<NodeJS.Timeout | null>(null);
+
+  const handleNodesChange = useCallback((changes: NodeChange[]) => {
+    setNodes((nds) => {
+      const updated = applyNodeChanges(changes, nds);
+
+      // clear previous timer and start new debounce
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+      debounceRef.current = setTimeout(() => {
+        const positions = updated.map((n) => n.position);
+        axios.post('http://127.0.0.1:8000/chat/positions', { positions }).catch((err) => {
+          console.error('Failed to update positions:', err);
+        });
+      }, 400); // send only after 400ms of inactivity
+
+      return updated;
+    });
+  }, []);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
   const [inputValue, setInputValue] = useState('');
+  // Fetch stored chat & positions on first load
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await axios.get('http://127.0.0.1:8000/chat/get');
+        const rows = res.data.data as Array<[string, string, any]>; // prompt, response, positions
+
+        const restoredNodes = rows.map(([prompt, resp, positions], idx) => {
+          let pos: { x: number; y: number } | undefined;
+
+          if (Array.isArray(positions)) {
+            // Positions were stored for the whole graph; use the one corresponding to this node if available
+            pos = positions[idx] || positions[positions.length - 1];
+          } else if (positions && typeof positions === 'object') {
+            pos = positions as { x: number; y: number };
+          }
+
+          return {
+            id: (idx + 1).toString(),
+            type: 'chatNode',
+            position: pos ?? { x: 250, y: idx * 400 + 50 },
+            data: { prompt, response: resp },
+          };
+        });
+        const restoredEdges = restoredNodes.slice(1).map((node, idx) => ({
+          id: `e${restoredNodes[idx].id}-${node.id}`,
+          source: restoredNodes[idx].id,
+          target: node.id,
+        }));
+        setNodes(restoredNodes);
+        setEdges(restoredEdges);
+      } catch (err) {
+        console.error('Error restoring chat:', err);
+      }
+    })();
+  }, []);
 
   const onConnect = useCallback(
     (params: Edge | Connection) => setEdges((eds) => addEdge(params, eds)),
@@ -45,7 +103,7 @@ const ChatWindow: React.FC = () => {
       type: 'chatNode',
       position: { 
         x: lastNode ? lastNode.position.x : 250, 
-        y: lastNode ? lastNode.position.y + 400 : 50
+        y: lastNode ? lastNode.position.y + 250 : 50
       },
       data: { prompt: currentInput, response: '...' },
     };
@@ -61,7 +119,7 @@ const ChatWindow: React.FC = () => {
     }
 
     try {
-      const response = await axios.post('http://127.0.0.1:8000/llm', {
+      const response = await axios.post('http://127.0.0.1:8000/chat/new', {
         prompt: currentInput,
       });
 
@@ -136,7 +194,7 @@ const ChatWindow: React.FC = () => {
         <ReactFlow
           nodes={nodes}
           edges={edges}
-          onNodesChange={onNodesChange}
+          onNodesChange={handleNodesChange}
           onEdgesChange={onEdgesChange}
           onConnect={onConnect}
           nodeTypes={nodeTypes}
