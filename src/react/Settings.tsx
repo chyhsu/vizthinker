@@ -20,10 +20,24 @@ const Settings: React.FC = () => {
     setProvider,
   } = useSettings();
 
+  // helper to convert stored rgba color into hex + opacity for the UI controls
+  const parseRgba = (rgba: string): { hex: string; opacity: number } => {
+    const match = rgba.match(/rgba?\((\d+),\s*(\d+),\s*(\d+),?\s*([0-9.]+)?\)/);
+    if (!match) return { hex: '#000000', opacity: 1 };
+    const r = Number(match[1]);
+    const g = Number(match[2]);
+    const b = Number(match[3]);
+    const a = match[4] !== undefined ? Number(match[4]) : 1;
+    const toHex = (c: number) => c.toString(16).padStart(2, '0');
+    return { hex: `#${toHex(r)}${toHex(g)}${toHex(b)}`, opacity: a };
+  };
+
+  const initialParsed = parseRgba(chatNodeColor);
+
   // local draft state
   const [draftBg, setDraftBg] = React.useState(backgroundImage);
-  const [draftColor, setDraftColor] = React.useState(chatNodeColor);
-  const [draftOpacity, setDraftOpacity] = React.useState<number>(0.2);
+  const [draftColor, setDraftColor] = React.useState<string>(initialParsed.hex);
+  const [draftOpacity, setDraftOpacity] = React.useState<number>(initialParsed.opacity);
   const [draftFontColor, setDraftFontColor] = React.useState<string>(fontColor);
   const [draftProvider, setDraftProvider] = React.useState(provider);
 
