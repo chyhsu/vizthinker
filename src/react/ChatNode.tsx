@@ -1,9 +1,11 @@
 import React from 'react';
 import ReactMarkdown from 'react-markdown';
 import { Box, Flex, Text, Avatar, VStack } from '@chakra-ui/react';
+import { useSettings } from './SettingsContext';
 import { Handle, Position } from 'reactflow';
 
 const ChatNode = ({ data }) => {
+  const { chatNodeColor, fontColor } = useSettings();
   const { prompt, response } = data;
   return (
     <>
@@ -16,8 +18,7 @@ const ChatNode = ({ data }) => {
       p={4}
       borderRadius="2xl"
       sx={{
-        backgroundColor: 'rgba(1, 3, 7, 0.2)',
-        backdropFilter: 'blur(5px)',
+        backgroundColor: chatNodeColor,
       }}
     >
       {/* User Prompt */}
@@ -27,7 +28,7 @@ const ChatNode = ({ data }) => {
           py={2}
           borderRadius="2xl"
           maxWidth="70%"
-          color="white"
+          color={fontColor}
         >
           <Text>{prompt}</Text>
         </Box>
@@ -42,7 +43,7 @@ const ChatNode = ({ data }) => {
           py={2}
           borderRadius="lg"
           maxWidth="70%"
-          color="white"
+          color={fontColor}
         >
           <ReactMarkdown
             components={{

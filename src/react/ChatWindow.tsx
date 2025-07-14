@@ -2,7 +2,7 @@ import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { Box, Input, Button, Flex, Heading } from '@chakra-ui/react';
 import {Link} from 'react-router-dom';
 import axios from 'axios';
-import ReactFlow, {
+import ReactFlow, { Background, BackgroundVariant,
   useNodesState,
   useEdgesState,
   addEdge,
@@ -12,12 +12,15 @@ import ReactFlow, {
 import 'reactflow/dist/style.css';
 
 import ChatNode from './ChatNode';
-import backgroundImage from '../asset/images/20200916_174140.jpg';
+import { useSettings } from './SettingsContext';
 
 const initialNodes = [];
 const initialEdges = [];
 
+
 const ChatWindow: React.FC = () => {
+  const { backgroundImage } = useSettings();
+  const isGrid = backgroundImage === 'grid';
   const nodeTypes = useMemo(() => ({ chatNode: ChatNode }), []);
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
@@ -92,24 +95,14 @@ const ChatWindow: React.FC = () => {
     }
   };
   
-  useEffect(() => {
-    const clearHistory = async () => {
-      try {
-        await axios.post('http://127.0.0.1:8000/chat/clear');
-        console.log('Chat history cleared on component mount.');
-      } catch (error) {
-        console.error('Failed to clear chat history:', error);
-      }
-    };
-    clearHistory();
-  }, []);
 
   return (
     <Flex
       direction="column"
       h="100vh"
       w="100%"
-      bgImage={`linear-gradient(rgba(75, 71, 71, 0.4), rgba(75, 71, 71, 0.4)), url(${backgroundImage})`}
+      bgImage={isGrid ? undefined : `linear-gradient(rgba(75, 71, 71, 0.4), rgba(75, 71, 71, 0.4)), url(${backgroundImage})`}
+      bg={isGrid ? '#1a1a1a' : undefined}
       bgPosition="center"
       bgRepeat="no-repeat"
       bgSize="cover"
@@ -125,7 +118,7 @@ const ChatWindow: React.FC = () => {
         }}
       >
         <Flex justify="space-between">
-          <Heading size="md" color="white">VizThink AI Assistant</Heading>
+          <Heading size="md" color="white">VizThinker</Heading>
           <Button
             as={Link}
             to="/settings"
@@ -148,7 +141,9 @@ const ChatWindow: React.FC = () => {
           onConnect={onConnect}
           nodeTypes={nodeTypes}
           fitView
-        />
+        >
+          {isGrid && <Background variant={BackgroundVariant.Dots} gap={24} size={1} color="rgba(255,255,255,0.15)" />}
+        </ReactFlow>
       </Box>
 
       <Flex

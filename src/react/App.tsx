@@ -2,6 +2,7 @@ import React from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { Box } from '@chakra-ui/react';
 import ChatWindow from './ChatWindow';
+import { SettingsProvider } from './SettingsContext';
 import Settings from './Settings';
 
 /**
@@ -9,14 +10,16 @@ import Settings from './Settings';
  */
 const App: React.FC = () => {
   return (
-    <BrowserRouter>
+    <SettingsProvider>
+      <BrowserRouter>
       <Box minH="100vh" bg="gray.50">
         <Routes>
           <Route path="/" element={<ChatWindow />} />
           <Route path="/settings" element={<Settings />} />
         </Routes>
       </Box>
-    </BrowserRouter>
+      </BrowserRouter>
+    </SettingsProvider>
   );
 };
 

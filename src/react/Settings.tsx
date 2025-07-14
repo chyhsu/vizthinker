@@ -1,11 +1,159 @@
 import React from 'react';
-import { Box, Heading, Text } from '@chakra-ui/react';
+import { Box, Heading, Select, FormControl, FormLabel, Input, Button, VStack, Slider, SliderTrack, SliderFilledTrack, SliderThumb, Flex } from '@chakra-ui/react';
+import { Link } from 'react-router-dom';
+import { useSettings } from './SettingsContext';
+import defaultBg from '../asset/images/20200916_174140.jpg';
+import bg3995 from '../asset/images/IMG_3995.png';
+import bg4013 from '../asset/images/IMG_4013.png';
+const defaultColor = 'rgba(1, 3, 7, 0.2)';
 
 const Settings: React.FC = () => {
+  // global context
+  const {
+    backgroundImage,
+    chatNodeColor,
+    fontColor,
+    setBackgroundImage,
+    setChatNodeColor,
+    setFontColor,
+  } = useSettings();
+
+  // local draft state
+  const [draftBg, setDraftBg] = React.useState(backgroundImage);
+  const [draftColor, setDraftColor] = React.useState(chatNodeColor);
+  const [draftOpacity, setDraftOpacity] = React.useState<number>(0.2);
+  const [draftFontColor, setDraftFontColor] = React.useState<string>(fontColor);
+
+  // util to blend opacity
+  const hexToRgba = (hex: string, opacity: number) => {
+    const sanitized = hex.replace('#', '');
+    const bigint = parseInt(sanitized, 16);
+    const r = (bigint >> 16) & 255;
+    const g = (bigint >> 8) & 255;
+    const b = bigint & 255;
+    return `rgba(${r}, ${g}, ${b}, ${opacity})`;
+  };
+
+  const applyChanges = () => {
+    const rgbaColor = hexToRgba(draftColor, draftOpacity);
+    setBackgroundImage(draftBg);
+    setChatNodeColor(rgbaColor);
+    setFontColor(draftFontColor);
+  };
+
+  const resetDefaults = () => {
+    setDraftBg(defaultBg);
+    setDraftColor(defaultColor);
+    setDraftOpacity(0.2);
+    setDraftFontColor('#ffffff');
+    setBackgroundImage(defaultBg);
+    setChatNodeColor(defaultColor);
+    setFontColor('#ffffff');
+  };
+
+  const backgroundOptions = [
+    { label: 'Grid', value: 'grid' },
+    { label: 'Default', value: defaultBg },
+    { label: 'Forest', value: bg3995 },
+    { label: 'Sea', value: bg4013 },
+  ];
+
   return (
-    <Box p={8} maxW="600px" mx="auto" mt={12} borderWidth={1} borderRadius="lg" boxShadow="md" bg="white">
-      <Heading mb={4} size="lg">Settings</Heading>
-      <Text color="gray.600">This is the settings page. Add your configuration options here.</Text>
+    <Box
+      h="100vh"
+      w="100%"
+      bgImage={`linear-gradient(rgba(75, 71, 71, 0.4), rgba(75, 71, 71, 0.4)), url(${draftBg})`}
+      bgPosition="center"
+      bgRepeat="no-repeat"
+      bgSize="cover"
+      p={8}
+    >
+      <Box
+        maxW="600px"
+        mx="auto"
+        borderWidth={1}
+        borderRadius="lg"
+        boxShadow="md"
+        sx={{
+          backgroundColor: 'rgba(255, 255, 255, 0.1)',
+          backdropFilter: 'blur(10px)',
+        }}
+        p={8}
+      >
+      <Heading mb={6} size="lg">Settings</Heading>
+
+      {/* Background Image Selection */}
+      <FormControl mb={6}>
+        <FormLabel>Chat Window Background</FormLabel>
+        <Select
+          value={draftBg}
+          onChange={(e) => setDraftBg(e.target.value)}
+        >
+          {backgroundOptions.map((opt) => (
+            <option key={opt.value} value={opt.value}>
+              {opt.label}
+            </option>
+          ))}
+        </Select>
+      </FormControl>
+
+      {/* Chat Node Background Color */}
+      <FormControl mb={6}>
+        <FormLabel>Chat Node Background Color</FormLabel>
+        <Input
+          type="color"
+          value={draftColor}
+          onChange={(e) => setDraftColor(e.target.value)}
+        />
+      </FormControl>
+
+      {/* Font Color */}
+      <FormControl mb={6}>
+        <FormLabel>Font Color</FormLabel>
+        <Input type="color" value={draftFontColor} onChange={(e)=>setDraftFontColor(e.target.value)} />
+      </FormControl>
+
+      {/* Opacity */}
+      <FormControl mb={6}>
+        <FormLabel>Opacity</FormLabel>
+        <Slider
+          min={0}
+          max={1}
+          step={0.05}
+          value={draftOpacity}
+          onChange={setDraftOpacity}
+        >
+          <SliderTrack>
+            <SliderFilledTrack />
+          </SliderTrack>
+          <SliderThumb />
+        </Slider>
+      </FormControl>
+
+      {/* Live preview */}
+      <FormControl mb={6}>
+        <FormLabel>Preview</FormLabel>
+        <Box
+          p={4}
+          borderRadius="2xl"
+          maxW="350px"
+          sx={{
+            backgroundColor: hexToRgba(draftColor, draftOpacity),
+          }}
+        >
+          <Heading size="sm" mb={2} color={draftFontColor}>Preview Node</Heading>
+          <Box color={draftFontColor}>This is how your chat node will look.</Box>
+        </Box>
+      </FormControl>
+
+      {/* Confirm button */}
+      <VStack  align="flex-end" spacing={2}>
+        <Flex justify="space-between" gap={4}>
+          <Button as={Link} to="/" variant="outline" size="sm" onClick={applyChanges}>Confirm</Button>
+          <Button variant="outline" size="sm" onClick={resetDefaults}>Reset</Button>
+        </Flex>
+      </VStack>
+      </Box>
     </Box>
   );
 };
