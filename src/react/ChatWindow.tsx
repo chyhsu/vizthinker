@@ -5,9 +5,11 @@ import axios from 'axios';
 import ReactFlow, { Background, BackgroundVariant,
   useNodesState,
   useEdgesState,
+  useReactFlow,
   addEdge,
   Connection,
   Edge,
+  ReactFlowProvider,
 } from 'reactflow';
 import 'reactflow/dist/style.css';
 
@@ -17,14 +19,14 @@ import { useSettings } from './SettingsContext';
 const initialNodes = [];
 const initialEdges = [];
 
-
-const ChatWindow: React.FC = () => {
-  const { backgroundImage } = useSettings();
+const ChatWindowFlow: React.FC = () => {
+  const { backgroundImage, provider } = useSettings();
   const isGrid = backgroundImage === 'grid';
   const nodeTypes = useMemo(() => ({ chatNode: ChatNode }), []);
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
   const [inputValue, setInputValue] = useState('');
+  const reactFlowInstance = useReactFlow();
 
   const onConnect = useCallback(
     (params: Edge | Connection) => setEdges((eds) => addEdge(params, eds)),
@@ -51,6 +53,15 @@ const ChatWindow: React.FC = () => {
     };
     setNodes((nds) => nds.concat(newNode));
 
+    // Auto-center the new node after a short delay to ensure it's rendered
+    setTimeout(() => {
+      reactFlowInstance.fitView({
+        nodes: [{ id: newNodeId }],
+        duration: 800,
+        padding: 0.3,
+      });
+    }, 100);
+
     if (lastNode) {
       const newEdge = {
         id: `e${lastNode.id}-${newNodeId}`,
@@ -63,6 +74,7 @@ const ChatWindow: React.FC = () => {
     try {
       const response = await axios.post('http://127.0.0.1:8000/llm', {
         prompt: currentInput,
+        provider: provider,
       });
 
       let aiResponse = response.data.response;
@@ -95,7 +107,6 @@ const ChatWindow: React.FC = () => {
     }
   };
   
-
   return (
     <Flex
       direction="column"
@@ -176,6 +187,14 @@ const ChatWindow: React.FC = () => {
         </Button>
       </Flex>
     </Flex>
+  );
+};
+
+const ChatWindow: React.FC = () => {
+  return (
+    <ReactFlowProvider>
+      <ChatWindowFlow />
+    </ReactFlowProvider>
   );
 };
 
