@@ -72,9 +72,8 @@ async def call_llm(user_prompt, provider):
             )
             
             response_text = response['message']['content']
-            await store_chatrecord(user_prompt, response_text)
             logger.info(f"Received response from Ollama: {len(response_text)} tokens")
-            
+
             return response_text
             
         except Exception as e:

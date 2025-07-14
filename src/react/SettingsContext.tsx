@@ -18,14 +18,7 @@ interface SettingsContextProps {
 const SettingsContext = createContext<SettingsContextProps | undefined>(undefined);
 
 export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  // Default values replicate the current hard-coded styling
-
-  const [backgroundImage, setBackgroundImage] = useState<string>('grid');
-  const [chatNodeColor, setChatNodeColor] = useState<string>('rgba(1, 3, 7, 0.2)');
-  const [fontColor, setFontColor] = useState<string>('#ffffff');
-  const [provider, setProvider] = useState<Provider>('google');
-
-    // Initialise from localStorage (fallback to defaults)
+  // Initialise from localStorage (fallback to defaults)
   const [backgroundImage, setBackgroundImage] = useState<string>(() => {
     return localStorage.getItem('viz_bg') ?? 'default';
   });
@@ -33,7 +26,10 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     return localStorage.getItem('viz_node_color') ?? 'rgba(1, 3, 7, 0.2)';
   });
   const [fontColor, setFontColor] = useState<string>(() => {
-    return localStorage.getItem('viz_font_color') ?? '#000000';
+    return localStorage.getItem('viz_font_color') ?? '#ffffff';
+  });
+  const [provider, setProvider] = useState<Provider>(() => {
+    return (localStorage.getItem('viz_provider') as Provider) ?? 'google';
   });
 
 
@@ -50,6 +46,10 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   React.useEffect(() => {
     localStorage.setItem('viz_font_color', fontColor);
   }, [fontColor]);
+
+  React.useEffect(() => {
+    localStorage.setItem('viz_provider', provider);
+  }, [provider]);
 
   return (
     <SettingsContext.Provider
