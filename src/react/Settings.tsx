@@ -45,10 +45,10 @@ const Settings: React.FC = () => {
     setDraftBg(defaultBg);
     setDraftColor(defaultColor);
     setDraftOpacity(0.2);
-    setDraftFontColor('#ffffff');
+    setDraftFontColor('#000000');
     setBackgroundImage(defaultBg);
     setChatNodeColor(defaultColor);
-    setFontColor('#ffffff');
+    setFontColor('#000000');
   };
 
   const backgroundOptions = [

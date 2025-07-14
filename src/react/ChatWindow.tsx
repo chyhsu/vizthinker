@@ -22,7 +22,7 @@ const initialEdges = [];
 
 const ChatWindow: React.FC = () => {
   const { backgroundImage } = useSettings();
-  const isGrid = backgroundImage === 'grid';
+  const isGrid = backgroundImage === 'grid' || backgroundImage === 'default';
   const nodeTypes = useMemo(() => ({ chatNode: ChatNode }), []);
   const [nodes, setNodes, _onNodesChange] = useNodesState(initialNodes);
 
