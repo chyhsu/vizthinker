@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="src/asset/images/Icon.jpg" alt="VizThinker logo" width="1000" />
+</p>
+
 # VizThink AI
 
 A desktop app for visual thinkers, powered by LLMs, that swaps the linear chat format for a dynamic, node-based graph. Explore ideas the way your brain does—branching, connecting, and visualizing concepts in an interactive canvas.
