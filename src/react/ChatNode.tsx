@@ -15,6 +15,8 @@ const ChatNode = ({ data }) => {
       align="stretch"
       w="70%"
       minW="300px"
+      maxW="800px"
+      maxH="300px"
       p={4}
       borderRadius="2xl"
       sx={{
@@ -30,7 +32,7 @@ const ChatNode = ({ data }) => {
           maxWidth="70%"
           color={fontColor}
         >
-          <Text>{prompt}</Text>
+          <Text>{prompt.length > 100 ? prompt.slice(0, 100) + '...' : prompt}</Text>
         </Box>
         <Avatar size="sm" ml={2} name="You" bg="blue.500" />
       </Flex>
@@ -53,7 +55,7 @@ const ChatNode = ({ data }) => {
               li: ({ children }) => <Text as="li" ml={4} listStyleType="disc">{children}</Text>,
             }}
           >
-            {response}
+            {response.length > 100 ? response.slice(0, 100) + '...' : response}
           </ReactMarkdown>
         </Box>
       </Flex>
