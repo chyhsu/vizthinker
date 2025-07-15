@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
-import { Box, Input, Button, Flex, Heading, Text, IconButton, ScaleFade } from '@chakra-ui/react';
-import {Link} from 'react-router-dom';
-import { AiOutlineArrowLeft } from 'react-icons/ai';
+import { Box, Input, Button, Flex, Heading, Text } from '@chakra-ui/react';
+import {Link, useNavigate} from 'react-router-dom';
+
 import axios from 'axios';
 import ReactFlow, { Background, BackgroundVariant,
   useNodesState,
@@ -17,7 +17,6 @@ import ReactFlow, { Background, BackgroundVariant,
 import 'reactflow/dist/style.css';
 
 import ChatNode from './ChatNode';
-import ExtendedNode from './extendedNode';
 import { useSettings } from './SettingsContext';
 
 const initialNodes = [];
@@ -50,10 +49,10 @@ const ChatWindowFlow: React.FC = () => {
     });
   }, []);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
-  const [expandedNode, setExpandedNode] = useState<{ prompt: string; response: string } | null>(null);
   const [inputValue, setInputValue] = useState('');
 
   const reactFlowInstance = useReactFlow();
+  const navigate = useNavigate();
 
   // Fetch stored chat & positions on first load
   useEffect(() => {
@@ -217,7 +216,7 @@ const ChatWindowFlow: React.FC = () => {
           onEdgesChange={onEdgesChange}
           onConnect={onConnect}
           nodeTypes={nodeTypes}
-          onNodeClick={(_, node) => setExpandedNode(node.data as { prompt: string; response: string })}
+          onNodeClick={(_, node) => navigate(`/chat/${node.id}`, { state: node.data })}
           
           fitView
         >
@@ -225,11 +224,10 @@ const ChatWindowFlow: React.FC = () => {
         </ReactFlow>
       </Box>
 
-      {expandedNode && (
-        <ScaleFade initialScale={0.8} in={!!expandedNode}>
-          <ExtendedNode data={expandedNode} onClose={() => setExpandedNode(null)} />
-        </ScaleFade>
-      )}
+      
+        
+          
+        
 
       <Flex
         p={4}

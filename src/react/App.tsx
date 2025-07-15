@@ -4,6 +4,7 @@ import { Box } from '@chakra-ui/react';
 import ChatWindow from './ChatWindow';
 import { SettingsProvider } from './SettingsContext';
 import Settings from './Settings';
+import ExtendedNode from './extendedNode';
 
 /**
  * Root application component.
@@ -16,6 +17,7 @@ const App: React.FC = () => {
         <Routes>
           <Route path="/" element={<ChatWindow />} />
           <Route path="/settings" element={<Settings />} />
+          <Route path="/chat/:id" element={<ExtendedNode />} />
         </Routes>
       </Box>
       </BrowserRouter>

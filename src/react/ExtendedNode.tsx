@@ -3,13 +3,17 @@ import { Box, Text, IconButton, Flex, VStack, Avatar } from '@chakra-ui/react';
 import ReactMarkdown from 'react-markdown';
 import { AiOutlineArrowLeft } from 'react-icons/ai';
 import { useSettings } from './SettingsContext';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 export interface ExtendedNodeProps {
-  data: { prompt: string; response: string };
-  onClose: () => void;
+  data?: { prompt: string; response: string };
+  onClose?: () => void;
 }
 
 const ExtendedNode: React.FC<ExtendedNodeProps> = ({ data, onClose }) => {
+  const location = useLocation() as { state?: { prompt: string; response: string } };
+  const navigate = useNavigate();
+  const nodeData = location.state ?? data ?? { prompt: '', response: '' };
   const { backgroundImage, chatNodeColor, fontColor } = useSettings();
   const isGrid = backgroundImage === 'grid' || backgroundImage === 'default';
   return (
@@ -33,7 +37,7 @@ const ExtendedNode: React.FC<ExtendedNodeProps> = ({ data, onClose }) => {
         icon={<AiOutlineArrowLeft />}
         size="sm"
         mb={4}
-        onClick={onClose}
+        onClick={() => (onClose ? onClose() : navigate(-1))}
       />
       <Flex justify="center" mb={6}>
         <VStack
@@ -44,11 +48,13 @@ const ExtendedNode: React.FC<ExtendedNodeProps> = ({ data, onClose }) => {
           borderRadius="2xl"
           p={4}
           sx={{ backgroundColor: chatNodeColor }}
+          overflowY="auto"
+          maxH="80vh"
           color={fontColor}
         >
           <Flex w="100%" justify="flex-end">
             <Box px={4} py={2} borderRadius="2xl" maxWidth="70%" color={fontColor}>
-              <Text whiteSpace="pre-wrap">{data.prompt}</Text>
+              <Text whiteSpace="pre-wrap">{nodeData.prompt}</Text>
             </Box>
             <Avatar size="sm" ml={2} name="You" bg="blue.500" />
           </Flex>
@@ -63,7 +69,7 @@ const ExtendedNode: React.FC<ExtendedNodeProps> = ({ data, onClose }) => {
                 li: ({ children }) => <Text as="li" ml={4} listStyleType="disc">{children}</Text>,
               }}
             >
-              {data.response}
+              {nodeData.response}
             </ReactMarkdown>
             </Box>
           </Flex>
