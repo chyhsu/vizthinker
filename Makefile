@@ -7,6 +7,7 @@ export PATH := /usr/local/bin:$(PATH)
 default: help
 
 # Variables
+OLLAMA_MODEL = gemma3n 
 VENV_DIR = .venv
 PYTHON = $(VENV_DIR)/bin/python
 PIP = $(VENV_DIR)/bin/pip
@@ -46,17 +47,17 @@ install: setup
 	@$(PIP) install -r res/requirements.txt
 	@echo "Installing additional Python packages (ollama)..."
 	@$(PIP) install ollama
-	@echo "Checking and installing llama3.2 model..."
+	@echo "Checking and installing $(OLLAMA_MODEL) model..."
 	@if command -v ollama >/dev/null 2>&1; then \
-		echo "Checking if llama3.2 model is available..."; \
-		if ! ollama list | grep -q "llama3.2"; then \
-			echo "Downloading llama3.2 model (this may take a while)..."; \
-			ollama pull llama3.2; \
+		echo "Checking if $(OLLAMA_MODEL) model is available..."; \
+		if ! ollama list | grep -q "$(OLLAMA_MODEL)"; then \
+			echo "Downloading $(OLLAMA_MODEL) model (this may take a while)..."; \
+			ollama pull $(OLLAMA_MODEL); \
 		else \
-			echo "llama3.2 model already installed."; \
+			echo "$(OLLAMA_MODEL) model already installed."; \
 		fi; \
 	else \
-		echo "Warning: ollama command not found. Please install Ollama manually and run 'ollama pull llama3.2'"; \
+		echo "Warning: ollama command not found. Please install Ollama manually and run 'ollama pull $(OLLAMA_MODEL)'"; \
 	fi
 	@echo "Building frontend application..."
 	@npm run build

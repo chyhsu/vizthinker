@@ -58,7 +58,7 @@ async def call_llm(user_prompt, provider):
             
             # Use ollama.chat for better control over the conversation
             response = ollama.chat(
-                model='llama3.2',  # Default model, can be configured later
+                model='gemma3n',  # Default model, can be configured later
                 messages=[
                     {
                         'role': 'system',
