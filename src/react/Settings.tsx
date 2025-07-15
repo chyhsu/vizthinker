@@ -1,10 +1,11 @@
 import React from 'react';
-import { Box, Heading, Select, FormControl, FormLabel, Input, Button, VStack, Slider, SliderTrack, SliderFilledTrack, SliderThumb, Flex } from '@chakra-ui/react';
+import { Box, Heading, Select, FormControl, FormLabel, Input, Button, VStack, Slider, SliderTrack, SliderFilledTrack, SliderThumb, Flex, grid } from '@chakra-ui/react';
 import { Link } from 'react-router-dom';
 import { useSettings } from './SettingsContext';
-import defaultBg from '../asset/images/20200916_174140.jpg';
-import bg3995 from '../asset/images/IMG_3995.png';
-import bg4013 from '../asset/images/IMG_4013.png';
+import sunset from '../asset/images/20200916_174140.jpg';
+import grassland from '../asset/images/IMG_3995.png';
+import sea from '../asset/images/IMG_4013.png';
+import defaultBg from '../asset/images/Title.jpg';
 const defaultColor = 'rgba(1, 3, 7, 0.2)';
 
 const Settings: React.FC = () => {
@@ -73,10 +74,10 @@ const Settings: React.FC = () => {
   };
 
   const backgroundOptions = [
-    { label: 'Grid', value: 'grid' },
     { label: 'Default', value: defaultBg },
-    { label: 'Forest', value: bg3995 },
-    { label: 'Sea', value: bg4013 },
+    { label: 'Sunset', value: sunset },
+    { label: 'Grassland', value: grassland },
+    { label: 'Sea', value: sea },
   ];
 
   const providerOptions = [

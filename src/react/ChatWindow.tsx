@@ -11,7 +11,6 @@ import useStore from '../typejs/store';
 const ChatWindow: React.FC = () => {
   const { backgroundImage, provider } = useSettings();
   const { nodes, edges, onNodesChange, onEdgesChange, onConnect, sendMessage } = useStore();
-  const isGrid = backgroundImage === 'grid' || backgroundImage === 'default';
   const nodeTypes = useMemo(() => ({ chatNode: ChatNode }), []);
   const [inputValue, setInputValue] = useState('');
   const navigate = useNavigate();
@@ -35,8 +34,7 @@ const ChatWindow: React.FC = () => {
       position="relative"
       h="100vh"
       w="100%"
-      bgImage={isGrid ? undefined : `linear-gradient(rgba(75, 71, 71, 0.4), rgba(75, 71, 71, 0.4)), url(${backgroundImage})`}
-      bg={isGrid ? '#1a1a1a' : undefined}
+      bgImage={backgroundImage}
       bgPosition="center"
       bgRepeat="no-repeat"
       bgSize="cover"
@@ -78,7 +76,7 @@ const ChatWindow: React.FC = () => {
           
           fitView
         >
-          {isGrid && <Background variant={BackgroundVariant.Dots} gap={24} size={1} color="rgba(255,255,255,0.15)" />}
+          <Background variant={BackgroundVariant.Dots} gap={24} size={1} color="rgba(255,255,255,0.15)" />
         </ReactFlow>
       </Box>
 

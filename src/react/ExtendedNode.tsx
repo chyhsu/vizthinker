@@ -18,7 +18,6 @@ const ExtendedNode: React.FC<ExtendedNodeProps> = ({ data, onClose }) => {
   const nodeData = location.state ?? data ?? { prompt: '', response: '' };
   const { sendMessage } = useStore();
   const { backgroundImage, chatNodeColor, fontColor, provider } = useSettings();
-  const isGrid = backgroundImage === 'grid' || backgroundImage === 'default';
   const [inputValue, setInputValue] = useState('');
 
   const handleSendMessage = async () => {
@@ -39,8 +38,7 @@ const ExtendedNode: React.FC<ExtendedNodeProps> = ({ data, onClose }) => {
       left={0}
       w="100%"
       h="100%"
-      bgImage={isGrid ? undefined : `linear-gradient(rgba(75, 71, 71, 0.4), rgba(75, 71, 71, 0.4)), url(${backgroundImage})`}
-      bg={isGrid ? '#1a1a1a' : undefined}
+      bgImage={backgroundImage}
       bgPosition="center"
       bgRepeat="no-repeat"
       bgSize="cover"
