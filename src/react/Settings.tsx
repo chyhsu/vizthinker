@@ -17,7 +17,7 @@ import { useSettings } from './SettingsContext';
 import sunset from '../asset/images/20200916_174140.jpg';
 import grassland from '../asset/images/IMG_3995.png';
 import sea from '../asset/images/IMG_4013.png';
-import defaultBg from '../asset/images/Title.jpg';
+import defaultBg from '../asset/images/Icon.jpg';
 const defaultColor = 'rgba(1, 3, 7, 0.2)';
 
 const Settings: React.FC = () => {
@@ -73,7 +73,6 @@ const Settings: React.FC = () => {
   };
 
   const resetDefaults = () => {
-    setDraftBg(defaultBg);
     setDraftColor(defaultColor);
     setDraftOpacity(0.2);
     setDraftFontColor('#ffffff');
