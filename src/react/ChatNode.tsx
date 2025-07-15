@@ -1,6 +1,15 @@
 import React from 'react';
 import ReactMarkdown from 'react-markdown';
 import { Box, Flex, Text, Avatar, VStack } from '@chakra-ui/react';
+import {
+  chatNodeVStackStyle,
+  chatNodeUserFlexStyle,
+  chatNodeUserBoxStyle,
+  chatNodeUserAvatarStyle,
+  chatNodeAIFlexStyle,
+  chatNodeAIBoxStyle,
+  chatNodeAIAvatarStyle
+} from '../typejs/style';
 import { useSettings } from './SettingsContext';
 import { Handle, Position } from 'reactflow';
 
@@ -11,40 +20,25 @@ const ChatNode = ({ data }) => {
     <>
       <Handle type="target" position={Position.Top} />
       <VStack
-      spacing={4}
-      align="stretch"
-      w="70%"
-      minW="300px"
-      maxW="800px"
-      maxH="300px"
-      p={4}
-      borderRadius="2xl"
-      sx={{
-        backgroundColor: chatNodeColor,
-      }}
-    >
+        {...chatNodeVStackStyle}
+        sx={{ backgroundColor: chatNodeColor }}
+      >
       {/* User Prompt */}
-      <Flex w="100%" justify="flex-end">
+      <Flex {...chatNodeUserFlexStyle}>
         <Box
-          px={4}
-          py={2}
-          borderRadius="2xl"
-          maxWidth="70%"
+          {...chatNodeUserBoxStyle}
           color={fontColor}
         >
           <Text>{prompt.length > 100 ? prompt.slice(0, 100) + '...' : prompt}</Text>
         </Box>
-        <Avatar size="sm" ml={2} name="You" bg="blue.500" />
+        <Avatar {...chatNodeUserAvatarStyle} />
       </Flex>
 
       {/* AI Response */}
-      <Flex w="100%" justify="flex-start">
-        <Avatar size="sm" mr={2} name="VizThink AI" />
+      <Flex {...chatNodeAIFlexStyle}>
+        <Avatar {...chatNodeAIAvatarStyle} />
         <Box
-          px={4}
-          py={2}
-          borderRadius="lg"
-          maxWidth="70%"
+          {...chatNodeAIBoxStyle}
           color={fontColor}
         >
           <ReactMarkdown

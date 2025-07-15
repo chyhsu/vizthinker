@@ -1,5 +1,17 @@
 import React from 'react';
-import { Box, Heading, Select, FormControl, FormLabel, Input, Button, VStack, Slider, SliderTrack, SliderFilledTrack, SliderThumb, Flex, grid } from '@chakra-ui/react';
+import { Box, Heading, Select, FormControl, FormLabel, Input, Button, VStack, Slider, SliderTrack, SliderFilledTrack, SliderThumb, Flex } from '@chakra-ui/react';
+import {
+  settingsOuterBoxStyle,
+  settingsCardBoxStyle,
+  settingsHeadingStyle,
+  settingsFormControlStyle,
+  settingsPreviewNodeBoxStyle,
+  settingsPreviewHeadingStyle,
+  settingsButtonVStackStyle,
+  settingsButtonFlexStyle,
+  settingsConfirmButtonStyle,
+  settingsResetButtonStyle
+} from '../typejs/style';
 import { Link } from 'react-router-dom';
 import { useSettings } from './SettingsContext';
 import sunset from '../asset/images/20200916_174140.jpg';
@@ -90,27 +102,14 @@ const Settings: React.FC = () => {
 
   return (
     <Box
-      h="100vh"
-      w="100%"
+      {...settingsOuterBoxStyle}
       bgImage={`linear-gradient(rgba(75, 71, 71, 0.4), rgba(75, 71, 71, 0.4)), url(${draftBg})`}
       bgPosition="center"
       bgRepeat="no-repeat"
       bgSize="cover"
-      p={8}
     >
-      <Box
-        maxW="600px"
-        mx="auto"
-        borderWidth={1}
-        borderRadius="lg"
-        boxShadow="md"
-        sx={{
-          backgroundColor: 'rgba(255, 255, 255, 0.1)',
-          backdropFilter: 'blur(10px)',
-        }}
-        p={8}
-      >
-      <Heading mb={6} size="lg">Settings</Heading>
+      <Box {...settingsCardBoxStyle}>
+      <Heading {...settingsHeadingStyle}>Settings</Heading>
 
       {/* AI Provider Selection */}
       <FormControl mb={6}>
@@ -179,23 +178,19 @@ const Settings: React.FC = () => {
       <FormControl mb={6}>
         <FormLabel>Preview</FormLabel>
         <Box
-          p={4}
-          borderRadius="2xl"
-          maxW="350px"
-          sx={{
-            backgroundColor: hexToRgba(draftColor, draftOpacity),
-          }}
+          {...settingsPreviewNodeBoxStyle}
+          sx={{ backgroundColor: hexToRgba(draftColor, draftOpacity) }}
         >
-          <Heading size="sm" mb={2} color={draftFontColor}>Preview Node</Heading>
+          <Heading {...settingsPreviewHeadingStyle} color={draftFontColor}>Preview Node</Heading>
           <Box color={draftFontColor}>This is how your chat node will look.</Box>
         </Box>
       </FormControl>
 
       {/* Confirm button */}
-      <VStack  align="flex-end" spacing={2}>
-        <Flex justify="space-between" gap={4}>
-          <Button as={Link} to="/" variant="outline" size="sm" onClick={applyChanges}>Confirm</Button>
-          <Button variant="outline" size="sm" onClick={resetDefaults}>Reset</Button>
+      <VStack {...settingsButtonVStackStyle}>
+        <Flex {...settingsButtonFlexStyle}>
+          <Button as={Link} to="/" {...settingsConfirmButtonStyle} onClick={applyChanges}>Confirm</Button>
+          <Button {...settingsResetButtonStyle} onClick={resetDefaults}>Reset</Button>
         </Flex>
       </VStack>
       </Box>

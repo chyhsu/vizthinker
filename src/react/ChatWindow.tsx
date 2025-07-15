@@ -1,5 +1,16 @@
 import React, { useState, useMemo } from 'react';
 import { Box, Input, Button, Flex, Heading } from '@chakra-ui/react';
+import {
+  chatWindowOuterFlexStyle,
+  chatWindowTopBarBoxStyle,
+  chatWindowTopBarFlexStyle,
+  chatWindowHeadingStyle,
+  chatWindowSettingsButtonStyle,
+  chatWindowFlowBoxStyle,
+    chatWindowInputFlexStyle,
+  chatWindowInputStyle,
+  chatWindowSendButtonStyle
+} from '../typejs/style';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import ReactFlow, { Background, BackgroundVariant } from 'reactflow';
@@ -30,41 +41,22 @@ const ChatWindow: React.FC = () => {
   
   return (
     <Flex
-      direction="column"
-      position="relative"
-      h="100vh"
-      w="100%"
+      {...chatWindowOuterFlexStyle}
       bgImage={backgroundImage}
       bgPosition="center"
       bgRepeat="no-repeat"
       bgSize="cover"
     >
-      <Box
-        p={4}
-        w="100%"
-        sx={{
-          backgroundColor: 'rgba(255, 255, 255, 0.1)',
-          backdropFilter: 'blur(10px)',
-          borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
-          zIndex: 10
-        }}
-      >
-        <Flex justify="space-between">
-          <Heading size="md" color="white">VizThinker</Heading>
-          <Button
-            as={Link}
-            to="/settings"
-            variant="ghost"
-            size="sm"
-            color="white"
-            _hover={{ bg: 'rgba(255, 255, 255, 0.15)' }}
-          >
+      <Box {...chatWindowTopBarBoxStyle}>
+        <Flex {...chatWindowTopBarFlexStyle}>
+          <Heading {...chatWindowHeadingStyle}>VizThinker</Heading>
+          <Button {...chatWindowSettingsButtonStyle} as={Link} to="/settings">
             Settings
           </Button>
         </Flex>
       </Box>
 
-      <Box flex={1} w="100%">
+      <Box {...chatWindowFlowBoxStyle}>
         <ReactFlow
           nodes={nodes}
           edges={edges}
@@ -85,32 +77,15 @@ const ChatWindow: React.FC = () => {
           
         
 
-      <Flex
-        p={4}
-        sx={{
-          backgroundColor: 'rgba(0, 0, 0, 0.2)',
-          backdropFilter: 'blur(10px)',
-          borderTop: '1px solid rgba(255, 255, 255, 0.1)',
-          zIndex: 10
-        }}
-      >
+      <Flex {...chatWindowInputFlexStyle}>
         <Input
           value={inputValue}
           onChange={(e) => setInputValue(e.target.value)}
           onKeyUp={handleKeyPress}
           placeholder="Type your message here..."
-          mr={2}
-          bg="transparent"
-          color="white"
-          borderColor="rgba(255, 255, 255, 0.3)"
-          _placeholder={{ color: 'gray.300' }}
-          _hover={{ borderColor: 'rgba(255, 255, 255, 0.5)' }}
-          _focus={{
-            borderColor: 'rgba(255, 255, 255, 0.7)',
-            boxShadow: '0 0 0 1px rgba(255, 255, 255, 0.7)',
-          }}
+          {...chatWindowInputStyle}
         />
-        <Button onClick={handleSendMessage} colorScheme="blue">
+        <Button onClick={handleSendMessage} {...chatWindowSendButtonStyle}>
           Send
         </Button>
       </Flex>
