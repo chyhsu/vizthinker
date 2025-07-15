@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="src/asset/images/Icon.jpg" alt="VizThinker logo" width="1000" />
+  <img src="src/asset/images/Title.jpg" alt="VizThinker logo" width="1000" />
 </p>
 
 # VizThink AI
