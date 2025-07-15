@@ -1,168 +1,25 @@
-import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
-import { Box, Input, Button, Flex, Heading, Text } from '@chakra-ui/react';
-import {Link, useNavigate} from 'react-router-dom';
-
+import React, { useState, useMemo } from 'react';
+import { Box, Input, Button, Flex, Heading } from '@chakra-ui/react';
+import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import ReactFlow, { Background, BackgroundVariant,
-  useNodesState,
-  useEdgesState,
-  useReactFlow,
-  addEdge,
-  Connection,
-  Edge,
-  ReactFlowProvider,
-  NodeChange,
-  applyNodeChanges,
-} from 'reactflow';
+import ReactFlow, { Background, BackgroundVariant } from 'reactflow';
 import 'reactflow/dist/style.css';
-
 import ChatNode from './ChatNode';
 import { useSettings } from './SettingsContext';
+import useStore from '../typejs/store';
 
-const initialNodes = [];
-const initialEdges = [];
-
-
-const ChatWindowFlow: React.FC = () => {
+const ChatWindow: React.FC = () => {
   const { backgroundImage, provider } = useSettings();
+  const { nodes, edges, onNodesChange, onEdgesChange, onConnect, sendMessage } = useStore();
   const isGrid = backgroundImage === 'grid' || backgroundImage === 'default';
   const nodeTypes = useMemo(() => ({ chatNode: ChatNode }), []);
-  const [nodes, setNodes, _onNodesChange] = useNodesState(initialNodes);
-
-    // Debounce timer ref so we only send positions after user stops dragging
-  const debounceRef = useRef<NodeJS.Timeout | null>(null);
-
-  const handleNodesChange = useCallback((changes: NodeChange[]) => {
-    setNodes((nds) => {
-      const updated = applyNodeChanges(changes, nds);
-
-      // clear previous timer and start new debounce
-      if (debounceRef.current) clearTimeout(debounceRef.current);
-      debounceRef.current = setTimeout(() => {
-        const positions = updated.map((n) => n.position);
-        axios.post('http://127.0.0.1:8000/chat/positions', { positions }).catch((err) => {
-          console.error('Failed to update positions:', err);
-        });
-      }, 400); // send only after 400ms of inactivity
-
-      return updated;
-    });
-  }, []);
-  const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
   const [inputValue, setInputValue] = useState('');
-
-  const reactFlowInstance = useReactFlow();
   const navigate = useNavigate();
-
-  // Fetch stored chat & positions on first load
-  useEffect(() => {
-    (async () => {
-      try {
-        const res = await axios.get('http://127.0.0.1:8000/chat/get');
-        const rows = res.data.data as Array<[string, string, any]>; // prompt, response, positions
-
-        const restoredNodes = rows.map(([prompt, resp, positions], idx) => {
-          let pos: { x: number; y: number } | undefined;
-
-          if (Array.isArray(positions)) {
-            // Positions were stored for the whole graph; use the one corresponding to this node if available
-            pos = positions[idx] || positions[positions.length - 1];
-          } else if (positions && typeof positions === 'object') {
-            pos = positions as { x: number; y: number };
-          }
-
-          return {
-            id: (idx + 1).toString(),
-            type: 'chatNode',
-            position: pos ?? { x: 250, y: idx * 400 + 50 },
-            data: { prompt, response: resp },
-          };
-        });
-        const restoredEdges = restoredNodes.slice(1).map((node, idx) => ({
-          id: `e${restoredNodes[idx].id}-${node.id}`,
-          source: restoredNodes[idx].id,
-          target: node.id,
-        }));
-        setNodes(restoredNodes);
-        setEdges(restoredEdges);
-      } catch (err) {
-        console.error('Error restoring chat:', err);
-      }
-    })();
-  }, []);
-
-
-  const onConnect = useCallback(
-    (params: Edge | Connection) => setEdges((eds) => addEdge(params, eds)),
-    [setEdges],
-  );
 
   const handleSendMessage = async () => {
     if (inputValue.trim() === '') return;
-
-    const currentInput = inputValue;
+    await sendMessage(inputValue, provider);
     setInputValue('');
-
-    const newNodeId = (nodes.length + 1).toString();
-    const lastNode = nodes[nodes.length - 1];
-    
-    const newNode = {
-      id: newNodeId,
-      type: 'chatNode',
-      position: { 
-        x: lastNode ? lastNode.position.x : 250, 
-        y: lastNode ? lastNode.position.y + 250 : 50
-      },
-      data: { prompt: currentInput, response: '...' },
-    };
-    setNodes((nds) => nds.concat(newNode));
-
-    // Auto-center the new node after a short delay to ensure it's rendered
-    setTimeout(() => {
-      reactFlowInstance.fitView({
-        nodes: [{ id: newNodeId }],
-        duration: 800,
-        padding: 0.3,
-      });
-    }, 100);
-
-    if (lastNode) {
-      const newEdge = {
-        id: `e${lastNode.id}-${newNodeId}`,
-        source: lastNode.id,
-        target: newNodeId,
-      };
-      setEdges((eds) => eds.concat(newEdge));
-    }
-
-    try {
-      const response = await axios.post('http://127.0.0.1:8000/chat/new', {
-        prompt: currentInput,
-        provider: provider,
-      });
-
-      let aiResponse = response.data.response;
-      console.log('AI Response:', aiResponse);
-
-      setNodes((nds) =>
-        nds.map((node) => {
-          if (node.id === newNodeId) {
-            return { ...node, data: { ...node.data, response: aiResponse } };
-          }
-          return node;
-        }),
-      );
-    } catch (error: any) {
-      console.error('Error fetching AI response:', error);
-      setNodes((nds) =>
-        nds.map((node) => {
-          if (node.id === newNodeId) {
-            return { ...node, data: { ...node.data, response: 'Sorry, an error occurred.' } };
-          }
-          return node;
-        }),
-      );
-    }
   };
 
   const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -170,6 +27,7 @@ const ChatWindowFlow: React.FC = () => {
       handleSendMessage();
     }
   };
+
   
   return (
     <Flex
@@ -212,7 +70,7 @@ const ChatWindowFlow: React.FC = () => {
         <ReactFlow
           nodes={nodes}
           edges={edges}
-          onNodesChange={handleNodesChange}
+          onNodesChange={onNodesChange}
           onEdgesChange={onEdgesChange}
           onConnect={onConnect}
           nodeTypes={nodeTypes}
@@ -262,12 +120,6 @@ const ChatWindowFlow: React.FC = () => {
   );
 };
 
-const ChatWindow: React.FC = () => {
-  return (
-    <ReactFlowProvider>
-      <ChatWindowFlow />
-    </ReactFlowProvider>
-  );
-};
+
 
 export default ChatWindow;

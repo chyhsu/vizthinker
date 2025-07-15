@@ -1,21 +1,37 @@
-import React from 'react';
-import { Box, Text, IconButton, Flex, VStack, Avatar } from '@chakra-ui/react';
+import React, { useState } from 'react';
+import { Box, Text, IconButton, Flex, VStack, Avatar, Input, Button } from '@chakra-ui/react';
 import ReactMarkdown from 'react-markdown';
 import { AiOutlineArrowLeft } from 'react-icons/ai';
 import { useSettings } from './SettingsContext';
 import { useLocation, useNavigate } from 'react-router-dom';
+import useStore from '../typejs/store';
+
+
 
 export interface ExtendedNodeProps {
   data?: { prompt: string; response: string };
   onClose?: () => void;
 }
-
 const ExtendedNode: React.FC<ExtendedNodeProps> = ({ data, onClose }) => {
   const location = useLocation() as { state?: { prompt: string; response: string } };
   const navigate = useNavigate();
   const nodeData = location.state ?? data ?? { prompt: '', response: '' };
-  const { backgroundImage, chatNodeColor, fontColor } = useSettings();
+  const { sendMessage } = useStore();
+  const { backgroundImage, chatNodeColor, fontColor, provider } = useSettings();
   const isGrid = backgroundImage === 'grid' || backgroundImage === 'default';
+  const [inputValue, setInputValue] = useState('');
+
+  const handleSendMessage = async () => {
+    if (inputValue.trim() === '') return;
+    await sendMessage(inputValue, provider);
+    setInputValue('');
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      handleSendMessage();
+    }
+  };
   return (
     <Box
       position="absolute"
@@ -74,6 +90,39 @@ const ExtendedNode: React.FC<ExtendedNodeProps> = ({ data, onClose }) => {
             </Box>
           </Flex>
         </VStack>
+      </Flex>
+      <Flex
+        p={4}
+        sx={{
+          position: 'absolute',
+          bottom: 0,
+          left: 0,
+          right: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.2)',
+          backdropFilter: 'blur(10px)',
+          borderTop: '1px solid rgba(255, 255, 255, 0.1)',
+          zIndex: 10
+        }}
+      >
+        <Input
+          value={inputValue}
+          onChange={(e) => setInputValue(e.target.value)}
+          onKeyUp={handleKeyPress}
+          placeholder="Type your message here..."
+          mr={2}
+          bg="transparent"
+          color="white"
+          borderColor="rgba(255, 255, 255, 0.3)"
+          _placeholder={{ color: 'gray.300' }}
+          _hover={{ borderColor: 'rgba(255, 255, 255, 0.5)' }}
+          _focus={{
+            borderColor: 'rgba(255, 255, 255, 0.7)',
+            boxShadow: '0 0 0 1px rgba(255, 255, 255, 0.7)',
+          }}
+        />
+        <Button onClick={handleSendMessage} colorScheme="blue">
+          Send
+        </Button>
       </Flex>
     </Box>
   );

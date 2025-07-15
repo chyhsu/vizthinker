@@ -5,6 +5,7 @@ import ChatWindow from './ChatWindow';
 import { SettingsProvider } from './SettingsContext';
 import Settings from './Settings';
 import ExtendedNode from './extendedNode';
+import ChatLayout from './ChatLayout';
 
 /**
  * Root application component.
@@ -15,9 +16,11 @@ const App: React.FC = () => {
       <BrowserRouter>
       <Box minH="100vh" bg="gray.50">
         <Routes>
-          <Route path="/" element={<ChatWindow />} />
+          <Route path="/" element={<ChatLayout />}>
+            <Route index element={<ChatWindow />} />
+            <Route path="chat/:id" element={<ExtendedNode />} />
+          </Route>
           <Route path="/settings" element={<Settings />} />
-          <Route path="/chat/:id" element={<ExtendedNode />} />
         </Routes>
       </Box>
       </BrowserRouter>
