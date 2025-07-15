@@ -1,6 +1,7 @@
 import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
-import { Box, Input, Button, Flex, Heading } from '@chakra-ui/react';
+import { Box, Input, Button, Flex, Heading, Text, IconButton, ScaleFade } from '@chakra-ui/react';
 import {Link} from 'react-router-dom';
+import { AiOutlineArrowLeft } from 'react-icons/ai';
 import axios from 'axios';
 import ReactFlow, { Background, BackgroundVariant,
   useNodesState,
@@ -16,6 +17,7 @@ import ReactFlow, { Background, BackgroundVariant,
 import 'reactflow/dist/style.css';
 
 import ChatNode from './ChatNode';
+import ExtendedNode from './extendedNode';
 import { useSettings } from './SettingsContext';
 
 const initialNodes = [];
@@ -48,6 +50,7 @@ const ChatWindowFlow: React.FC = () => {
     });
   }, []);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
+  const [expandedNode, setExpandedNode] = useState<{ prompt: string; response: string } | null>(null);
   const [inputValue, setInputValue] = useState('');
 
   const reactFlowInstance = useReactFlow();
@@ -172,6 +175,7 @@ const ChatWindowFlow: React.FC = () => {
   return (
     <Flex
       direction="column"
+      position="relative"
       h="100vh"
       w="100%"
       bgImage={isGrid ? undefined : `linear-gradient(rgba(75, 71, 71, 0.4), rgba(75, 71, 71, 0.4)), url(${backgroundImage})`}
@@ -213,11 +217,19 @@ const ChatWindowFlow: React.FC = () => {
           onEdgesChange={onEdgesChange}
           onConnect={onConnect}
           nodeTypes={nodeTypes}
+          onNodeClick={(_, node) => setExpandedNode(node.data as { prompt: string; response: string })}
+          
           fitView
         >
           {isGrid && <Background variant={BackgroundVariant.Dots} gap={24} size={1} color="rgba(255,255,255,0.15)" />}
         </ReactFlow>
       </Box>
+
+      {expandedNode && (
+        <ScaleFade initialScale={0.8} in={!!expandedNode}>
+          <ExtendedNode data={expandedNode} onClose={() => setExpandedNode(null)} />
+        </ScaleFade>
+      )}
 
       <Flex
         p={4}
@@ -231,7 +243,7 @@ const ChatWindowFlow: React.FC = () => {
         <Input
           value={inputValue}
           onChange={(e) => setInputValue(e.target.value)}
-          onKeyPress={handleKeyPress}
+          onKeyUp={handleKeyPress}
           placeholder="Type your message here..."
           mr={2}
           bg="transparent"
