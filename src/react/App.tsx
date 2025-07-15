@@ -4,7 +4,7 @@ import { Box } from '@chakra-ui/react';
 import ChatWindow from './ChatWindow';
 import { SettingsProvider } from './SettingsContext';
 import Settings from './Settings';
-import ExtendedNode from './extendedNode';
+import ExtendedNode from './ExtendedNode';
 import ChatLayout from './ChatLayout';
 
 /**
