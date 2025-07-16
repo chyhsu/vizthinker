@@ -102,12 +102,12 @@ const Settings: React.FC = () => {
   return (
     <Box
       {...settingsOuterBoxStyle}
-      bgImage={`linear-gradient(rgba(75, 71, 71, 0.4), rgba(75, 71, 71, 0.4)), url(${draftBg})`}
+      bgImage={`linear-gradient(rgba(135, 206, 235, 0.3), rgba(135, 206, 235, 0.3)), url(${draftBg})`}
       bgPosition="center"
       bgRepeat="no-repeat"
       bgSize="cover"
     >
-      <Box {...settingsCardBoxStyle}>
+      <Box {...settingsCardBoxStyle} boxShadow="2xl" borderRadius="xl">
       <Heading {...settingsHeadingStyle}>Settings</Heading>
 
       {/* AI Provider Selection */}
@@ -116,6 +116,12 @@ const Settings: React.FC = () => {
         <Select
           value={draftProvider}
           onChange={(e) => setDraftProvider(e.target.value as any)}
+          bg="white"
+          borderColor="gray.300"
+          borderWidth="2px"
+          boxShadow="md"
+          _hover={{ borderColor: "blue.400", boxShadow: "lg" }}
+          _focus={{ borderColor: "blue.500", boxShadow: "0 0 0 1px blue.500" }}
         >
           {providerOptions.map((opt) => (
             <option key={opt.value} value={opt.value}>
@@ -131,6 +137,12 @@ const Settings: React.FC = () => {
         <Select
           value={draftBg}
           onChange={(e) => setDraftBg(e.target.value)}
+          bg="white"
+          borderColor="gray.300"
+          borderWidth="2px"
+          boxShadow="md"
+          _hover={{ borderColor: "blue.400", boxShadow: "lg" }}
+          _focus={{ borderColor: "blue.500", boxShadow: "0 0 0 1px blue.500" }}
         >
           {backgroundOptions.map((opt) => (
             <option key={opt.value} value={opt.value}>
@@ -147,13 +159,29 @@ const Settings: React.FC = () => {
           type="color"
           value={draftColor}
           onChange={(e) => setDraftColor(e.target.value)}
+          bg="white"
+          borderColor="gray.300"
+          borderWidth="2px"
+          boxShadow="md"
+          _hover={{ borderColor: "blue.400", boxShadow: "lg" }}
+          _focus={{ borderColor: "blue.500", boxShadow: "0 0 0 1px blue.500" }}
         />
       </FormControl>
 
       {/* Font Color */}
       <FormControl mb={6}>
         <FormLabel>Font Color</FormLabel>
-        <Input type="color" value={draftFontColor} onChange={(e)=>setDraftFontColor(e.target.value)} />
+        <Input 
+          type="color" 
+          value={draftFontColor} 
+          onChange={(e)=>setDraftFontColor(e.target.value)}
+          bg="white"
+          borderColor="gray.300"
+          borderWidth="2px"
+          boxShadow="md"
+          _hover={{ borderColor: "blue.400", boxShadow: "lg" }}
+          _focus={{ borderColor: "blue.500", boxShadow: "0 0 0 1px blue.500" }}
+        />
       </FormControl>
 
       {/* Opacity */}
@@ -166,10 +194,10 @@ const Settings: React.FC = () => {
           value={draftOpacity}
           onChange={setDraftOpacity}
         >
-          <SliderTrack>
-            <SliderFilledTrack />
+          <SliderTrack bg="gray.200" h="6px">
+            <SliderFilledTrack bg="blue.400" />
           </SliderTrack>
-          <SliderThumb />
+          <SliderThumb bg="blue.500" boxShadow="md" _hover={{ transform: "scale(1.1)" }} />
         </Slider>
       </FormControl>
 

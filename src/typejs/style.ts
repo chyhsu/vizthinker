@@ -31,7 +31,13 @@ export const chatWindowTopBarFlexStyle: FlexProps = {
 // Heading in Top Bar
 export const chatWindowHeadingStyle: HeadingProps = {
   size: 'md',
-  color: 'white',
+  color: 'black',
+  bg: 'rgba(255, 255, 255, 0.8)',
+  px: 3,
+  py: 1,
+  borderRadius: 'md',
+  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+  backdropFilter: 'blur(8px)',
 };
 
 // Settings Button (top right)
@@ -40,8 +46,11 @@ export const chatWindowSettingsButtonStyle: ButtonProps & LinkProps = {
   to: '/settings',
   variant: 'ghost',
   size: 'sm',
-  color: 'white',
-  _hover: { bg: 'rgba(255, 255, 255, 0.15)' },
+  color: 'black',
+  bg: 'rgba(255, 255, 255, 0.8)',
+  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+  backdropFilter: 'blur(8px)',
+  _hover: { bg: 'rgba(255, 255, 255, 0.9)' },
 };
 
 // Main ReactFlow Box
@@ -52,11 +61,19 @@ export const chatWindowFlowBoxStyle: BoxProps = {
 
 // Bottom Bar Flex (input area)
 export const chatWindowInputFlexStyle: FlexProps = {
+  position: 'absolute',
+  bottom: 4,
+  left: '50%',
+  transform: 'translateX(-50%)',
+  maxW: '600px',
+  w: '90%',
   p: 4,
+  borderRadius: '2xl',
   sx: {
-    backgroundColor: 'rgba(0, 0, 0, 0.2)',
+    backgroundColor: 'rgba(255, 255, 255, 0.8)',
     backdropFilter: 'blur(10px)',
-    borderTop: '1px solid rgba(255, 255, 255, 0.1)',
+    border: '1px solid rgba(0, 0, 0, 0.1)',
+    boxShadow: '0 4px 20px rgba(0, 0, 0, 0.2)',
     zIndex: 10,
   },
 };
@@ -65,13 +82,13 @@ export const chatWindowInputFlexStyle: FlexProps = {
 export const chatWindowInputStyle: InputProps = {
   mr: 2,
   bg: 'transparent',
-  color: 'white',
-  borderColor: 'rgba(255, 255, 255, 0.3)',
-  _placeholder: { color: 'gray.300' },
-  _hover: { borderColor: 'rgba(255, 255, 255, 0.5)' },
+  color: 'black',
+  borderColor: 'rgba(0, 0, 0, 0.3)',
+  _placeholder: { color: 'gray.600' },
+  _hover: { borderColor: 'rgba(0, 0, 0, 0.5)' },
   _focus: {
-    borderColor: 'rgba(255, 255, 255, 0.7)',
-    boxShadow: '0 0 0 1px rgba(255, 255, 255, 0.7)',
+    borderColor: 'rgba(0, 0, 0, 0.7)',
+    boxShadow: '0 0 0 1px rgba(0, 0, 0, 0.7)',
   },
 };
 
