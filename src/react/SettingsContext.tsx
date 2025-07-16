@@ -1,5 +1,4 @@
 import React, { createContext, useContext, useState } from 'react';
-import defaultBg from '../asset/images/Icon.jpg';
 
 // Types ----------------------------------------------------
 type Provider = 'google' | 'ollama' | 'openai' | 'x' | 'anthropic';

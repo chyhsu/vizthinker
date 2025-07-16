@@ -80,12 +80,6 @@ const ChatWindow: React.FC = () => {
           />
         </ReactFlow>
       </Box>
-
-      
-        
-          
-        
-
       <Flex {...chatWindowInputFlexStyle}>
         <Input
           value={inputValue}
