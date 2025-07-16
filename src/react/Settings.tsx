@@ -18,7 +18,7 @@ import sunset from '../asset/images/20200916_174140.jpg';
 import grassland from '../asset/images/IMG_3995.png';
 import sea from '../asset/images/IMG_4013.png';
 import defaultBg from '../asset/images/Icon.jpg';
-const defaultColor = 'rgba(1, 3, 7, 0.2)';
+const defaultColor = 'rgba(0, 0, 0, 0.7)';
 
 const Settings: React.FC = () => {
   // global context
@@ -48,11 +48,25 @@ const Settings: React.FC = () => {
   const initialParsed = parseRgba(chatNodeColor);
 
   // local draft state
-  const [draftBg, setDraftBg] = React.useState(backgroundImage);
+  const [draftBg, setDraftBg] = React.useState(backgroundImage || '#ffffff');
   const [draftColor, setDraftColor] = React.useState<string>(initialParsed.hex);
   const [draftOpacity, setDraftOpacity] = React.useState<number>(initialParsed.opacity);
   const [draftFontColor, setDraftFontColor] = React.useState<string>(fontColor);
   const [draftProvider, setDraftProvider] = React.useState(provider);
+
+  // Auto-adjust font color based on background
+  React.useEffect(() => {
+    if (draftBg === '#000000') {
+      setDraftColor('#ffffff');
+      setDraftFontColor('#000000'); // black text for white node
+    } else {
+      // when switching away from pure black bg, reset to defaults
+      const parsedDefault = parseRgba(defaultColor);
+      setDraftColor(parsedDefault.hex);
+      setDraftOpacity(parsedDefault.opacity);
+      setDraftFontColor('#ffffff'); // white text for default node
+    }
+  }, [draftBg]);
 
   // util to blend opacity
   const hexToRgba = (hex: string, opacity: number) => {
@@ -64,6 +78,8 @@ const Settings: React.FC = () => {
     return `rgba(${r}, ${g}, ${b}, ${opacity})`;
   };
 
+  const isPureBlack = draftBg === '#000000';
+
   const applyChanges = () => {
     const rgbaColor = hexToRgba(draftColor, draftOpacity);
     setBackgroundImage(draftBg);
@@ -73,19 +89,22 @@ const Settings: React.FC = () => {
   };
 
   const resetDefaults = () => {
-    setDraftColor(defaultColor);
-    setDraftOpacity(0.2);
-    setDraftFontColor('#ffffff');
+    const parsedDefault = parseRgba(defaultColor);
+    setDraftBg('#ffffff');
+    setDraftColor(parsedDefault.hex);
+    setDraftOpacity(parsedDefault.opacity);
+    setDraftFontColor('#ffffff'); 
     setDraftProvider('google');
-    setBackgroundImage(defaultBg);
+    setBackgroundImage('#ffffff');
     setChatNodeColor(defaultColor);
-    setFontColor('#ffffff');
+    setFontColor('#ffffff'); 
     setProvider('google');
-
   };
 
   const backgroundOptions = [
-    { label: 'Default', value: defaultBg },
+    { label: 'Pure White', value: '#ffffff' },
+    { label: 'Pure Black', value: '#000000' },
+    { label: 'Logo Image', value: defaultBg },
     { label: 'Sunset', value: sunset },
     { label: 'Grassland', value: grassland },
     { label: 'Sea', value: sea },
@@ -102,12 +121,26 @@ const Settings: React.FC = () => {
   return (
     <Box
       {...settingsOuterBoxStyle}
-      bgImage={`linear-gradient(rgba(135, 206, 235, 0.3), rgba(135, 206, 235, 0.3)), url(${draftBg})`}
-      bgPosition="center"
-      bgRepeat="no-repeat"
-      bgSize="cover"
+      {...(draftBg.startsWith('#') ? 
+        { bg: draftBg } : 
+        {
+          bgImage: `url(${draftBg})`,
+          bgPosition: "center",
+          bgRepeat: "no-repeat",
+          bgSize: "cover"
+        }
+      )}
     >
-      <Box {...settingsCardBoxStyle} boxShadow="2xl" borderRadius="xl">
+      <Box 
+        {...settingsCardBoxStyle} 
+        boxShadow="2xl" 
+        borderRadius="xl"
+        color={isPureBlack ? 'black' : 'inherit'}
+        sx={{
+          ...(settingsCardBoxStyle.sx || {}),
+          backgroundColor: isPureBlack ? 'rgba(255, 255, 255, 0.75)' : settingsCardBoxStyle.sx?.backgroundColor
+        }}
+      >
       <Heading {...settingsHeadingStyle}>Settings</Heading>
 
       {/* AI Provider Selection */}

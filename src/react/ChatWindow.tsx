@@ -18,6 +18,13 @@ import useStore from '../typejs/store';
 
 const ChatWindow: React.FC = () => {
   const { backgroundImage, provider } = useSettings();
+  
+  // Helper function to determine if background is dark
+  const isDarkBackground = (bg: string) => {
+    if (bg === '#000000') return true;
+    if (bg === '#ffffff') return false;
+    return false; // Default for image backgrounds
+  };
   const { nodes, edges, onNodesChange, onEdgesChange, onConnect, sendMessage } = useStore();
   const nodeTypes = useMemo(() => ({ chatNode: ChatNode }), []);
   const [inputValue, setInputValue] = useState('');
@@ -41,10 +48,15 @@ const ChatWindow: React.FC = () => {
       position="relative"
       h="100vh"
       w="100%"
-      bgImage={backgroundImage}
-      bgPosition="center"
-      bgRepeat="no-repeat"
-      bgSize="cover"
+      {...(backgroundImage.startsWith('#') ? 
+        { bg: backgroundImage } : 
+        {
+          bgImage: backgroundImage,
+          bgPosition: "center",
+          bgRepeat: "no-repeat",
+          bgSize: "cover"
+        }
+      )}
     >
       <HeaderBar />
 
@@ -60,7 +72,12 @@ const ChatWindow: React.FC = () => {
           
           fitView
         >
-          <Background variant={BackgroundVariant.Dots} gap={24} size={1} color="rgba(255,255,255,0.15)" />
+          <Background 
+            variant={BackgroundVariant.Dots} 
+            gap={24} 
+            size={1} 
+            color={isDarkBackground(backgroundImage) ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.15)"} 
+          />
         </ReactFlow>
       </Box>
 

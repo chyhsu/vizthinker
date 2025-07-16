@@ -49,10 +49,15 @@ const ExtendedNode: React.FC<ExtendedNodeProps> = ({ data, onClose }) => {
   return (
     <Box
       {...extendedNodeOuterBoxStyle}
-      bgImage={backgroundImage}
-      bgPosition="center"
-      bgRepeat="no-repeat"
-      bgSize="cover"
+      {...(backgroundImage.startsWith('#') ? 
+        { bg: backgroundImage } : 
+        {
+          bgImage: backgroundImage,
+          bgPosition: "center",
+          bgRepeat: "no-repeat",
+          bgSize: "cover"
+        }
+      )}
     >
       <IconButton
         {...extendedNodeBackButtonStyle}

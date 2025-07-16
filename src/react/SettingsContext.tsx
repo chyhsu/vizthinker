@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState } from 'react';
+import defaultBg from '../asset/images/Icon.jpg';
 
 // Types ----------------------------------------------------
 type Provider = 'google' | 'ollama' | 'openai' | 'x' | 'anthropic';
@@ -20,10 +21,10 @@ const SettingsContext = createContext<SettingsContextProps | undefined>(undefine
 export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   // Initialise from localStorage (fallback to defaults)
   const [backgroundImage, setBackgroundImage] = useState<string>(() => {
-    return localStorage.getItem('viz_bg') ?? 'default';
+    return localStorage.getItem('viz_bg') ?? '#ffffff';
   });
   const [chatNodeColor, setChatNodeColor] = useState<string>(() => {
-    return localStorage.getItem('viz_node_color') ?? 'rgba(1, 3, 7, 0.2)';
+    return localStorage.getItem('viz_node_color') ?? 'rgba(0, 0, 0, 0.7)';
   });
   const [fontColor, setFontColor] = useState<string>(() => {
     return localStorage.getItem('viz_font_color') ?? '#ffffff';
