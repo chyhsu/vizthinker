@@ -1,21 +1,18 @@
 import React, { useState, useMemo } from 'react';
-import { Box, Input, Button, Flex, Heading } from '@chakra-ui/react';
+import { Box, Input, Button, Flex } from '@chakra-ui/react';
 import {
   chatWindowOuterFlexStyle,
-  chatWindowTopBarBoxStyle,
-  chatWindowTopBarFlexStyle,
-  chatWindowHeadingStyle,
-  chatWindowSettingsButtonStyle,
   chatWindowFlowBoxStyle,
-    chatWindowInputFlexStyle,
+  chatWindowInputFlexStyle,
   chatWindowInputStyle,
   chatWindowSendButtonStyle
 } from '../typejs/style';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import ReactFlow, { Background, BackgroundVariant } from 'reactflow';
 import 'reactflow/dist/style.css';
 import ChatNode from './ChatNode';
+import HeaderBar from './HeaderBar';
 import { useSettings } from './SettingsContext';
 import useStore from '../typejs/store';
 
@@ -40,23 +37,18 @@ const ChatWindow: React.FC = () => {
 
   
   return (
-    <Flex
-      {...chatWindowOuterFlexStyle}
+    <Box
+      position="relative"
+      h="100vh"
+      w="100%"
       bgImage={backgroundImage}
       bgPosition="center"
       bgRepeat="no-repeat"
       bgSize="cover"
     >
-      <Box {...chatWindowTopBarBoxStyle}>
-        <Flex {...chatWindowTopBarFlexStyle}>
-          <Heading {...chatWindowHeadingStyle}>VizThinker</Heading>
-          <Button {...chatWindowSettingsButtonStyle} as={Link} to="/settings">
-            Settings
-          </Button>
-        </Flex>
-      </Box>
+      <HeaderBar />
 
-      <Box {...chatWindowFlowBoxStyle}>
+      <Box h="100%" w="100%">
         <ReactFlow
           nodes={nodes}
           edges={edges}
@@ -89,7 +81,7 @@ const ChatWindow: React.FC = () => {
           Send
         </Button>
       </Flex>
-    </Flex>
+    </Box>
   );
 };
 
