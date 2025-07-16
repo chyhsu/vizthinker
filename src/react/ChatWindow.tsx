@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Box, Input, Button, Flex } from '@chakra-ui/react';
+import { Box, Input, Button, Flex, Text } from '@chakra-ui/react';
 import {
   chatWindowOuterFlexStyle,
   chatWindowFlowBoxStyle,
@@ -25,14 +25,24 @@ const ChatWindow: React.FC = () => {
     if (bg === '#ffffff') return false;
     return false; // Default for image backgrounds
   };
-  const { nodes, edges, onNodesChange, onEdgesChange, onConnect, sendMessage } = useStore();
+  const { nodes, edges, onNodesChange, onEdgesChange, onConnect, sendMessage, selectedNodeId, setSelectedNodeId } = useStore();
   const nodeTypes = useMemo(() => ({ chatNode: ChatNode }), []);
   const [inputValue, setInputValue] = useState('');
   const navigate = useNavigate();
 
+  const selectedNode = selectedNodeId ? nodes.find(n => n.id === selectedNodeId) : null;
+
   const handleSendMessage = async () => {
     if (inputValue.trim() === '') return;
-    await sendMessage(inputValue, provider);
+    
+    if (selectedNodeId) {
+      // Branch from selected node
+      await sendMessage(inputValue, provider, selectedNodeId, true);
+      setSelectedNodeId(null); // Clear selection after branching
+    } else {
+      // Continue from last node (normal behavior)
+      await sendMessage(inputValue, provider);
+    }
     setInputValue('');
   };
 
@@ -42,7 +52,10 @@ const ChatWindow: React.FC = () => {
     }
   };
 
-  
+  const clearSelection = () => {
+    setSelectedNodeId(null);
+  };
+
   return (
     <Box
       position="relative"
@@ -68,8 +81,7 @@ const ChatWindow: React.FC = () => {
           onEdgesChange={onEdgesChange}
           onConnect={onConnect}
           nodeTypes={nodeTypes}
-          onNodeClick={(_, node) => navigate(`/chat/${node.id}`, { state: node.data })}
-          
+          onPaneClick={clearSelection}
           fitView
         >
           <Background 
@@ -80,17 +92,39 @@ const ChatWindow: React.FC = () => {
           />
         </ReactFlow>
       </Box>
-      <Flex {...chatWindowInputFlexStyle}>
-        <Input
-          value={inputValue}
-          onChange={(e) => setInputValue(e.target.value)}
-          onKeyUp={handleKeyPress}
-          placeholder="Type your message here..."
-          {...chatWindowInputStyle}
-        />
-        <Button onClick={handleSendMessage} {...chatWindowSendButtonStyle}>
-          Send
-        </Button>
+      <Flex {...chatWindowInputFlexStyle} direction="column">
+        {selectedNode && (
+          <Box 
+            bg="blue.100" 
+            p={2} 
+            mb={2} 
+            borderRadius="md" 
+            fontSize="sm"
+            display="flex"
+            justifyContent="space-between"
+            alignItems="center"
+          >
+            <Text>
+              <strong>Branching from:</strong> {selectedNode.data.prompt.slice(0, 50)}
+              {selectedNode.data.prompt.length > 50 ? '...' : ''}
+            </Text>
+            <Button size="xs" onClick={clearSelection}>
+              Clear
+            </Button>
+          </Box>
+        )}
+        <Flex>
+          <Input
+            value={inputValue}
+            onChange={(e) => setInputValue(e.target.value)}
+            onKeyUp={handleKeyPress}
+            placeholder={selectedNode ? "Type message to branch from selected node..." : "Type your message here..."}
+            {...chatWindowInputStyle}
+          />
+          <Button onClick={handleSendMessage} {...chatWindowSendButtonStyle}>
+            {selectedNode ? 'Branch' : 'Send'}
+          </Button>
+        </Flex>
       </Flex>
     </Box>
   );

@@ -1,6 +1,7 @@
 import os
 import json
 import aiosqlite
+from typing import Optional, List, Tuple
 from dotenv import load_dotenv
 load_dotenv()
 from server.logger import logger
@@ -15,22 +16,31 @@ async def init_db() -> None:
                 id INTEGER PRIMARY KEY,
                 prompt TEXT,
                 response TEXT,
+                parent_id INTEGER,
                 positions TEXT
             )
             """
         )
+        # Check and add parent_id column if missing
+        cursor = await db.execute("PRAGMA table_info(chatrecord)")
+        columns = await cursor.fetchall()
+        column_names = [col[1] for col in columns]
+        if 'parent_id' not in column_names:
+            await db.execute("ALTER TABLE chatrecord ADD COLUMN parent_id INTEGER")
         await db.commit()
         await delete_chatrecord()
 
-async def store_chatrecord(prompt: str, response: str):
-    """Store a single prompt/response pair along with the entire graph positions list"""
+async def store_chatrecord(prompt: str, response: str, parent_id: Optional[int] = None) -> int:
+    """Store a single prompt/response pair along with the parent_id"""
     async with aiosqlite.connect(DB_PATH) as db:
-        await db.execute(
-            "INSERT INTO chatrecord (prompt, response) VALUES (?, ?)",
-            (prompt, response),
+        cursor = await db.execute(
+            "INSERT INTO chatrecord (prompt, response, parent_id) VALUES (?, ?, ?)",
+            (prompt, response, parent_id),
         )
-        logger.info("Chat record saved.")
+        new_id = cursor.lastrowid
         await db.commit()
+        logger.info("Chat record saved with id %d.", new_id)
+        return new_id
 
 async def store_positions(positions: list[dict]):
     """Update each chatrecord row with its current node position.
@@ -48,15 +58,34 @@ async def store_positions(positions: list[dict]):
         logger.info("Updated positions for %d nodes.", len(positions))
         await db.commit()
 
-async def get_chatrecord():
-    """Return list of tuples: (prompt, response, positions:list|None)"""
+async def get_path_history(node_id: int) -> List[Tuple[str, str]]:
+    history = []
     async with aiosqlite.connect(DB_PATH) as db:
-        cursor = await db.execute("SELECT prompt, response, positions FROM chatrecord")
+        current = node_id
+        while current is not None:
+            cursor = await db.execute(
+                "SELECT prompt, response, parent_id FROM chatrecord WHERE id = ?",
+                (current,),
+            )
+            row = await cursor.fetchone()
+            if row is None:
+                break
+            prompt, response, parent_id = row
+            history.append((prompt, response))
+            current = parent_id
+    history.reverse()
+    return history
+
+async def get_chatrecord():
+    """Return list of tuples: (id, prompt, response, positions, parent_id)"""
+    async with aiosqlite.connect(DB_PATH) as db:
+        cursor = await db.execute("SELECT id, prompt, response, positions, parent_id FROM chatrecord")
         rows = await cursor.fetchall()
         parsed = []
-        for prompt, response, pos_json in rows:
+        for row in rows:
+            id_, prompt, response, pos_json, parent_id = row
             positions = json.loads(pos_json) if pos_json else None
-            parsed.append((prompt, response, positions))
+            parsed.append((id_, prompt, response, positions, parent_id))
         logger.info(f"Retrieved chatrecord: {parsed}")
         return parsed
 

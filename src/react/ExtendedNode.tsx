@@ -18,7 +18,7 @@ import {
 import ReactMarkdown from 'react-markdown';
 import { AiOutlineArrowLeft } from 'react-icons/ai';
 import { useSettings } from './SettingsContext';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import useStore from '../typejs/store';
 
 
@@ -30,6 +30,7 @@ export interface ExtendedNodeProps {
 const ExtendedNode: React.FC<ExtendedNodeProps> = ({ data, onClose }) => {
   const location = useLocation() as { state?: { prompt: string; response: string } };
   const navigate = useNavigate();
+  const { id: nodeId } = useParams<{ id: string }>();
   const nodeData = location.state ?? data ?? { prompt: '', response: '' };
   const { sendMessage } = useStore();
   const { backgroundImage, chatNodeColor, fontColor, provider } = useSettings();
@@ -37,7 +38,13 @@ const ExtendedNode: React.FC<ExtendedNodeProps> = ({ data, onClose }) => {
 
   const handleSendMessage = async () => {
     if (inputValue.trim() === '') return;
-    await sendMessage(inputValue, provider);
+    await sendMessage(inputValue, provider, nodeId);
+    setInputValue('');
+  };
+
+  const handleBranch = async () => {
+    if (inputValue.trim() === '') return;
+    await sendMessage(inputValue, provider, nodeId, true);
     setInputValue('');
   };
 
@@ -103,6 +110,9 @@ const ExtendedNode: React.FC<ExtendedNodeProps> = ({ data, onClose }) => {
         />
         <Button onClick={handleSendMessage} {...extendedNodeSendButtonStyle}>
           Send
+        </Button>
+        <Button onClick={handleBranch} ml={2} {...extendedNodeSendButtonStyle}>
+          Branch
         </Button>
       </Flex>
     </Box>

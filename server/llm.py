@@ -4,6 +4,8 @@ import ollama
 from dotenv import load_dotenv
 from server.logger import logger
 from server.dao.sqlite import get_chatrecord
+from typing import Optional
+from server.dao.sqlite import get_path_history
 
 load_dotenv()
 api_key_map={
@@ -14,7 +16,7 @@ api_key_map={
     "ollama": None,  # Ollama doesn't need API key for local models
 }
 
-async def call_llm(user_prompt, provider):
+async def call_llm(user_prompt: str, provider: str, parent_id: Optional[int] = None):
 
     # Get Api Key (except for ollama which runs locally)
     if provider != "ollama":
@@ -22,8 +24,11 @@ async def call_llm(user_prompt, provider):
         if not api_key:
             raise RuntimeError(provider+" API key not set.")
     
-    chat_history = await get_chatrecord()
-    system_prompt = "You are a LLM chat box. Give resposnse within 300 tokens."+ "\n\n"+ "Chat history: " + str(chat_history)
+    if parent_id is not None:
+        chat_history = await get_path_history(parent_id)
+    else:
+        chat_history = []
+    system_prompt = "You are a LLM chat box. Give response within 300 tokens.\n\nChat history: " + str(chat_history)
     
     # For each Provider
     if provider == "google":

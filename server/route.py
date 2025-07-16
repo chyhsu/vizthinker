@@ -34,21 +34,23 @@ def setup_routes(app: FastAPI):
         try:
             # Get provider from request data, default to "google" if not specified
             provider = data.get('provider', 'google')
+            parent_id = data.get('parent_id')
             
             content = await call_llm(
                 user_prompt=data['prompt'],
                 provider=provider,
+                parent_id=parent_id
             )
         except RuntimeError as e:
             raise HTTPException(status_code=400, detail=str(e))
         
         try:
-            await store_chatrecord(data['prompt'], content)
+            new_id = await store_chatrecord(data['prompt'], content, parent_id)
         except Exception as e:
             logger.error(f"Failed to save chat history: {e}", exc_info=True)
             raise HTTPException(status_code=500, detail="Failed to save chat history.")
         
-        return {"response": content}
+        return {"response": content, "new_id": new_id}
 
     @app.post("/chat/positions")
     async def update_positions(request: Request):

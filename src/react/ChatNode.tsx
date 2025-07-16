@@ -12,22 +12,37 @@ import {
 } from '../typejs/style';
 import { useSettings } from './SettingsContext';
 import { Handle, Position } from 'reactflow';
+import useStore from '../typejs/store';
 
-const ChatNode = ({ data }) => {
+const ChatNode = ({ data, id }) => {
   const [isPromptExpanded, setIsPromptExpanded] = useState(false);
   const [isResponseExpanded, setIsResponseExpanded] = useState(false);
   const { chatNodeColor, fontColor } = useSettings();
+  const { selectedNodeId, setSelectedNodeId } = useStore();
   const { prompt, response } = data;
 
   const promptTooLong = prompt.length > 100;
   const responseTooLong = response.length > 100;
+  const isSelected = selectedNodeId === id;
+
+  const handleNodeClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setSelectedNodeId(isSelected ? null : id);
+  };
 
   return (
     <>
       <Handle type="target" position={Position.Top} />
       <VStack
         {...chatNodeVStackStyle}
-        sx={{ backgroundColor: chatNodeColor }}
+        sx={{ 
+          backgroundColor: chatNodeColor,
+          border: isSelected ? '3px solid #4299e1' : '1px solid transparent',
+          boxShadow: isSelected ? '0 0 10px rgba(66, 153, 225, 0.5)' : 'none'
+        }}
+        onClick={handleNodeClick}
+        cursor="pointer"
       >
       {/* User Prompt */}
       <Flex {...chatNodeUserFlexStyle}>
