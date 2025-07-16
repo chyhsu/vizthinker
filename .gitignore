@@ -4,3 +4,4 @@ dist
 server/__pycache__
 server/dao/__pycache__
 vizthink.db
+.env
