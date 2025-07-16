@@ -9,7 +9,6 @@ DB_PATH = os.getenv("VIZTHINK_DB", "vizthink.db")
 async def init_db() -> None:
     logger.info(f"Initializing database at {DB_PATH}")
     async with aiosqlite.connect(DB_PATH) as db:
-        await delete_chatrecord()
         await db.execute(
             """
             CREATE TABLE IF NOT EXISTS chatrecord (
@@ -21,6 +20,7 @@ async def init_db() -> None:
             """
         )
         await db.commit()
+        await delete_chatrecord()
 
 async def store_chatrecord(prompt: str, response: str):
     """Store a single prompt/response pair along with the entire graph positions list"""
