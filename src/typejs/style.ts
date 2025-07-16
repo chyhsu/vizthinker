@@ -96,6 +96,18 @@ export const chatWindowInputStyle: InputProps = {
 export const chatWindowSendButtonStyle: ButtonProps = {
   colorScheme: 'blackAlpha',
 };
+
+
+export const chatWindowBranchBoxStyle: FlexProps = {
+  bg: "blue.100",
+  p: 2,
+  mb: 2,
+  borderRadius: "md",
+  fontSize: "sm",
+  display: "flex",
+  justifyContent: "space-between",
+  alignItems: "center",
+};
 ///////////////////////////////////////////////////////////
 
 ///////////////ExtendedNode///////////////////////////////////

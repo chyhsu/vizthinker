@@ -5,7 +5,8 @@ import {
   chatWindowFlowBoxStyle,
   chatWindowInputFlexStyle,
   chatWindowInputStyle,
-  chatWindowSendButtonStyle
+  chatWindowSendButtonStyle,
+  chatWindowBranchBoxStyle
 } from '../typejs/style';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
@@ -81,6 +82,8 @@ const ChatWindow: React.FC = () => {
           onEdgesChange={onEdgesChange}
           onConnect={onConnect}
           nodeTypes={nodeTypes}
+          onNodeClick={(_, node) => setSelectedNodeId(node.id)}
+          onNodeDoubleClick={(_, node) => navigate(`/chat/${node.id}`)}
           onPaneClick={clearSelection}
           fitView
         >
@@ -95,14 +98,7 @@ const ChatWindow: React.FC = () => {
       <Flex {...chatWindowInputFlexStyle} direction="column">
         {selectedNode && (
           <Box 
-            bg="blue.100" 
-            p={2} 
-            mb={2} 
-            borderRadius="md" 
-            fontSize="sm"
-            display="flex"
-            justifyContent="space-between"
-            alignItems="center"
+            {...chatWindowBranchBoxStyle}
           >
             <Text>
               <strong>Branching from:</strong> {selectedNode.data.prompt.slice(0, 50)}
