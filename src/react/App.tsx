@@ -18,7 +18,6 @@ const App: React.FC = () => {
         <Routes>
           <Route path="/" element={<ChatLayout />}>
             <Route index element={<ChatWindow />} />
-            <Route path="chat/:id" element={<ExtendedNode />} />
           </Route>
           <Route path="/settings" element={<Settings />} />
         </Routes>

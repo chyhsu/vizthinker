@@ -12,6 +12,7 @@ import {
   applyNodeChanges,
   applyEdgeChanges,
   ReactFlowInstance,
+  Viewport, // Add this
 } from 'reactflow';
 
 // Helper function to estimate node height based on content
@@ -130,6 +131,8 @@ export interface StoreState {
   edges: Edge[];
   reactFlowInstance: ReactFlowInstance | null;
   selectedNodeId: string | null;
+  viewport?: Viewport; // Add this
+  extendedNodeId: string | null;
   onNodesChange: OnNodesChange;
   onEdgesChange: OnEdgesChange;
   onConnect: OnConnect;
@@ -137,8 +140,11 @@ export interface StoreState {
   setEdges: (edges: Edge[]) => void;
   setReactFlowInstance: (instance: ReactFlowInstance) => void;
   setSelectedNodeId: (nodeId: string | null) => void;
+  setViewport: (viewport: Viewport) => void; // Add this
+  setExtendedNodeId: (id: string | null) => void;
   fetchInitialData: () => Promise<void>;
   sendMessage: (prompt: string, provider: string, parentId?: string, isBranch?: boolean) => Promise<void>;
+  savePositions: () => Promise<void>; // Add this
 }
 
 const useStore = create<StoreState>()(
@@ -147,6 +153,8 @@ const useStore = create<StoreState>()(
     edges: [],
     reactFlowInstance: null,
     selectedNodeId: null,
+    viewport: undefined, // Add this
+    extendedNodeId: null,
 
     setReactFlowInstance: (instance) => {
       set({ reactFlowInstance: instance });
@@ -156,10 +164,23 @@ const useStore = create<StoreState>()(
       set({ selectedNodeId: nodeId });
     },
 
+    setViewport: (viewport) => {
+      set({ viewport });
+    },
+
+    setExtendedNodeId: (id) => {
+      set({ extendedNodeId: id });
+    },
+
     onNodesChange: (changes) => {
       set((state) => {
         state.nodes = applyNodeChanges(changes, state.nodes);
       });
+      // Add debounced save if position change
+      if (changes.some(c => c.type === 'position')) {
+        if ((get() as any).saveTimeout) clearTimeout((get() as any).saveTimeout);
+        (get() as any).saveTimeout = setTimeout(() => get().savePositions(), 1000);
+      }
     },
 
     onEdgesChange: (changes) => {
@@ -180,6 +201,17 @@ const useStore = create<StoreState>()(
 
     setEdges: (edges) => {
       set({ edges });
+    },
+
+    savePositions: async () => {
+      const { nodes } = get();
+      const sortedNodes = [...nodes].sort((a, b) => parseInt(a.id) - parseInt(b.id));
+      const positions = sortedNodes.map(n => n.position);
+      try {
+        await axios.post('http://127.0.0.1:8000/chat/positions', { positions });
+      } catch (err) {
+        console.error('Error saving positions:', err);
+      }
     },
 
     fetchInitialData: async () => {

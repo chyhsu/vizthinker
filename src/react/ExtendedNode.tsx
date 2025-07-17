@@ -1,19 +1,21 @@
 import React, { useState } from 'react';
 import { Box, Text, IconButton, Flex, VStack, Avatar, Input, Button } from '@chakra-ui/react';
 import {
-  extendedNodeOuterBoxStyle,
   extendedNodeBackButtonStyle,
   extendedNodeCenterFlexStyle,
-  extendedNodeVStackStyle,
-  extendedNodeUserFlexStyle,
-  extendedNodeUserBoxStyle,
-  extendedNodeUserAvatarStyle,
-  extendedNodeAIFlexStyle,
-  extendedNodeAIBoxStyle,
-  extendedNodeAIAvatarStyle,
   extendedNodeInputFlexStyle,
   extendedNodeInputStyle,
-  extendedNodeSendButtonStyle
+  extendedNodeSendButtonStyle,
+  // Add chatNode styles
+  chatNodeVStackStyle,
+  chatNodeUserFlexStyle,
+  chatNodeUserBoxStyle,
+  chatNodeUserAvatarStyle,
+  chatNodeAIFlexStyle,
+  chatNodeAIBoxStyle,
+  chatNodeAIAvatarStyle,
+  // Add settings card style
+  settingsCardBoxStyle
 } from '../typejs/style';
 import ReactMarkdown from 'react-markdown';
 import { AiOutlineArrowLeft } from 'react-icons/ai';
@@ -22,17 +24,14 @@ import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import useStore from '../typejs/store';
 
 
-
 export interface ExtendedNodeProps {
-  data?: { prompt: string; response: string };
-  onClose?: () => void;
+  nodeId: string;
+  onClose: () => void;
 }
-const ExtendedNode: React.FC<ExtendedNodeProps> = ({ data, onClose }) => {
-  const location = useLocation() as { state?: { prompt: string; response: string } };
-  const navigate = useNavigate();
-  const { id: nodeId } = useParams<{ id: string }>();
-  const nodeData = location.state ?? data ?? { prompt: '', response: '' };
-  const { sendMessage } = useStore();
+const ExtendedNode: React.FC<ExtendedNodeProps> = ({ nodeId, onClose }) => {
+  const { nodes, sendMessage } = useStore();
+  const selectedNode = nodeId ? nodes.find(n => n.id === nodeId) : null;
+  const nodeData = selectedNode?.data ?? { prompt: '', response: '' };
   const { backgroundImage, chatNodeColor, fontColor, provider } = useSettings();
   const [inputValue, setInputValue] = useState('');
 
@@ -53,39 +52,52 @@ const ExtendedNode: React.FC<ExtendedNodeProps> = ({ data, onClose }) => {
       handleSendMessage();
     }
   };
+
+  // Helper function to determine if background is dark for text color
+  const isDarkBackground = (bg: string) => {
+    if (bg === '#000000') return true;
+    if (bg === '#ffffff') return false;
+    return false; // Default for image backgrounds
+  };
+
   return (
     <Box
-      {...extendedNodeOuterBoxStyle}
-      {...(backgroundImage.startsWith('#') ? 
-        { bg: backgroundImage } : 
-        {
-          bgImage: backgroundImage,
-          bgPosition: "center",
-          bgRepeat: "no-repeat",
-          bgSize: "cover"
-        }
-      )}
+      position="absolute"
+      top="60px"
+      right="20px"
+      bottom="80px"
+      width="500px"
+      overflowY="auto"
+      zIndex={1000}
+      p={4}
+      borderRadius="xl"
+      boxShadow="2xl"
+      bg={isDarkBackground(backgroundImage) ? 'rgba(0, 0, 0, 0.85)' : 'rgba(255, 255, 255, 0.9)'}
+      color={isDarkBackground(backgroundImage) ? 'white' : 'black'}
     >
       <IconButton
         {...extendedNodeBackButtonStyle}
         icon={<AiOutlineArrowLeft />}
-        onClick={() => (onClose ? onClose() : navigate(-1))}
+        onClick={onClose}
+        mb={4}
       />
-      <Flex {...extendedNodeCenterFlexStyle}>
+      
+      <VStack spacing={6} align="stretch">
+        {/* Chat Node Content */}
         <VStack
-          {...extendedNodeVStackStyle}
+          {...chatNodeVStackStyle}
           sx={{ backgroundColor: chatNodeColor }}
           color={fontColor}
         >
-          <Flex {...extendedNodeUserFlexStyle}>
-            <Box {...extendedNodeUserBoxStyle} color={fontColor}>
+          <Flex {...chatNodeUserFlexStyle}>
+            <Box {...chatNodeUserBoxStyle} color={fontColor}>
               <Text whiteSpace="pre-wrap">{nodeData.prompt}</Text>
             </Box>
-            <Avatar {...extendedNodeUserAvatarStyle} />
+            <Avatar {...chatNodeUserAvatarStyle} />
           </Flex>
-          <Flex {...extendedNodeAIFlexStyle}>
-            <Avatar {...extendedNodeAIAvatarStyle} />
-            <Box {...extendedNodeAIBoxStyle} color={fontColor}>
+          <Flex {...chatNodeAIFlexStyle}>
+            <Avatar {...chatNodeAIAvatarStyle} />
+            <Box {...chatNodeAIBoxStyle} color={fontColor}>
               <ReactMarkdown
               components={{
                 p: ({ children }) => <Text>{children}</Text>,
@@ -99,22 +111,53 @@ const ExtendedNode: React.FC<ExtendedNodeProps> = ({ data, onClose }) => {
             </Box>
           </Flex>
         </VStack>
-      </Flex>
-      <Flex {...extendedNodeInputFlexStyle}>
-        <Input
-          value={inputValue}
-          onChange={(e) => setInputValue(e.target.value)}
-          onKeyUp={handleKeyPress}
-          placeholder="Type your message here..."
-          {...extendedNodeInputStyle}
-        />
-        <Button onClick={handleSendMessage} {...extendedNodeSendButtonStyle}>
-          Send
-        </Button>
-        <Button onClick={handleBranch} ml={2} {...extendedNodeSendButtonStyle}>
-          Branch
-        </Button>
-      </Flex>
+
+        {/* Input Section */}
+        <VStack spacing={4} align="stretch">
+          <Flex>
+            <Input
+              value={inputValue}
+              onChange={(e) => setInputValue(e.target.value)}
+              onKeyUp={handleKeyPress}
+              placeholder="Type your message here..."
+              {...extendedNodeInputStyle}
+              bg="white"
+              borderColor="gray.300"
+              borderWidth="2px"
+              color="black"
+              _placeholder={{ color: "gray.500" }}
+              _hover={{ borderColor: "blue.400" }}
+              _focus={{ borderColor: "blue.500", boxShadow: "0 0 0 1px blue.500" }}
+            />
+          </Flex>
+          <Flex gap={2}>
+            <Button 
+              onClick={handleSendMessage} 
+              flex={1}
+              bg="blue.500"
+              color="white"
+              size="md"
+              borderRadius="md"
+              _hover={{ bg: "blue.600" }}
+              _focus={{ boxShadow: "0 0 0 2px blue.200" }}
+            >
+              Send
+            </Button>
+            <Button 
+              onClick={handleBranch} 
+              flex={1}
+              bg="green.500"
+              color="white"
+              size="md"
+              borderRadius="md"
+              _hover={{ bg: "green.600" }}
+              _focus={{ boxShadow: "0 0 0 2px green.200" }}
+            >
+              Branch
+            </Button>
+          </Flex>
+        </VStack>
+      </VStack>
     </Box>
   );
 };

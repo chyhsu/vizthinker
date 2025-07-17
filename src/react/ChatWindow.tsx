@@ -8,14 +8,14 @@ import {
   chatWindowSendButtonStyle,
   chatWindowBranchBoxStyle
 } from '../typejs/style';
-import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import ReactFlow, { Background, BackgroundVariant } from 'reactflow';
+import ReactFlow, { Background, BackgroundVariant, Viewport } from 'reactflow';
 import 'reactflow/dist/style.css';
 import ChatNode from './ChatNode';
 import HeaderBar from './HeaderBar';
 import { useSettings } from './SettingsContext';
 import useStore from '../typejs/store';
+import ExtendedNode from './ExtendedNode';
 
 const ChatWindow: React.FC = () => {
   const { backgroundImage, provider } = useSettings();
@@ -26,10 +26,9 @@ const ChatWindow: React.FC = () => {
     if (bg === '#ffffff') return false;
     return false; // Default for image backgrounds
   };
-  const { nodes, edges, onNodesChange, onEdgesChange, onConnect, sendMessage, selectedNodeId, setSelectedNodeId } = useStore();
+  const { nodes, edges, onNodesChange, onEdgesChange, onConnect, sendMessage, selectedNodeId, setSelectedNodeId, viewport, setViewport, extendedNodeId, setExtendedNodeId } = useStore();
   const nodeTypes = useMemo(() => ({ chatNode: ChatNode }), []);
   const [inputValue, setInputValue] = useState('');
-  const navigate = useNavigate();
 
   const selectedNode = selectedNodeId ? nodes.find(n => n.id === selectedNodeId) : null;
 
@@ -83,9 +82,20 @@ const ChatWindow: React.FC = () => {
           onConnect={onConnect}
           nodeTypes={nodeTypes}
           onNodeClick={(_, node) => setSelectedNodeId(node.id)}
-          onNodeDoubleClick={(_, node) => navigate(`/chat/${node.id}`)}
+          onNodeDoubleClick={(_, node) => setExtendedNodeId(node.id)}
           onPaneClick={clearSelection}
-          fitView
+          fitView={false}
+          onInit={(instance) => {
+            if (viewport) {
+              instance.setViewport(viewport);
+            } else {
+              instance.fitView({ padding: 0.1, includeHiddenNodes: false });
+            }
+            setTimeout(() => {
+              setViewport(instance.getViewport());
+            }, 500);
+          }}
+          onMoveEnd={(e, vp: Viewport) => setViewport(vp)}
         >
           <Background 
             variant={BackgroundVariant.Dots} 
@@ -95,6 +105,14 @@ const ChatWindow: React.FC = () => {
           />
         </ReactFlow>
       </Box>
+
+      {extendedNodeId && (
+        <ExtendedNode
+          nodeId={extendedNodeId}
+          onClose={() => setExtendedNodeId(null)}
+        />
+      )}
+
       <Flex {...chatWindowInputFlexStyle} direction="column">
         {selectedNode && (
           <Box 
