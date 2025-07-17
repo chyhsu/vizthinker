@@ -145,6 +145,7 @@ export interface StoreState {
   fetchInitialData: () => Promise<void>;
   sendMessage: (prompt: string, provider: string, parentId?: string, isBranch?: boolean) => Promise<void>;
   savePositions: () => Promise<void>; // Add this
+  createWelcome: () => Promise<void>; // Add this
 }
 
 const useStore = create<StoreState>()(
@@ -214,6 +215,30 @@ const useStore = create<StoreState>()(
       }
     },
 
+    createWelcome: async () => {
+      const welcomePrompt = "Welcome to VizThink AI";
+      const welcomeResponse = "Hello! I'm your AI assistant. Type a message below to start.";
+      try {
+        const response = await axios.post('http://127.0.0.1:8000/chat/welcome', {
+          prompt: welcomePrompt,
+          response: welcomeResponse
+        });
+        const newId = response.data.new_id.toString();
+        set((state) => {
+          const newNode = {
+            id: newId,
+            type: 'chatNode',
+            position: { x: 0, y: 0 },
+            data: { prompt: welcomePrompt, response: welcomeResponse }
+          };
+          state.nodes.push(newNode);
+          state.extendedNodeId = newId;
+        });
+      } catch (error) {
+        console.error('Error creating welcome node:', error);
+      }
+    },
+
     fetchInitialData: async () => {
       try {
         const res = await axios.get('http://127.0.0.1:8000/chat/get');
@@ -268,6 +293,9 @@ const useStore = create<StoreState>()(
           }));
 
         set({ nodes: restoredNodes, edges: restoredEdges });
+        if (restoredNodes.length === 0) {
+          await get().createWelcome();
+        }
       } catch (err) {
         console.error('Error restoring chat:', err);
       }

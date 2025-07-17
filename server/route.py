@@ -52,6 +52,14 @@ def setup_routes(app: FastAPI):
         
         return {"response": content, "new_id": new_id}
 
+    @app.post("/chat/welcome")
+    async def create_welcome(request: Request):
+        data = await request.json()
+        prompt = data['prompt']
+        content = data['response']
+        new_id = await store_chatrecord(prompt, content, None)
+        return {"new_id": new_id}
+
     @app.post("/chat/positions")
     async def update_positions(request: Request):
         """Update each chatrecord row with its current node position."""

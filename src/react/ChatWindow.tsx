@@ -28,30 +28,6 @@ const ChatWindow: React.FC = () => {
   };
   const { nodes, edges, onNodesChange, onEdgesChange, onConnect, sendMessage, selectedNodeId, setSelectedNodeId, viewport, setViewport, extendedNodeId, setExtendedNodeId } = useStore();
   const nodeTypes = useMemo(() => ({ chatNode: ChatNode }), []);
-  const [inputValue, setInputValue] = useState('');
-
-  const selectedNode = selectedNodeId ? nodes.find(n => n.id === selectedNodeId) : null;
-
-  const handleSendMessage = async () => {
-    if (inputValue.trim() === '') return;
-    
-    if (selectedNodeId) {
-      // Branch from selected node
-      await sendMessage(inputValue, provider, selectedNodeId, true);
-      setSelectedNodeId(null); // Clear selection after branching
-    } else {
-      // Continue from last node (normal behavior)
-      await sendMessage(inputValue, provider);
-    }
-    setInputValue('');
-  };
-
-  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') {
-      handleSendMessage();
-    }
-  };
-
   const clearSelection = () => {
     setSelectedNodeId(null);
   };
@@ -113,33 +89,19 @@ const ChatWindow: React.FC = () => {
         />
       )}
 
-      <Flex {...chatWindowInputFlexStyle} direction="column">
-        {selectedNode && (
-          <Box 
-            {...chatWindowBranchBoxStyle}
-          >
-            <Text>
-              <strong>Branching from:</strong> {selectedNode.data.prompt.slice(0, 50)}
-              {selectedNode.data.prompt.length > 50 ? '...' : ''}
-            </Text>
-            <Button size="xs" onClick={clearSelection}>
-              Clear
-            </Button>
-          </Box>
-        )}
-        <Flex>
-          <Input
-            value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
-            onKeyUp={handleKeyPress}
-            placeholder={selectedNode ? "Type message to branch from selected node..." : "Type your message here..."}
-            {...chatWindowInputStyle}
-          />
-          <Button onClick={handleSendMessage} {...chatWindowSendButtonStyle}>
-            {selectedNode ? 'Branch' : 'Send'}
+      {selectedNodeId && (
+        <Box 
+          {...chatWindowBranchBoxStyle}
+        >
+          <Text>
+            <strong>Branching from:</strong> {nodes.find(n => n.id === selectedNodeId)?.data.prompt.slice(0, 50)}
+            {nodes.find(n => n.id === selectedNodeId)?.data.prompt.length > 50 ? '...' : ''}
+          </Text>
+          <Button size="xs" onClick={clearSelection}>
+            Clear
           </Button>
-        </Flex>
-      </Flex>
+        </Box>
+      )}
     </Box>
   );
 };
