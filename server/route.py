@@ -5,7 +5,7 @@ from fastapi.responses import FileResponse
 from pathlib import Path
 from server.llm import call_llm
 from server.logger import logger
-from server.dao.sqlite import delete_chatrecord, get_chatrecord, store_chatrecord, store_positions
+from server.dao.sqlite import delete_chatrecord, get_chatrecord, store_chatrecord, store_positions, delete_single_chatrecord
 
 # Define the directory for static files (the 'dist' folder)
 static_files_dir = Path(__file__).resolve().parent.parent / "dist"
@@ -96,6 +96,22 @@ def setup_routes(app: FastAPI):
         except Exception as e:
             logger.error(f"Failed to clear chat history: {e}", exc_info=True)
             raise HTTPException(status_code=500, detail="Failed to clear chat history.")
+    
+    @app.delete("/chat/delete/{node_id}")
+    async def delete_node(node_id: int):
+        """Delete a specific node and all its descendants."""
+        try:
+            success = await delete_single_chatrecord(node_id)
+            if not success:
+                raise HTTPException(status_code=404, detail=f"Node with ID {node_id} not found.")
+            
+            logger.info(f"Node {node_id} and its descendants deleted successfully.")
+            return {"message": f"Node {node_id} and its descendants deleted successfully."}
+        except HTTPException:
+            raise
+        except Exception as e:
+            logger.error(f"Failed to delete node {node_id}: {e}", exc_info=True)
+            raise HTTPException(status_code=500, detail=f"Failed to delete node {node_id}.")
     
     # Catch-all route to serve the main index.html for any other path.
     # This is crucial for single-page applications (SPAs) like React.

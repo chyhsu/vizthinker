@@ -14,6 +14,8 @@ import {
 } from '../typejs/style';
 import { Link } from 'react-router-dom';
 import { useSettings } from './SettingsContext';
+import useStore from '../typejs/store';
+import { useToast } from '@chakra-ui/react';
 import sunset from '../asset/images/20200916_174140.jpg';
 import grassland from '../asset/images/IMG_3995.png';
 import sea from '../asset/images/IMG_4013.png';
@@ -32,6 +34,10 @@ const Settings: React.FC = () => {
     setFontColor,
     setProvider,
   } = useSettings();
+
+  // store context
+  const { clearAllConversations } = useStore();
+  const toast = useToast();
 
   // helper to convert stored rgba color into hex + opacity for the UI controls
   const parseRgba = (rgba: string): { hex: string; opacity: number } => {
@@ -99,6 +105,27 @@ const Settings: React.FC = () => {
     setChatNodeColor(defaultColor);
     setFontColor('#ffffff'); 
     setProvider('google');
+  };
+
+  const handleClearAllConversations = async () => {
+    try {
+      await clearAllConversations();
+      toast({
+        title: "Success",
+        description: "All conversation records have been cleared successfully.",
+        status: "success",
+        duration: 3000,
+        isClosable: true,
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to clear conversation records. Please try again.",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+    }
   };
 
   const backgroundOptions = [
@@ -244,6 +271,20 @@ const Settings: React.FC = () => {
           <Heading {...settingsPreviewHeadingStyle} color={draftFontColor}>Preview Node</Heading>
           <Box color={draftFontColor}>This is how your chat node will look.</Box>
         </Box>
+      </FormControl>
+
+      {/* Clear All Conversations */}
+      <FormControl mb={6}>
+        <FormLabel>Data Management</FormLabel>
+        <Button
+          colorScheme="red"
+          variant="outline"
+          w="100%"
+          onClick={handleClearAllConversations}
+          _hover={{ bg: 'red.50', borderColor: 'red.400' }}
+        >
+          Clear All Conversation Records
+        </Button>
       </FormControl>
 
       {/* Confirm button */}

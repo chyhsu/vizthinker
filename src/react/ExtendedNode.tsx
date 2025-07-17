@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Box, Text, IconButton, Flex, VStack, Avatar, Input, Button } from '@chakra-ui/react';
+import { Box, Text, IconButton, Flex, VStack, Avatar, Input, Button, useToast } from '@chakra-ui/react';
 import {
   extendedNodeBackButtonStyle,
   extendedNodeCenterFlexStyle,
@@ -18,7 +18,7 @@ import {
   settingsCardBoxStyle
 } from '../typejs/style';
 import ReactMarkdown from 'react-markdown';
-import { AiOutlineArrowLeft } from 'react-icons/ai';
+import { AiOutlineArrowLeft, AiOutlineDelete } from 'react-icons/ai';
 import { useSettings } from './SettingsContext';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import useStore from '../typejs/store';
@@ -29,11 +29,13 @@ export interface ExtendedNodeProps {
   onClose: () => void;
 }
 const ExtendedNode: React.FC<ExtendedNodeProps> = ({ nodeId, onClose }) => {
-  const { nodes, sendMessage } = useStore();
+  const { nodes, sendMessage, deleteNode } = useStore();
   const selectedNode = nodeId ? nodes.find(n => n.id === nodeId) : null;
   const nodeData = selectedNode?.data ?? { prompt: '', response: '' };
   const { backgroundImage, chatNodeColor, fontColor, provider } = useSettings();
   const [inputValue, setInputValue] = useState('');
+  const [isDeleting, setIsDeleting] = useState(false);
+  const toast = useToast();
 
   const handleSendMessage = async () => {
     if (inputValue.trim() === '') return;
@@ -45,6 +47,33 @@ const ExtendedNode: React.FC<ExtendedNodeProps> = ({ nodeId, onClose }) => {
     if (inputValue.trim() === '') return;
     await sendMessage(inputValue, provider, nodeId, true);
     setInputValue('');
+  };
+
+  const handleDeleteNode = async () => {
+    if (isDeleting) return;
+    
+    setIsDeleting(true);
+    try {
+      await deleteNode(nodeId);
+      toast({
+        title: "節點已刪除",
+        description: "節點及其所有子節點已成功刪除",
+        status: "success",
+        duration: 3000,
+        isClosable: true,
+      });
+      onClose(); // Close the extended view after deletion
+    } catch (error) {
+      toast({
+        title: "刪除失敗",
+        description: "刪除節點時發生錯誤，請重試",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -75,12 +104,24 @@ const ExtendedNode: React.FC<ExtendedNodeProps> = ({ nodeId, onClose }) => {
       bg={isDarkBackground(backgroundImage) ? 'rgba(0, 0, 0, 0.85)' : 'rgba(255, 255, 255, 0.9)'}
       color={isDarkBackground(backgroundImage) ? 'white' : 'black'}
     >
-      <IconButton
-        {...extendedNodeBackButtonStyle}
-        icon={<AiOutlineArrowLeft />}
-        onClick={onClose}
-        mb={4}
-      />
+      <Flex justify="space-between" align="center" mb={4}>
+        <IconButton
+          {...extendedNodeBackButtonStyle}
+          icon={<AiOutlineArrowLeft />}
+          onClick={onClose}
+          aria-label="返回"
+        />
+        <IconButton
+          aria-label="刪除節點"
+          icon={<AiOutlineDelete />}
+          size="sm"
+          colorScheme="red"
+          variant="solid"
+          onClick={handleDeleteNode}
+          isLoading={isDeleting}
+          _hover={{ transform: 'scale(1.1)' }}
+        />
+      </Flex>
       
       <VStack spacing={6} align="stretch">
         {/* Chat Node Content */}

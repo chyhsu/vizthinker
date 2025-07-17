@@ -146,6 +146,8 @@ export interface StoreState {
   sendMessage: (prompt: string, provider: string, parentId?: string, isBranch?: boolean) => Promise<void>;
   savePositions: () => Promise<void>; // Add this
   createWelcome: () => Promise<void>; // Add this
+  deleteNode: (nodeId: string) => Promise<void>; // Add this
+  clearAllConversations: () => Promise<void>; // Add this
 }
 
 const useStore = create<StoreState>()(
@@ -216,6 +218,19 @@ const useStore = create<StoreState>()(
     },
 
     createWelcome: async () => {
+      const { nodes } = get();
+      
+      // Check if welcome node already exists to prevent duplicates
+      const existingWelcome = nodes.find(node => 
+        node.data?.prompt === "Welcome to VizThink AI" || 
+        node.data?.response?.includes("Hello! I'm your AI assistant")
+      );
+      
+      if (existingWelcome) {
+        console.log('Welcome node already exists, skipping creation');
+        return;
+      }
+
       const welcomePrompt = "Welcome to VizThink AI";
       const welcomeResponse = "Hello! I'm your AI assistant. Type a message below to start.";
       try {
@@ -228,7 +243,7 @@ const useStore = create<StoreState>()(
           const newNode = {
             id: newId,
             type: 'chatNode',
-            position: { x: 0, y: 0 },
+            position: { x: 500, y: 200 },
             data: { prompt: welcomePrompt, response: welcomeResponse }
           };
           state.nodes.push(newNode);
@@ -236,6 +251,81 @@ const useStore = create<StoreState>()(
         });
       } catch (error) {
         console.error('Error creating welcome node:', error);
+      }
+    },
+
+    clearAllConversations: async () => {
+      try {
+        // Clear backend data
+        await axios.post('http://127.0.0.1:8000/chat/clear');
+        
+        // Clear frontend state
+        set((state) => {
+          state.nodes = [];
+          state.edges = [];
+          state.selectedNodeId = null;
+          state.extendedNodeId = null;
+          state.viewport = undefined;
+        });
+
+        // Create a fresh welcome node
+        await get().createWelcome();
+        
+        console.log('All conversations cleared successfully');
+      } catch (error) {
+        console.error('Error clearing conversations:', error);
+        throw error; // Re-throw to allow UI to handle the error
+      }
+    },
+
+    deleteNode: async (nodeId: string) => {
+      try {
+        // Call backend API to delete the node and its descendants
+        await axios.delete(`http://127.0.0.1:8000/chat/delete/${nodeId}`);
+        
+        // Get all descendant node IDs recursively
+        const getAllDescendants = (parentId: string, nodes: Node[], edges: Edge[]): string[] => {
+          const descendants: string[] = [];
+          const directChildren = edges
+            .filter(edge => edge.source === parentId)
+            .map(edge => edge.target);
+          
+          for (const childId of directChildren) {
+            descendants.push(childId);
+            // Recursively get descendants of this child
+            descendants.push(...getAllDescendants(childId, nodes, edges));
+          }
+          
+          return descendants;
+        };
+
+        // Update frontend state
+        set((state) => {
+          const nodesToDelete = [nodeId, ...getAllDescendants(nodeId, state.nodes, state.edges)];
+          
+          // Remove nodes
+          state.nodes = state.nodes.filter(node => !nodesToDelete.includes(node.id));
+          
+          // Remove edges connected to deleted nodes
+          state.edges = state.edges.filter(edge => 
+            !nodesToDelete.includes(edge.source) && !nodesToDelete.includes(edge.target)
+          );
+          
+          // Clear selection if the selected node was deleted
+          if (state.selectedNodeId && nodesToDelete.includes(state.selectedNodeId)) {
+            state.selectedNodeId = null;
+          }
+          
+          // Clear extended node if it was deleted
+          if (state.extendedNodeId && nodesToDelete.includes(state.extendedNodeId)) {
+            state.extendedNodeId = null;
+          }
+        });
+        
+        console.log(`Node ${nodeId} and its descendants deleted successfully.`);
+      } catch (error) {
+        console.error('Error deleting node:', error);
+        throw error;
       }
     },
 
