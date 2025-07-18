@@ -27,6 +27,7 @@ export const PROVIDER_OPTIONS = [
   { value: 'google', label: 'Google' },
   { value: 'openai', label: 'OpenAI' },
   { value: 'anthropic', label: 'Anthropic' },
+  { value: 'ollama', label: 'Ollama' },
 ] as const;
 
 // Color parsing and conversion utilities
