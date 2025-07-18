@@ -44,16 +44,16 @@ const ChatNode = ({ data, id }) => {
     try {
       await deleteNode(id);
       toast({
-        title: "節點已刪除",
-        description: "節點及其所有子節點已成功刪除",
+        title: "Node deleted",
+        description: "Node and all its child nodes have been successfully deleted",
         status: "success",
         duration: 3000,
         isClosable: true,
       });
     } catch (error) {
       toast({
-        title: "刪除失敗",
-        description: "刪除節點時發生錯誤，請重試",
+        title: "Delete failed",
+        description: "Failed to delete node, please try again",
         status: "error",
         duration: 3000,
         isClosable: true,
@@ -80,7 +80,7 @@ const ChatNode = ({ data, id }) => {
         {/* Delete Button - only show when selected */}
         {isSelected && (
           <IconButton
-            aria-label="刪除節點"
+            aria-label="Delete Node"
             icon={<AiOutlineDelete />}
             size="xs"
             colorScheme="red"

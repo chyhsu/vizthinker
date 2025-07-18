@@ -222,7 +222,56 @@ const useStore = create<StoreState>()(
     },
 
     Initailize: async () => {
-      await get().createWelcome();
+      try {
+        // Fetch chat records from backend
+        const response = await axios.get('http://127.0.0.1:8000/chat/get');
+        const chatRecords = response.data.data; // Backend returns {message, data}
+        
+        if (chatRecords && chatRecords.length > 0) {
+          // Convert backend data to React Flow nodes
+          const restoredNodes: Node[] = [];
+          const restoredEdges: Edge[] = [];
+          
+          chatRecords.forEach(([id, prompt, response, positions, parent_id]: [number, string, string, any, number | null]) => {
+            const nodeId = id.toString();
+            
+            // Create node with position from database or default
+            const node: Node = {
+              id: nodeId,
+              type: 'chatNode',
+              position: positions || { x: 500, y: 200 },
+              data: { prompt, response }
+            };
+            restoredNodes.push(node);
+            
+            // Create edge if this node has a parent
+            if (parent_id !== null) {
+              const edge: Edge = {
+                id: `${parent_id}-${id}`,
+                source: parent_id.toString(),
+                target: nodeId,
+                type: 'default'
+              };
+              restoredEdges.push(edge);
+            }
+          });
+          
+          // Update store with restored nodes and edges
+          set((state) => {
+            state.nodes = restoredNodes;
+            state.edges = restoredEdges;
+          });
+          
+          console.log(`Restored ${restoredNodes.length} nodes and ${restoredEdges.length} edges from backend`);
+        } else {
+          // No existing data, create welcome node
+          await get().createWelcome();
+        }
+      } catch (error) {
+        console.error('Error initializing from backend:', error);
+        // Fallback to creating welcome node if backend fails
+        await get().createWelcome();
+      }
     },
 
     sendMessage: async (prompt: string, provider: string, parentId?: string, isBranch: boolean = false) => {

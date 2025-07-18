@@ -12,7 +12,7 @@ const ChatLayoutFlow: React.FC = () => {
   }, [setReactFlowInstance, reactFlowInstance]);
   useEffect(() => {
     Initailize();
-  }, []);
+  }, [Initailize]);
   return <Outlet />;
 };
 
