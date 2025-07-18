@@ -3,7 +3,6 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { Box } from '@chakra-ui/react';
 import ChatWindow from './ChatWindow';
 import { SettingsProvider } from './SettingsContext';
-import Settings from './Settings';
 import ExtendedNode from './ExtendedNode';
 import ChatLayout from './ChatLayout';
 
@@ -19,7 +18,6 @@ const App: React.FC = () => {
           <Route path="/" element={<ChatLayout />}>
             <Route index element={<ChatWindow />} />
           </Route>
-          <Route path="/settings" element={<Settings />} />
         </Routes>
       </Box>
       </BrowserRouter>

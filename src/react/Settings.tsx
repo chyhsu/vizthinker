@@ -1,7 +1,26 @@
 import React from 'react';
-import { Box, Heading, Select, FormControl, FormLabel, Input, Button, VStack, Slider, SliderTrack, SliderFilledTrack, SliderThumb, Flex } from '@chakra-ui/react';
+import { 
+  Modal, 
+  ModalOverlay, 
+  ModalContent, 
+  ModalHeader, 
+  ModalBody, 
+  ModalCloseButton,
+  Box, 
+  Heading, 
+  Select, 
+  FormControl, 
+  FormLabel, 
+  Input, 
+  Button, 
+  VStack, 
+  Slider, 
+  SliderTrack, 
+  SliderFilledTrack, 
+  SliderThumb, 
+  Flex 
+} from '@chakra-ui/react';
 import {
-  settingsOuterBoxStyle,
   settingsCardBoxStyle,
   settingsHeadingStyle,
   settingsFormControlStyle,
@@ -12,7 +31,6 @@ import {
   settingsConfirmButtonStyle,
   settingsResetButtonStyle
 } from '../typejs/style';
-import { Link } from 'react-router-dom';
 import { useSettings } from './SettingsContext';
 import useStore from '../typejs/store';
 import { useToast } from '@chakra-ui/react';
@@ -20,9 +38,15 @@ import sunset from '../asset/images/20200916_174140.jpg';
 import grassland from '../asset/images/IMG_3995.png';
 import sea from '../asset/images/IMG_4013.png';
 import defaultBg from '../asset/images/Icon.jpg';
+
 const defaultColor = 'rgba(0, 0, 0, 0.7)';
 
-const Settings: React.FC = () => {
+interface SettingsModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+}
+
+const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
   // global context
   const {
     backgroundImage,
@@ -60,6 +84,18 @@ const Settings: React.FC = () => {
   const [draftFontColor, setDraftFontColor] = React.useState<string>(fontColor);
   const [draftProvider, setDraftProvider] = React.useState(provider);
 
+  // Reset draft state when modal opens
+  React.useEffect(() => {
+    if (isOpen) {
+      const parsed = parseRgba(chatNodeColor);
+      setDraftBg(backgroundImage || '#ffffff');
+      setDraftColor(parsed.hex);
+      setDraftOpacity(parsed.opacity);
+      setDraftFontColor(fontColor);
+      setDraftProvider(provider);
+    }
+  }, [isOpen, backgroundImage, chatNodeColor, fontColor, provider]);
+
   // Auto-adjust font color based on background
   React.useEffect(() => {
     if (draftBg === '#000000') {
@@ -92,6 +128,7 @@ const Settings: React.FC = () => {
     setChatNodeColor(rgbaColor);
     setFontColor(draftFontColor);
     setProvider(draftProvider);
+    onClose();
   };
 
   const resetDefaults = () => {
@@ -118,6 +155,7 @@ const Settings: React.FC = () => {
         isClosable: true,
       });
     } catch (error) {
+      console.error('Error clearing conversations:', error);
       toast({
         title: "Error",
         description: "Failed to clear conversation records. Please try again.",
@@ -129,174 +167,159 @@ const Settings: React.FC = () => {
   };
 
   const backgroundOptions = [
-    { label: 'Pure White', value: '#ffffff' },
-    { label: 'Pure Black', value: '#000000' },
-    { label: 'Logo Image', value: defaultBg },
-    { label: 'Sunset', value: sunset },
-    { label: 'Grassland', value: grassland },
-    { label: 'Sea', value: sea },
+    { value: '#ffffff', label: 'White' },
+    { value: '#000000', label: 'Black' },
+    { value: sunset, label: 'Sunset' },
+    { value: grassland, label: 'Grassland' },
+    { value: sea, label: 'Sea' },
+    { value: defaultBg, label: 'Default' },
   ];
 
   const providerOptions = [
-    { label: 'Google Gemini', value: 'google' },
-    { label: 'Ollama (Local)', value: 'ollama' },
-    { label: 'OpenAI', value: 'openai' },
-    { label: 'X (Grok)', value: 'x' },
-    { label: 'Anthropic (Claude)', value: 'anthropic' },
+    { value: 'google', label: 'Google' },
+    { value: 'openai', label: 'OpenAI' },
+    { value: 'anthropic', label: 'Anthropic' },
   ];
 
   return (
-    <Box
-      {...settingsOuterBoxStyle}
-      {...(draftBg.startsWith('#') ? 
-        { bg: draftBg } : 
-        {
-          bgImage: `url(${draftBg})`,
-          bgPosition: "center",
-          bgRepeat: "no-repeat",
-          bgSize: "cover"
-        }
-      )}
-    >
-      <Box 
-        {...settingsCardBoxStyle} 
-        boxShadow="2xl" 
-        borderRadius="xl"
-        color={isPureBlack ? 'black' : 'inherit'}
-        sx={{
-          ...(settingsCardBoxStyle.sx || {}),
-          backgroundColor: isPureBlack ? 'rgba(255, 255, 255, 0.75)' : settingsCardBoxStyle.sx?.backgroundColor
-        }}
-      >
-      <Heading {...settingsHeadingStyle}>Settings</Heading>
+    <Modal isOpen={isOpen} onClose={onClose} size="xl" scrollBehavior="inside">
+      <ModalOverlay />
+      <ModalContent maxW="600px" maxH="90vh">
+        <ModalHeader>
+          <Heading {...settingsHeadingStyle}>Settings</Heading>
+        </ModalHeader>
+        <ModalCloseButton />
+        <ModalBody pb={6}>
+          <VStack spacing={6} align="stretch">
+            {/* AI Provider Selection */}
+            <FormControl>
+              <FormLabel>AI Provider</FormLabel>
+              <Select
+                value={draftProvider}
+                onChange={(e) => setDraftProvider(e.target.value as any)}
+                bg="white"
+                borderColor="gray.300"
+                borderWidth="2px"
+                boxShadow="md"
+                _hover={{ borderColor: "blue.400", boxShadow: "lg" }}
+                _focus={{ borderColor: "blue.500", boxShadow: "0 0 0 1px blue.500" }}
+              >
+                {providerOptions.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </option>
+                ))}
+              </Select>
+            </FormControl>
 
-      {/* AI Provider Selection */}
-      <FormControl mb={6}>
-        <FormLabel>AI Provider</FormLabel>
-        <Select
-          value={draftProvider}
-          onChange={(e) => setDraftProvider(e.target.value as any)}
-          bg="white"
-          borderColor="gray.300"
-          borderWidth="2px"
-          boxShadow="md"
-          _hover={{ borderColor: "blue.400", boxShadow: "lg" }}
-          _focus={{ borderColor: "blue.500", boxShadow: "0 0 0 1px blue.500" }}
-        >
-          {providerOptions.map((opt) => (
-            <option key={opt.value} value={opt.value}>
-              {opt.label}
-            </option>
-          ))}
-        </Select>
-      </FormControl>
+            {/* Background Image Selection */}
+            <FormControl>
+              <FormLabel>Chat Window Background</FormLabel>
+              <Select
+                value={draftBg}
+                onChange={(e) => setDraftBg(e.target.value)}
+                bg="white"
+                borderColor="gray.300"
+                borderWidth="2px"
+                boxShadow="md"
+                _hover={{ borderColor: "blue.400", boxShadow: "lg" }}
+                _focus={{ borderColor: "blue.500", boxShadow: "0 0 0 1px blue.500" }}
+              >
+                {backgroundOptions.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </option>
+                ))}
+              </Select>
+            </FormControl>
 
-      {/* Background Image Selection */}
-      <FormControl mb={6}>
-        <FormLabel>Chat Window Background</FormLabel>
-        <Select
-          value={draftBg}
-          onChange={(e) => setDraftBg(e.target.value)}
-          bg="white"
-          borderColor="gray.300"
-          borderWidth="2px"
-          boxShadow="md"
-          _hover={{ borderColor: "blue.400", boxShadow: "lg" }}
-          _focus={{ borderColor: "blue.500", boxShadow: "0 0 0 1px blue.500" }}
-        >
-          {backgroundOptions.map((opt) => (
-            <option key={opt.value} value={opt.value}>
-              {opt.label}
-            </option>
-          ))}
-        </Select>
-      </FormControl>
+            {/* Chat Node Background Color */}
+            <FormControl>
+              <FormLabel>Chat Node Background Color</FormLabel>
+              <Input
+                type="color"
+                value={draftColor}
+                onChange={(e) => setDraftColor(e.target.value)}
+                bg="white"
+                borderColor="gray.300"
+                borderWidth="2px"
+                boxShadow="md"
+                _hover={{ borderColor: "blue.400", boxShadow: "lg" }}
+                _focus={{ borderColor: "blue.500", boxShadow: "0 0 0 1px blue.500" }}
+              />
+            </FormControl>
 
-      {/* Chat Node Background Color */}
-      <FormControl mb={6}>
-        <FormLabel>Chat Node Background Color</FormLabel>
-        <Input
-          type="color"
-          value={draftColor}
-          onChange={(e) => setDraftColor(e.target.value)}
-          bg="white"
-          borderColor="gray.300"
-          borderWidth="2px"
-          boxShadow="md"
-          _hover={{ borderColor: "blue.400", boxShadow: "lg" }}
-          _focus={{ borderColor: "blue.500", boxShadow: "0 0 0 1px blue.500" }}
-        />
-      </FormControl>
+            {/* Font Color */}
+            <FormControl>
+              <FormLabel>Font Color</FormLabel>
+              <Input 
+                type="color" 
+                value={draftFontColor} 
+                onChange={(e)=>setDraftFontColor(e.target.value)}
+                bg="white"
+                borderColor="gray.300"
+                borderWidth="2px"
+                boxShadow="md"
+                _hover={{ borderColor: "blue.400", boxShadow: "lg" }}
+                _focus={{ borderColor: "blue.500", boxShadow: "0 0 0 1px blue.500" }}
+              />
+            </FormControl>
 
-      {/* Font Color */}
-      <FormControl mb={6}>
-        <FormLabel>Font Color</FormLabel>
-        <Input 
-          type="color" 
-          value={draftFontColor} 
-          onChange={(e)=>setDraftFontColor(e.target.value)}
-          bg="white"
-          borderColor="gray.300"
-          borderWidth="2px"
-          boxShadow="md"
-          _hover={{ borderColor: "blue.400", boxShadow: "lg" }}
-          _focus={{ borderColor: "blue.500", boxShadow: "0 0 0 1px blue.500" }}
-        />
-      </FormControl>
+            {/* Opacity */}
+            <FormControl>
+              <FormLabel>Opacity</FormLabel>
+              <Slider
+                min={0}
+                max={1}
+                step={0.05}
+                value={draftOpacity}
+                onChange={setDraftOpacity}
+              >
+                <SliderTrack bg="gray.200" h="6px">
+                  <SliderFilledTrack bg="blue.400" />
+                </SliderTrack>
+                <SliderThumb bg="blue.500" boxShadow="md" _hover={{ transform: "scale(1.1)" }} />
+              </Slider>
+            </FormControl>
 
-      {/* Opacity */}
-      <FormControl mb={6}>
-        <FormLabel>Opacity</FormLabel>
-        <Slider
-          min={0}
-          max={1}
-          step={0.05}
-          value={draftOpacity}
-          onChange={setDraftOpacity}
-        >
-          <SliderTrack bg="gray.200" h="6px">
-            <SliderFilledTrack bg="blue.400" />
-          </SliderTrack>
-          <SliderThumb bg="blue.500" boxShadow="md" _hover={{ transform: "scale(1.1)" }} />
-        </Slider>
-      </FormControl>
+            {/* Live preview */}
+            <FormControl>
+              <FormLabel>Preview</FormLabel>
+              <Box
+                {...settingsPreviewNodeBoxStyle}
+                sx={{ backgroundColor: hexToRgba(draftColor, draftOpacity) }}
+              >
+                <Heading {...settingsPreviewHeadingStyle} color={draftFontColor}>Preview Node</Heading>
+                <Box color={draftFontColor}>This is how your chat node will look.</Box>
+              </Box>
+            </FormControl>
 
-      {/* Live preview */}
-      <FormControl mb={6}>
-        <FormLabel>Preview</FormLabel>
-        <Box
-          {...settingsPreviewNodeBoxStyle}
-          sx={{ backgroundColor: hexToRgba(draftColor, draftOpacity) }}
-        >
-          <Heading {...settingsPreviewHeadingStyle} color={draftFontColor}>Preview Node</Heading>
-          <Box color={draftFontColor}>This is how your chat node will look.</Box>
-        </Box>
-      </FormControl>
+            {/* Clear All Conversations */}
+            <FormControl>
+              <FormLabel>Data Management</FormLabel>
+              <Button
+                colorScheme="red"
+                variant="outline"
+                w="100%"
+                onClick={handleClearAllConversations}
+                _hover={{ bg: 'red.50', borderColor: 'red.400' }}
+              >
+                Clear All Conversation Records
+              </Button>
+            </FormControl>
 
-      {/* Clear All Conversations */}
-      <FormControl mb={6}>
-        <FormLabel>Data Management</FormLabel>
-        <Button
-          colorScheme="red"
-          variant="outline"
-          w="100%"
-          onClick={handleClearAllConversations}
-          _hover={{ bg: 'red.50', borderColor: 'red.400' }}
-        >
-          Clear All Conversation Records
-        </Button>
-      </FormControl>
-
-      {/* Confirm button */}
-      <VStack {...settingsButtonVStackStyle}>
-        <Flex {...settingsButtonFlexStyle}>
-          <Button as={Link} to="/" {...settingsConfirmButtonStyle} onClick={applyChanges}>Confirm</Button>
-          <Button {...settingsResetButtonStyle} onClick={resetDefaults}>Reset</Button>
-        </Flex>
-      </VStack>
-      </Box>
-    </Box>
+            {/* Action buttons */}
+            <VStack {...settingsButtonVStackStyle}>
+              <Flex {...settingsButtonFlexStyle}>
+                <Button {...settingsConfirmButtonStyle} onClick={applyChanges}>Confirm</Button>
+                <Button {...settingsResetButtonStyle} onClick={resetDefaults}>Reset</Button>
+              </Flex>
+            </VStack>
+          </VStack>
+        </ModalBody>
+      </ModalContent>
+    </Modal>
   );
 };
 
-export default Settings;
+export default SettingsModal;
