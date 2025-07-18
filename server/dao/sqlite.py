@@ -31,7 +31,7 @@ async def init_db() -> None:
         # Note: Removed automatic deletion of chat records on startup
         # This was causing issues with duplicate welcome nodes
 
-async def store_chatrecord(prompt: str, response: str, parent_id: Optional[int] = None) -> int:
+async def store_one_chatrecord(prompt: str, response: str, parent_id: Optional[int] = None) -> int:
     """Store a single prompt/response pair along with the parent_id"""
     async with aiosqlite.connect(DB_PATH) as db:
         cursor = await db.execute(
@@ -43,7 +43,7 @@ async def store_chatrecord(prompt: str, response: str, parent_id: Optional[int] 
         logger.info("Chat record saved with id %d.", new_id)
         return new_id
 
-async def store_positions(positions: list[dict]):
+async def store_all_positions(positions: list[dict]):
     """Update each chatrecord row with its current node position.
 
     Assumes the order of ``positions`` matches the chronological order
@@ -77,7 +77,7 @@ async def get_path_history(node_id: int) -> List[Tuple[str, str]]:
     history.reverse()
     return history
 
-async def get_chatrecord():
+async def get_all_chatrecord():
     """Return list of tuples: (id, prompt, response, positions, parent_id)"""
     async with aiosqlite.connect(DB_PATH) as db:
         cursor = await db.execute("SELECT id, prompt, response, positions, parent_id FROM chatrecord")
@@ -89,8 +89,7 @@ async def get_chatrecord():
             parsed.append((id_, prompt, response, positions, parent_id))
         logger.info(f"Retrieved chatrecord: {parsed}")
         return parsed
-
-async def delete_chatrecord():
+async def delete_all_chatrecord():
     async with aiosqlite.connect(DB_PATH) as db:
         await db.execute("DELETE FROM chatrecord")
         await db.commit()

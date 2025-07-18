@@ -36,7 +36,12 @@ setup:
 	else \
 		echo "Virtual environment already exists."; \
 	fi
-
+	@if [ ! -f "vizthink.db" ]; then \
+        echo "Creating SQLite database..."; \
+        touch vizthink.db; \
+    else \
+        echo "Database already exists."; \
+    fi
 # Target to install all dependencies
 install: setup
 	@echo "Checking for Node.js and npm..."
@@ -101,5 +106,5 @@ build:
 # Target to clean up the project
 clean:
 	@echo "Cleaning up project..."
-	@rm -rf node_modules dist .cache .vite $(VENV_DIR)
+	@rm -rf node_modules dist .cache .vite $(VENV_DIR) vizthink.db
 	@echo "Cleanup complete."

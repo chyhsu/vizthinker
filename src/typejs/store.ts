@@ -32,7 +32,7 @@ export interface StoreState {
   setSelectedNodeId: (nodeId: string | null) => void;
   setViewport: (viewport: Viewport) => void; // Add this
   setExtendedNodeId: (id: string | null) => void;
-  fetchInitialData: () => Promise<void>;
+  Initailize: () => Promise<void>;
   sendMessage: (prompt: string, provider: string, parentId?: string, isBranch?: boolean) => Promise<void>;
   savePositions: () => Promise<void>; // Add this
   createWelcome: () => Promise<void>; // Add this
@@ -72,7 +72,7 @@ const useStore = create<StoreState>()(
       // Add debounced save if position change
       if (changes.some(c => c.type === 'position')) {
         if ((get() as any).saveTimeout) clearTimeout((get() as any).saveTimeout);
-        (get() as any).saveTimeout = setTimeout(() => get().savePositions(), 1000);
+        (get() as any).saveTimeout = setTimeout(() => get().savePositions(), 500);
       }
     },
 
@@ -124,9 +124,11 @@ const useStore = create<StoreState>()(
       const welcomePrompt = "Welcome to VizThink AI";
       const welcomeResponse = "Hello! I'm your AI assistant. Type a message below to start.";
       try {
-        const response = await axios.post('http://127.0.0.1:8000/chat/welcome', {
+        const response = await axios.post('http://127.0.0.1:8000/chat/new', {
           prompt: welcomePrompt,
-          response: welcomeResponse
+          response: welcomeResponse,
+          provider: 'google',
+          parent_id: null
         });
         const newId = response.data.new_id.toString();
         set((state) => {
@@ -219,66 +221,8 @@ const useStore = create<StoreState>()(
       }
     },
 
-    fetchInitialData: async () => {
-      try {
-        const res = await axios.get('http://127.0.0.1:8000/chat/get');
-        const rows = res.data.data as Array<[number, string, string, any, number | null]>;
-
-        // Build nodes progressively to calculate proper positions
-        const restoredNodes: Node[] = [];
-        
-        for (const [id, prompt, resp, positions, parent] of rows) {
-          let pos: { x: number; y: number } | undefined;
-          
-          // Use saved positions if available
-          if (Array.isArray(positions)) {
-            pos = positions[positions.length - 1];
-          } else if (positions && typeof positions === 'object') {
-            pos = positions as { x: number; y: number };
-          }
-          
-          // If no saved position, calculate optimal position
-          if (!pos) {
-            const parentNode = parent ? restoredNodes.find(n => n.id === parent.toString()) : undefined;
-            const isBranch = parentNode ? restoredNodes.some(n => 
-              n.id !== parentNode.id && 
-              n.data?.parent_id === parentNode.id
-            ) : false;
-            
-            pos = calculateOptimalPosition(
-              restoredNodes,
-              [], // Use empty array since edges are built after nodes in fetchInitialData
-              parentNode,
-              isBranch,
-              { prompt, response: resp }
-            );
-          }
-          
-          const newNode: Node = {
-            id: id.toString(),
-            type: 'chatNode',
-            position: pos,
-            data: { prompt, response: resp, parent_id: parent?.toString() },
-          };
-          
-          restoredNodes.push(newNode);
-        }
-
-        const restoredEdges = rows
-          .filter(([id, prompt, resp, positions, parent]) => parent !== null)
-          .map(([id, prompt, resp, positions, parent]) => ({
-            id: `e${parent}-${id}`,
-            source: parent!.toString(),
-            target: id.toString(),
-          }));
-
-        set({ nodes: restoredNodes, edges: restoredEdges });
-        if (restoredNodes.length === 0) {
-          await get().createWelcome();
-        }
-      } catch (err) {
-        console.error('Error restoring chat:', err);
-      }
+    Initailize: async () => {
+      await get().createWelcome();
     },
 
     sendMessage: async (prompt: string, provider: string, parentId?: string, isBranch: boolean = false) => {
@@ -339,6 +283,8 @@ const useStore = create<StoreState>()(
         const postData: any = { prompt, provider };
         if (lastNode) {
           postData.parent_id = lastNode.id;
+        }else{
+          postData.parent_id = null;
         }
         const response = await axios.post('http://127.0.0.1:8000/chat/new', postData);
 

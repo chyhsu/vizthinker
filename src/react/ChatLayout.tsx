@@ -4,14 +4,15 @@ import { useReactFlow, ReactFlowProvider } from 'reactflow';
 import useStore from '../typejs/store';
 
 const ChatLayoutFlow: React.FC = () => {
-  const { fetchInitialData, setReactFlowInstance } = useStore();
+  const { Initailize, setReactFlowInstance } = useStore();
   const reactFlowInstance = useReactFlow();
-
+  
   useEffect(() => {
-    fetchInitialData();
     setReactFlowInstance(reactFlowInstance);
-  }, [fetchInitialData, setReactFlowInstance, reactFlowInstance]);
-
+  }, [setReactFlowInstance, reactFlowInstance]);
+  useEffect(() => {
+    Initailize();
+  }, []);
   return <Outlet />;
 };
 

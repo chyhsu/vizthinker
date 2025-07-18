@@ -3,7 +3,7 @@ import google.generativeai as genai
 import ollama
 from dotenv import load_dotenv
 from server.logger import logger
-from server.dao.sqlite import get_chatrecord
+from server.dao.sqlite import get_all_chatrecord
 from typing import Optional
 from server.dao.sqlite import get_path_history
 
