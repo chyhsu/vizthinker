@@ -71,11 +71,10 @@ Dependencies:
   <p align="center">
     <img src="src/asset/images/layout.png" alt="VizThinker graph" width="500" />
   </p>
-  
-  - ✅ Integration with multiple LLM providers (Google, Ollama).
   <p align="center">
     <img src="src/asset/images/extended.png" alt="Input" width="500" />
   </p>
+  - ✅ Integration with multiple LLM providers (Google, Ollama).
   - ✅ Standalone desktop application 
   - ✅ Local session persistence with SQLite.
   - ✅ Customizable settings modal for themes and providers.
