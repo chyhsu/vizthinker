@@ -91,20 +91,6 @@ const ChatWindow: React.FC = () => {
           onClose={() => setExtendedNodeId(null)}
         />
       )}
-
-      {selectedNodeId && (
-        <Box 
-          {...chatWindowBranchBoxStyle}
-        >
-          <Text>
-            <strong>Branching from:</strong> {nodes.find(n => n.id === selectedNodeId)?.data.prompt.slice(0, 50)}
-            {nodes.find(n => n.id === selectedNodeId)?.data.prompt.length > 50 ? '...' : ''}
-          </Text>
-          <Button size="xs" onClick={clearSelection}>
-            Clear
-          </Button>
-        </Box>
-      )}
     </Box>
   );
 };

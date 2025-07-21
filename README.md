@@ -19,8 +19,11 @@ Traditional chatbots like ChatGPT are stuck in a top-down, scroll-heavy rut. Tha
 - **Node-Based Chats**: Start with a root prompt, then add follow-up or branching nodes to dive deep or explore tangents.
 - **Dynamic Graph**: Watch your conversation grow into an interactive graph with clear vertical (deep dive) and horizontal (side quest) connections.
 - **LLM Power**: Send node content to an LLM (like OpenAI) and get responses as new nodes.
-- **Interactive Canvas**: Pan and zoom to navigate your idea graph.
-- **Save & Load**: Store your sessions locally on your desktop and pick up where you left off.
+- **Visually Distinct Branching**: Create follow-up nodes (solid lines) or branching nodes (dotted lines) to organize your thoughts.
+- **Interactive Canvas**: Pan, zoom, and select nodes to navigate your idea graph.
+- **Customizable Experience**: Tailor the look and feel with a settings modal for different LLM providers (OpenAI, Google, Ollama), themes, and colors.
+- **Desktop Native**: Runs as a standalone desktop application for a seamless, focused experience.
+- **Persistent Sessions**: Automatically saves your graph to a local SQLite database and restores it on startup.
 
 
 ## User Stories
@@ -29,7 +32,7 @@ Traditional chatbots like ChatGPT are stuck in a top-down, scroll-heavy rut. Tha
 - As a VizThinker, I want to branch off a specific point in an LLM response to dig into it without losing the main thread.
 - As a VizThinker, I want to save my idea graph locally and revisit it later.
 
-## Installation( Development Stage)
+## Installation & Running
 Dependencies:
 - Node.js
 - Python
@@ -48,32 +51,36 @@ Dependencies:
   make install
   ```
 
-- **3. Run the application**
-  This command starts the backend server and frontend development server.
+- **3. Build the application**
+  This command compiles the frontend code into a static build.
   ```bash
-  make run
+  npm run build
   ```
 
-  Once the servers are running, open your browser and navigate to:
-  ```
-  http://localhost:5173
-  ```
-
-  For more control, you can also run the components separately:
+- **4. Run the Electron App**
+  This command starts the backend server and launches the desktop application.
   ```bash
-  # Run just the backend server:
-  make backend
-
-  # Run just the frontend development server:
-  make frontend
+  npm run electron
   ```
 
 
 ## Roadmap
 
-- **Phase 1 (6 weeks)**: Build the core UI, node system, and LLM integration within Electron.
-- **Phase 2 (4 weeks)**: Polish the graph layout and UI/UX for desktop.
-- **Phase 3 (2 weeks)**: Test with VizThinkers and release the first version.
+- **Phase 1: Core Functionality (Complete)**
+  - ✅ Node-based graph interface with branching logic.
+  - ✅ Integration with multiple LLM providers (OpenAI, Google, Ollama).
+  - ✅ Standalone desktop application powered by Electron.
+  - ✅ Local session persistence with SQLite.
+  - ✅ Customizable settings modal for themes and providers.
+
+- **Phase 2: UI/UX Polish & Advanced Features (In Progress)**
+  - ⏳ Refine graph layout and node interactions.
+  - ⏳ Implement node content editing and styling.
+  - ⏳ Explore automatic graph layout algorithms.
+
+- **Phase 3: Testing & Release**
+  - 📋 Beta testing with fellow VizThinkers.
+  - 🚀 First official release.
 
 ### Future Vibes
 - Drag nodes around and try new graph layouts.
