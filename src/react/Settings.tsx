@@ -363,7 +363,12 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
           <VStack spacing={6} align="stretch">
             {/* AI Provider Selection */}
             <FormControl>
-              <FormLabel>AI Provider</FormLabel>
+              <HStack justify="space-between" align="center" mb={2}>
+                <FormLabel mb={0}>AI Provider</FormLabel>
+                <Badge colorScheme="blue" variant="solid" fontSize="xs">
+                  Currently: {PROVIDER_OPTIONS.find(opt => opt.value === provider)?.label || provider}
+                </Badge>
+              </HStack>
               <Select
                 value={draftProvider}
                 onChange={(e) => setDraftProvider(e.target.value as any)}

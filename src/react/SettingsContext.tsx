@@ -50,7 +50,7 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     return localStorage.getItem('viz_font_color') ?? '#ffffff';
   });
   const [provider, setProvider] = useState<Provider>(() => {
-    return (localStorage.getItem('viz_provider') as Provider) ?? 'google';
+    return (localStorage.getItem('viz_provider') as Provider) ?? 'ollama';
   });
   const [apiKeys, setApiKeysState] = useState<ApiKeys>(() => {
     try {
@@ -78,7 +78,7 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         openai: 'gpt-4o',
         anthropic: 'claude-3-5-sonnet-20241022',
         x: 'grok-beta',
-        ollama: 'gemma2'
+        ollama: 'gemma3n:latest'
       };
     } catch {
       return {
@@ -86,7 +86,7 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         openai: 'gpt-4o',
         anthropic: 'claude-3-5-sonnet-20241022',
         x: 'grok-beta',
-        ollama: 'gemma2'
+        ollama: 'gemma3n:latest'
       };
     }
   });

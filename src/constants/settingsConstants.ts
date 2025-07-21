@@ -35,6 +35,7 @@ export const PROVIDER_OPTIONS = [
   { value: 'openai', label: 'OpenAI' },
   { value: 'anthropic', label: 'Anthropic' },
   { value: 'ollama', label: 'Ollama' },
+  { value: 'x', label: 'X (Grok)' },
 ] as const;
 
 // Model options for each provider
