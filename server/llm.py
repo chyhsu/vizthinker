@@ -44,7 +44,7 @@ async def call_llm(user_prompt: str, provider: str, parent_id: Optional[int] = N
 
             response = await gemini_model.generate_content_async(
                 user_prompt,
-                request_options={"timeout": 10}
+                request_options={'timeout': 30}  # Set a 30-second timeout
             )
 
             logger.info(f"Received response from LLM: {len(response.text)} tokens")
