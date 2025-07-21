@@ -137,7 +137,22 @@ const useStore = create<StoreState>()(
       }
 
       const welcomePrompt = "Welcome to VizThink AI";
-      const welcomeResponse = "Hello! I'm your AI assistant. Type a message below to start.";
+      const tempWelcomeId = `temp_welcome_${Date.now()}`;
+      
+      // Create loading welcome node first
+      set((state) => {
+        const newNode = {
+          id: tempWelcomeId,
+          type: 'chatNode',
+          position: { x: 100, y: 100 }, // Default position
+          data: { prompt: welcomePrompt, response: 'Initializing...', isLoading: true },
+          style: { borderRadius: '1rem', padding: '1rem', width: '350px' },
+          draggable: false, // Prevent dragging during loading
+        };
+        state.nodes.push(newNode);
+        state.extendedNodeId = tempWelcomeId;
+      });
+
       try {
         const postData: any = {
           prompt: welcomePrompt,
@@ -152,20 +167,31 @@ const useStore = create<StoreState>()(
         }
         
         const response = await axios.post('http://127.0.0.1:8000/chat', postData);
-        const newId = response.data.record_id.toString();
+        const actualWelcomeId = response.data.record_id.toString();
+        const welcomeResponse = "Hello! I'm your AI assistant. Type a message below to start.";
+        
         set((state) => {
-          const newNode = {
-            id: newId,
-            type: 'chatNode',
-            position: { x: 100, y: 100 }, // Default position
-            data: { prompt: welcomePrompt, response: welcomeResponse },
-            style: { borderRadius: '1rem', padding: '1rem', width: '350px' },
-          };
-          state.nodes.push(newNode);
-          state.extendedNodeId = newId;
+          const node = state.nodes.find((n) => n.id === tempWelcomeId);
+          if (node) {
+            node.id = actualWelcomeId;
+            node.data.response = welcomeResponse;
+            node.data.isLoading = false; // Clear loading state
+            node.draggable = true; // Re-enable dragging
+          }
+          state.extendedNodeId = actualWelcomeId;
         });
       } catch (error) {
         console.error('Error creating welcome node:', error);
+        // On error, still show a welcome message but without loading
+        const welcomeResponse = "Hello! I'm your AI assistant. Type a message below to start.";
+        set((state) => {
+          const node = state.nodes.find((n) => n.id === tempWelcomeId);
+          if (node) {
+            node.data.response = welcomeResponse;
+            node.data.isLoading = false; // Clear loading state
+            node.draggable = true; // Re-enable dragging
+          }
+        });
       }
     },
 
@@ -314,22 +340,23 @@ const useStore = create<StoreState>()(
         lastNode = nodes[nodes.length - 1];
       }
 
-      // Calculate optimal position using the new algorithm
+      // Calculate optimal position for final content (not placeholder)
       const newNodePosition = calculateOptimalPosition(
         nodes,
         get().edges,
         lastNode,
         isBranch,
-        { prompt, response: '...' }
+        { prompt, response: 'Thinking...' } // Use estimated content for positioning
       );
 
       const tempNewNodeId = `temp_${Date.now()}`;
       const newNode: Node = {
         id: tempNewNodeId,
         type: 'chatNode',
-        position: newNodePosition,
-        data: { prompt, response: '...' },
+        position: newNodePosition, // Fixed position during loading
+        data: { prompt, response: 'Thinking...', isLoading: true },
         style: { borderRadius: '1rem', padding: '1rem', width: '350px' },
+        draggable: false, // Prevent dragging during loading
       };
 
       set((state) => {
@@ -378,16 +405,9 @@ const useStore = create<StoreState>()(
           if (node) {
             node.id = actualNewId;
             node.data.response = aiResponse;
-            
-            // Recalculate position now that we have the actual response content
-            const updatedPosition = calculateOptimalPosition(
-              state.nodes.filter(n => n.id !== tempNewNodeId), // Exclude the current node
-              state.edges,
-              lastNode,
-              isBranch,
-              { prompt, response: aiResponse }
-            );
-            node.position = updatedPosition;
+            node.data.isLoading = false; // Clear loading state
+            node.draggable = true; // Re-enable dragging
+            // Keep the same position to avoid jarring movement
           }
           const edge = state.edges.find((e) => e.target === tempNewNodeId);
           if (edge) {
@@ -396,17 +416,7 @@ const useStore = create<StoreState>()(
           }
         });
 
-        // Center the view on the final position of the new node
-        setTimeout(() => {
-          reactFlowInstance?.fitView({ 
-            nodes: [{ id: actualNewId }], 
-            duration: 800, 
-            padding: 0.1,
-            includeHiddenNodes: false,
-            minZoom: 0.5,
-            maxZoom: 1.2
-          });
-        }, 200);
+        // Don't recenter after response - keep the node in its fixed position
       } catch (error: any) {
         console.error('Error fetching AI response:', error);
         let errorMessage = 'Sorry, an error occurred.';
@@ -422,6 +432,8 @@ const useStore = create<StoreState>()(
           const node = state.nodes.find((n) => n.id === tempNewNodeId);
           if (node) {
             node.data.response = errorMessage;
+            node.data.isLoading = false; // Clear loading state on error
+            node.draggable = true; // Re-enable dragging
           }
         });
       }

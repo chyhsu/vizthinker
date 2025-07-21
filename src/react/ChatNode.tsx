@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
-import { Box, Flex, Text, Avatar, VStack, Button, IconButton, useToast } from '@chakra-ui/react';
+import { Box, Flex, Text, Avatar, VStack, Button, IconButton, useToast, Spinner } from '@chakra-ui/react';
 import {
   chatNodeVStackStyle,
   chatNodeUserFlexStyle,
@@ -22,6 +22,7 @@ interface ChatNodeProps {
   data: {
     prompt: string;
     response: string;
+    isLoading?: boolean;
   };
   id: string;
 }
@@ -32,7 +33,7 @@ const ChatNode: React.FC<ChatNodeProps> = ({ data, id }) => {
   const [isDeleting, setIsDeleting] = useState(false);
   const { chatNodeColor, fontColor } = useSettings();
   const { deleteNode, selectedNodeId, setSelectedNodeId, updateNodeStyle } = useStore();
-  const { prompt, response } = data;
+  const { prompt, response, isLoading } = data;
   const toast = useToast();
 
   const promptTooLong = prompt.length > 100;
@@ -47,10 +48,11 @@ const ChatNode: React.FC<ChatNodeProps> = ({ data, id }) => {
   useEffect(() => {
     updateNodeStyle(id, {
       backgroundColor: chatNodeColor,
-      border: isSelected ? '3px solid #4299e1' : 'none',
-      boxShadow: isSelected ? '0 0 10px rgba(66, 153, 225, 0.5)' : 'none',
+      border: isSelected ? '3px solid #4299e1' : (isLoading ? '2px solid #3182ce' : 'none'),
+      boxShadow: isSelected ? '0 0 10px rgba(66, 153, 225, 0.5)' : (isLoading ? '0 0 15px rgba(49, 130, 206, 0.4)' : 'none'),
+      opacity: isLoading ? 0.8 : 1, // Explicitly reset opacity when not loading
     });
-  }, [id, chatNodeColor, isSelected, updateNodeStyle]);
+  }, [id, chatNodeColor, isSelected, isLoading, updateNodeStyle]);
 
   const handleDeleteNode = async (e: React.MouseEvent) => {
     e.preventDefault();
@@ -94,8 +96,8 @@ const ChatNode: React.FC<ChatNodeProps> = ({ data, id }) => {
         onClick={handleNodeClick}
         cursor="pointer"
       >
-        {/* Delete Button - only show when selected */}
-        {isSelected && (
+        {/* Delete Button - only show when selected and not loading */}
+        {isSelected && !isLoading && (
           <IconButton
             aria-label="Delete Node"
             icon={<AiOutlineDelete />}
@@ -144,50 +146,61 @@ const ChatNode: React.FC<ChatNodeProps> = ({ data, id }) => {
           {...chatNodeAIBoxStyle}
           color={fontColor}
         >
-          <ReactMarkdown
-                        components={{
-                          p: ({ children }) => <Text>{children}</Text>,
-                          strong: ({ children }) => <Text as="strong">{children}</Text>,
-                          em: ({ children }) => <Text as="em">{children}</Text>,
-                          li: ({ children }) => (
-                            <Text as="li" ml={4} listStyleType="disc">
-                              {children}
-                            </Text>
-                          ),
-                          code: ({ inline, className, children, ...props }: any) => {
-                            const match = /language-(\w+)/.exec(className || '');
-                            return !inline && match ? (
-                              <SyntaxHighlighter
-                                style={a11yDark}
-                                language={match[1]}
-                                PreTag="div"
-                                {...props}
-                              >
-                                {String(children).replace(/\n$/, '')}
-                              </SyntaxHighlighter>
-                            ) : (
-                              <chakra.code className={className} {...props}>
-                                {children}
-                              </chakra.code>
-                            );
-                          },
-                        }}
-                        >
-                         {responseTooLong && !isResponseExpanded ? `${response.slice(0, 150)}...` : response}
-                        </ReactMarkdown>
-          {responseTooLong && (
-            <Button
-              size="xs"
-              variant="link"
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                setIsResponseExpanded(!isResponseExpanded);
-              }}
-              mt={1}
-            >
-              {isResponseExpanded ? 'Show Less' : 'Show More'}
-            </Button>
+          {isLoading ? (
+            <Flex align="center" gap={3}>
+              <Spinner size="sm" color="blue.500" />
+              <Text color={fontColor} fontStyle="italic">
+                {response}
+              </Text>
+            </Flex>
+          ) : (
+            <>
+              <ReactMarkdown
+                            components={{
+                              p: ({ children }) => <Text>{children}</Text>,
+                              strong: ({ children }) => <Text as="strong">{children}</Text>,
+                              em: ({ children }) => <Text as="em">{children}</Text>,
+                              li: ({ children }) => (
+                                <Text as="li" ml={4} listStyleType="disc">
+                                  {children}
+                                </Text>
+                              ),
+                              code: ({ inline, className, children, ...props }: any) => {
+                                const match = /language-(\w+)/.exec(className || '');
+                                return !inline && match ? (
+                                  <SyntaxHighlighter
+                                    style={a11yDark}
+                                    language={match[1]}
+                                    PreTag="div"
+                                    {...props}
+                                  >
+                                    {String(children).replace(/\n$/, '')}
+                                  </SyntaxHighlighter>
+                                ) : (
+                                  <chakra.code className={className} {...props}>
+                                    {children}
+                                  </chakra.code>
+                                );
+                              },
+                            }}
+                            >
+                             {responseTooLong && !isResponseExpanded ? `${response.slice(0, 150)}...` : response}
+                            </ReactMarkdown>
+              {responseTooLong && (
+                <Button
+                  size="xs"
+                  variant="link"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setIsResponseExpanded(!isResponseExpanded);
+                  }}
+                  mt={1}
+                >
+                  {isResponseExpanded ? 'Show Less' : 'Show More'}
+                </Button>
+              )}
+            </>
           )}
         </Box>
       </Flex>

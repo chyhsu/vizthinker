@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { Box, Text, IconButton, Flex, VStack, Avatar, Input, Button, useToast, chakra } from '@chakra-ui/react';
+import { Box, Text, IconButton, Flex, VStack, Avatar, Input, Button, useToast, chakra, Spinner } from '@chakra-ui/react';
 import {
   extendedNodeBackButtonStyle,
   extendedNodeCenterFlexStyle,
@@ -33,7 +33,7 @@ export interface ExtendedNodeProps {
 const ExtendedNode: React.FC<ExtendedNodeProps> = ({ nodeId, onClose }) => {
   const { nodes, sendMessage, deleteNode } = useStore();
   const selectedNode = nodeId ? nodes.find(n => n.id === nodeId) : null;
-  const nodeData = selectedNode?.data ?? { prompt: '', response: '' };
+  const nodeData = selectedNode?.data ?? { prompt: '', response: '', isLoading: false };
   const { backgroundImage, chatNodeColor, fontColor, provider, providerModels } = useSettings();
   const [inputValue, setInputValue] = useState('');
   const [isDeleting, setIsDeleting] = useState(false);
@@ -125,6 +125,7 @@ const ExtendedNode: React.FC<ExtendedNodeProps> = ({ nodeId, onClose }) => {
           variant="solid"
           onClick={handleDeleteNode}
           isLoading={isDeleting}
+          isDisabled={nodeData.isLoading}
           _hover={{ transform: 'scale(1.1)' }}
         />
       </Flex>
@@ -140,37 +141,46 @@ const ExtendedNode: React.FC<ExtendedNodeProps> = ({ nodeId, onClose }) => {
           <Flex {...chatNodeAIFlexStyle}>
             <Avatar {...chatNodeAIAvatarStyle} />
             <Box {...chatNodeAIBoxStyle} color={fontColor}>
-              <ReactMarkdown
-              components={{
-                p: ({ children }) => <Text>{children}</Text>,
-                strong: ({ children }) => <Text as="strong">{children}</Text>,
-                em: ({ children }) => <Text as="em">{children}</Text>,
-                li: ({ children }) => (
-                  <Text as="li" ml={4} listStyleType="disc">
-                    {children}
+              {nodeData.isLoading ? (
+                <Flex align="center" gap={3}>
+                  <Spinner size="sm" color="blue.500" />
+                  <Text color={fontColor} fontStyle="italic">
+                    {nodeData.response}
                   </Text>
-                ),
-                code: ({ inline, className, children, ...props }: any) => {
-                  const match = /language-(\w+)/.exec(className || '');
-                  return !inline && match ? (
-                    <SyntaxHighlighter
-                      style={a11yDark}
-                      language={match[1]}
-                      PreTag="div"
-                      {...props}
-                    >
-                      {String(children).replace(/\n$/, '')}
-                    </SyntaxHighlighter>
-                  ) : (
-                    <chakra.code className={className} {...props}>
+                </Flex>
+              ) : (
+                <ReactMarkdown
+                components={{
+                  p: ({ children }) => <Text>{children}</Text>,
+                  strong: ({ children }) => <Text as="strong">{children}</Text>,
+                  em: ({ children }) => <Text as="em">{children}</Text>,
+                  li: ({ children }) => (
+                    <Text as="li" ml={4} listStyleType="disc">
                       {children}
-                    </chakra.code>
-                  );
-                },
-              }}
-              >
-                {nodeData.response}
-              </ReactMarkdown>
+                    </Text>
+                  ),
+                  code: ({ inline, className, children, ...props }: any) => {
+                    const match = /language-(\w+)/.exec(className || '');
+                    return !inline && match ? (
+                      <SyntaxHighlighter
+                        style={a11yDark}
+                        language={match[1]}
+                        PreTag="div"
+                        {...props}
+                      >
+                        {String(children).replace(/\n$/, '')}
+                      </SyntaxHighlighter>
+                    ) : (
+                      <chakra.code className={className} {...props}>
+                        {children}
+                      </chakra.code>
+                    );
+                  },
+                }}
+                >
+                  {nodeData.response}
+                </ReactMarkdown>
+              )}
             </Box>
           </Flex>
         {/* Input Section */}
@@ -201,6 +211,7 @@ const ExtendedNode: React.FC<ExtendedNodeProps> = ({ nodeId, onClose }) => {
               borderRadius="md"
               _hover={{ bg: "blue.600" }}
               _focus={{ boxShadow: "0 0 0 2px blue.200" }}
+              isDisabled={nodeData.isLoading || inputValue.trim() === ''}
             >
               Send
             </Button>
@@ -213,6 +224,7 @@ const ExtendedNode: React.FC<ExtendedNodeProps> = ({ nodeId, onClose }) => {
               borderRadius="md"
               _hover={{ bg: "green.600" }}
               _focus={{ boxShadow: "0 0 0 2px green.200" }}
+              isDisabled={nodeData.isLoading || inputValue.trim() === ''}
             >
               Branch
             </Button>
