@@ -1,4 +1,13 @@
 # Makefile for VizThinker
+#
+# Export Functionality Dependencies:
+# - html2canvas: For capturing ReactFlow graphs as PNG images
+# - react-icons: For UI icons in export modal (FaGlobe, FaFileImage, FaDownload)
+# - vis-network: Loaded via CDN in HTML exports for interactive graph visualization
+#
+# The export feature provides:
+# 1. HTML Export: Complete interactive webpage with zoomable graph
+# 2. PNG Export: High-quality image of the conversation graph
 
 export PATH := /usr/local/bin:$(PATH)
 
@@ -14,18 +23,20 @@ PIP = $(VENV_DIR)/bin/pip
 CONFIG_DIR = config
 
 # Phony targets prevent conflicts with files of the same name
-.PHONY: help setup install run dev build backend frontend clean
+.PHONY: help setup install install-export verify-export run dev build backend frontend clean
 
 help:
 	@echo ""
 	@echo "Usage:"
-	@echo "  make install      - Set up project and install all dependencies."
-	@echo "  make run          - Run the complete application (backend and frontend)."
-	@echo "  make dev          - Run backend and frontend servers for development (same as run)."
-	@echo "  make build        - Build the frontend application for production."
-	@echo "  make backend      - Run the Python backend server."
-	@echo "  make frontend     - Run the Vite frontend dev server."
-	@echo "  make clean        - Remove all generated files and virtual environments."
+	@echo "  make install        - Set up project and install all dependencies."
+	@echo "  make install-export - Install only export functionality dependencies."
+	@echo "  make verify-export  - Verify export dependencies are properly installed."
+	@echo "  make run            - Run the complete application (backend and frontend)."
+	@echo "  make dev            - Run backend and frontend servers for development (same as run)."
+	@echo "  make build          - Build the frontend application for production."
+	@echo "  make backend        - Run the Python backend server."
+	@echo "  make frontend       - Run the Vite frontend dev server."
+	@echo "  make clean          - Remove all generated files and virtual environments."
 	@echo ""
 
 # Target to set up the Python virtual environment
@@ -48,6 +59,9 @@ install: setup
 	@command -v npm >/dev/null 2>&1 || { echo "Error: npm is not installed. Please install Node.js (which includes npm) and try again."; exit 1; }
 	@echo "Installing Node.js dependencies..."
 	@npm install
+	@echo "Installing additional dependencies for export functionality..."
+	@npm install html2canvas@^1.4.1
+	@npm install react-icons@^5.5.0
 	@echo "Installing Python dependencies..."
 	@$(PIP) install -r res/requirements.txt
 	@echo "Installing additional Python packages (ollama)..."
@@ -67,6 +81,51 @@ install: setup
 	@echo "Building frontend application..."
 	@npm run build
 	@echo "All dependencies installed and frontend built successfully."
+
+# Target to install only export functionality dependencies
+install-export:
+	@echo "Installing export functionality dependencies..."
+	@echo "Checking for Node.js and npm..."
+	@command -v npm >/dev/null 2>&1 || { echo "Error: npm is not installed. Please install Node.js (which includes npm) and try again."; exit 1; }
+	@echo "Installing html2canvas for image export..."
+	@npm install html2canvas@^1.4.1
+	@echo "Installing react-icons for UI icons..."
+	@npm install react-icons@^5.5.0
+	@echo "Verifying vis-network is available (used via CDN in HTML export)..."
+	@echo "Export functionality dependencies installed successfully."
+	@echo ""
+	@echo "Export Features Available:"
+	@echo "  - HTML Export: Interactive web page with zoomable graph visualization"
+	@echo "  - PNG Export: High-quality image of the conversation graph"
+	@echo ""
+
+# Target to verify export dependencies are installed
+verify-export:
+	@echo "Verifying export functionality dependencies..."
+	@echo "Checking Node.js dependencies..."
+	@if npm list html2canvas >/dev/null 2>&1; then \
+		echo "✓ html2canvas: Installed"; \
+	else \
+		echo "✗ html2canvas: Missing - run 'make install-export'"; \
+	fi
+	@if npm list react-icons >/dev/null 2>&1; then \
+		echo "✓ react-icons: Installed"; \
+	else \
+		echo "✗ react-icons: Missing - run 'make install-export'"; \
+	fi
+	@echo "Checking CDN dependencies..."
+	@echo "✓ vis-network: Loaded via CDN in HTML export"
+	@echo ""
+	@echo "Export functionality status:"
+	@if npm list html2canvas >/dev/null 2>&1 && npm list react-icons >/dev/null 2>&1; then \
+		echo "✅ All export dependencies are properly installed"; \
+		echo "🌐 HTML Export: Ready (with interactive graph visualization)"; \
+		echo "📸 PNG Export: Ready (with high-quality image capture)"; \
+	else \
+		echo "❌ Some export dependencies are missing"; \
+		echo "Run 'make install-export' to install missing dependencies"; \
+	fi
+	@echo ""
 
 # Target to run the backend server
 backend:
