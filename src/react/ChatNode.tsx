@@ -14,8 +14,19 @@ import { useSettings } from './SettingsContext';
 import { Handle, Position } from 'reactflow';
 import useStore from '../typejs/store';
 import { AiOutlineDelete } from 'react-icons/ai';
+import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
+import { a11yDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
+import { chakra } from '@chakra-ui/react';
 
-const ChatNode = ({ data, id }) => {
+interface ChatNodeProps {
+  data: {
+    prompt: string;
+    response: string;
+  };
+  id: string;
+}
+
+const ChatNode: React.FC<ChatNodeProps> = ({ data, id }) => {
   const [isPromptExpanded, setIsPromptExpanded] = useState(false);
   const [isResponseExpanded, setIsResponseExpanded] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -128,15 +139,36 @@ const ChatNode = ({ data, id }) => {
           color={fontColor}
         >
           <ReactMarkdown
-            components={{
-              p: ({ children }) => <Text>{children}</Text>,
-              strong: ({ children }) => <Text as="strong">{children}</Text>,
-              em: ({ children }) => <Text as="em">{children}</Text>,
-              li: ({ children }) => <Text as="li" ml={4} listStyleType="disc">{children}</Text>,
-            }}
-          >
-            {responseTooLong && !isResponseExpanded ? `${response.slice(0, 150)}...` : response}
-          </ReactMarkdown>
+                        components={{
+                          p: ({ children }) => <Text>{children}</Text>,
+                          strong: ({ children }) => <Text as="strong">{children}</Text>,
+                          em: ({ children }) => <Text as="em">{children}</Text>,
+                          li: ({ children }) => (
+                            <Text as="li" ml={4} listStyleType="disc">
+                              {children}
+                            </Text>
+                          ),
+                          code: ({ inline, className, children, ...props }: any) => {
+                            const match = /language-(\w+)/.exec(className || '');
+                            return !inline && match ? (
+                              <SyntaxHighlighter
+                                style={a11yDark}
+                                language={match[1]}
+                                PreTag="div"
+                                {...props}
+                              >
+                                {String(children).replace(/\n$/, '')}
+                              </SyntaxHighlighter>
+                            ) : (
+                              <chakra.code className={className} {...props}>
+                                {children}
+                              </chakra.code>
+                            );
+                          },
+                        }}
+                        >
+                         {responseTooLong && !isResponseExpanded ? `${response.slice(0, 150)}...` : response}
+                        </ReactMarkdown>
           {responseTooLong && (
             <Button
               size="xs"
