@@ -38,9 +38,9 @@ export interface StoreState {
   Initailize: () => Promise<void>;
   sendMessage: (prompt: string, provider: string, parentId?: string, isBranch?: boolean, model?: string) => Promise<void>;
   savePositions: () => Promise<void>; // Add this
-  createWelcome: () => Promise<void>; // Add this
+  createWelcome: (provider?: string, model?: string) => Promise<void>; // Add this
   deleteNode: (nodeId: string) => Promise<void>; // Add this
-  clearAllConversations: () => Promise<void>; // Add this
+  clearAllConversations: (provider?: string, model?: string) => Promise<void>; // Add this
   updateNodeStyle: (nodeId: string, style: React.CSSProperties) => void;
   exportAsImage: () => Promise<void>;
   exportAsHTML: () => void;
@@ -122,7 +122,7 @@ const useStore = create<StoreState>()(
       }
     },
 
-    createWelcome: async () => {
+    createWelcome: async (provider = 'ollama', model?: string) => {
       const { nodes } = get();
       
       // Check if welcome node already exists to prevent duplicates
@@ -139,12 +139,19 @@ const useStore = create<StoreState>()(
       const welcomePrompt = "Welcome to VizThink AI";
       const welcomeResponse = "Hello! I'm your AI assistant. Type a message below to start.";
       try {
-        const response = await axios.post('http://127.0.0.1:8000/chat', {
+        const postData: any = {
           prompt: welcomePrompt,
-          provider: 'google',
+          provider: provider,
           parent_id: null,
           isBranch: false,
-        });
+        };
+        
+        // Add model if provided
+        if (model) {
+          postData.model = model;
+        }
+        
+        const response = await axios.post('http://127.0.0.1:8000/chat', postData);
         const newId = response.data.record_id.toString();
         set((state) => {
           const newNode = {
@@ -162,7 +169,7 @@ const useStore = create<StoreState>()(
       }
     },
 
-    clearAllConversations: async () => {
+    clearAllConversations: async (provider = 'ollama', model?: string) => {
       try {
         // Clear backend data
         await axios.delete('http://127.0.0.1:8000/chat/records');
@@ -177,7 +184,7 @@ const useStore = create<StoreState>()(
         });
 
         // Create a fresh welcome node
-        await get().createWelcome();
+        await get().createWelcome(provider, model);
         
         console.log('All conversations cleared successfully');
       } catch (error) {
@@ -284,12 +291,12 @@ const useStore = create<StoreState>()(
           console.log(`Restored ${restoredNodes.length} nodes and ${restoredEdges.length} edges from backend`);
         } else {
           // No existing data, create welcome node
-          await get().createWelcome();
+          await get().createWelcome(); // Use default provider (ollama)
         }
       } catch (error) {
         console.error('Error initializing from backend:', error);
         // Fallback to creating welcome node if backend fails
-        await get().createWelcome();
+        await get().createWelcome(); // Use default provider (ollama)
       }
     },
 

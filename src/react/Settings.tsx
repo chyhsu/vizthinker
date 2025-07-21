@@ -215,7 +215,8 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
 
   const handleClearAllConversations = async () => {
     try {
-      await clearAllConversations();
+      const selectedModel = draftProviderModels[draftProvider as keyof typeof draftProviderModels];
+      await clearAllConversations(draftProvider, selectedModel);
       toast(TOAST_MESSAGES.CLEAR_SUCCESS);
     } catch (error) {
       console.error('Error clearing conversations:', error);
