@@ -29,8 +29,8 @@ export const estimateNodeHeight = (prompt: string, response: string): number => 
     const branchOffset = 450; // Increased horizontal offset for more spacing between branches
   
     if (!parentNode) {
-      // First node
-      return { x: 400, y: 50 };
+      // First node - center it in the viewport
+      return { x: 0, y: 0 }; // Center position - ReactFlow will handle the actual centering with fitView
     }
   
     if (isBranch) {

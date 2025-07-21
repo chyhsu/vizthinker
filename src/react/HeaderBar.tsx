@@ -1,13 +1,46 @@
 import React, { useState } from 'react';
-import { Box, Button, Flex, Heading, HStack, Icon } from '@chakra-ui/react';
-import { FaDownload } from 'react-icons/fa';
+import { Box, Button, Flex, Heading, HStack, Icon, useToast } from '@chakra-ui/react';
+import { FaDownload, FaTrash } from 'react-icons/fa';
 import { headerBarOuterBoxStyle, headerBarFlexStyle, headerBarHeadingStyle, headerBarSettingsButtonStyle } from '../typejs/style';
 import SettingsModal from './Settings';
 import ExportModal from './ExportModal';
+import useStore from '../typejs/store';
+import { useSettings } from './SettingsContext';
 
 const HeaderBar: React.FC = () => {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isExportOpen, setIsExportOpen] = useState(false);
+  const [isClearing, setIsClearing] = useState(false);
+  const { clearAllConversations } = useStore();
+  const { provider, providerModels } = useSettings();
+  const toast = useToast();
+
+  const handleClearAll = async () => {
+    if (isClearing) return;
+    
+    setIsClearing(true);
+    try {
+      const selectedModel = providerModels[provider as keyof typeof providerModels];
+      await clearAllConversations(provider, selectedModel);
+      toast({
+        title: "Conversations Cleared",
+        description: "All conversation records have been successfully cleared",
+        status: "success",
+        duration: 3000,
+        isClosable: true,
+      });
+    } catch (error) {
+      toast({
+        title: "Clear Failed", 
+        description: "Failed to clear conversations, please try again",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+    } finally {
+      setIsClearing(false);
+    }
+  };
 
   return (
     <>
@@ -23,6 +56,17 @@ const HeaderBar: React.FC = () => {
               leftIcon={<Icon as={FaDownload} />}
             >
               Export
+            </Button>
+            <Button
+              onClick={handleClearAll}
+              {...headerBarSettingsButtonStyle}
+              leftIcon={<Icon as={FaTrash} />}
+              isLoading={isClearing}
+              colorScheme="red"
+              variant="outline"
+              _hover={{ bg: 'red.50', borderColor: 'red.400' }}
+            >
+              Clear All
             </Button>
             <Button
               onClick={() => setIsSettingsOpen(true)}

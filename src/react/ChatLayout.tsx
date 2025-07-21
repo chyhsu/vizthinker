@@ -8,11 +8,16 @@ const ChatLayoutFlow: React.FC = () => {
   const reactFlowInstance = useReactFlow();
   
   useEffect(() => {
+    // Set the ReactFlow instance first, then initialize
     setReactFlowInstance(reactFlowInstance);
-  }, [setReactFlowInstance, reactFlowInstance]);
-  useEffect(() => {
-    Initailize();
-  }, [Initailize]);
+    // Small delay to ensure the instance is properly set before initializing
+    const timer = setTimeout(() => {
+      Initailize();
+    }, 100);
+    
+    return () => clearTimeout(timer);
+  }, [setReactFlowInstance, reactFlowInstance, Initailize]);
+
   return <Outlet />;
 };
 

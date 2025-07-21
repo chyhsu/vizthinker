@@ -123,7 +123,7 @@ const useStore = create<StoreState>()(
     },
 
     createWelcome: async (provider = 'ollama', model?: string) => {
-      const { nodes } = get();
+      const { nodes, reactFlowInstance } = get();
       
       // Check if welcome node already exists to prevent duplicates
       const existingWelcome = nodes.find(node => 
@@ -139,12 +139,12 @@ const useStore = create<StoreState>()(
       const welcomePrompt = "Welcome to VizThink AI";
       const tempWelcomeId = `temp_welcome_${Date.now()}`;
       
-      // Create loading welcome node first
+      // Create loading welcome node first - positioned in center
       set((state) => {
         const newNode = {
           id: tempWelcomeId,
           type: 'chatNode',
-          position: { x: 100, y: 100 }, // Default position
+          position: { x: 0, y: 0 }, // Center position - will be adjusted by fitView
           data: { prompt: welcomePrompt, response: 'Initializing...', isLoading: true },
           style: { borderRadius: '1rem', padding: '1rem', width: '350px' },
           draggable: false, // Prevent dragging during loading
@@ -152,6 +152,19 @@ const useStore = create<StoreState>()(
         state.nodes.push(newNode);
         state.extendedNodeId = tempWelcomeId;
       });
+
+      // Center the view on the welcome node
+      setTimeout(() => {
+        if (reactFlowInstance) {
+          reactFlowInstance.fitView({ 
+            padding: 0.1, 
+            includeHiddenNodes: false,
+            duration: 500,
+            minZoom: 0.5,
+            maxZoom: 1.5
+          });
+        }
+      }, 100);
 
       try {
         const postData: any = {
@@ -180,6 +193,20 @@ const useStore = create<StoreState>()(
           }
           state.extendedNodeId = actualWelcomeId;
         });
+
+        // Center the view again after the content is loaded
+        setTimeout(() => {
+          if (reactFlowInstance) {
+            reactFlowInstance.fitView({ 
+              padding: 0.1, 
+              includeHiddenNodes: false,
+              duration: 500,
+              minZoom: 0.5,
+              maxZoom: 1.5
+            });
+          }
+        }, 100);
+
       } catch (error) {
         console.error('Error creating welcome node:', error);
         // On error, still show a welcome message but without loading
@@ -192,10 +219,24 @@ const useStore = create<StoreState>()(
             node.draggable = true; // Re-enable dragging
           }
         });
+
+        // Center the view even on error
+        setTimeout(() => {
+          if (reactFlowInstance) {
+            reactFlowInstance.fitView({ 
+              padding: 0.1, 
+              includeHiddenNodes: false,
+              duration: 500,
+              minZoom: 0.5,
+              maxZoom: 1.5
+            });
+          }
+        }, 100);
       }
     },
 
     clearAllConversations: async (provider = 'ollama', model?: string) => {
+      const { reactFlowInstance } = get();
       try {
         // Clear backend data
         await axios.delete('http://127.0.0.1:8000/chat/records');
@@ -211,6 +252,19 @@ const useStore = create<StoreState>()(
 
         // Create a fresh welcome node
         await get().createWelcome(provider, model);
+        
+        // Ensure the view is properly centered after clearing
+        setTimeout(() => {
+          if (reactFlowInstance) {
+            reactFlowInstance.fitView({ 
+              padding: 0.1, 
+              includeHiddenNodes: false,
+              duration: 800,
+              minZoom: 0.5,
+              maxZoom: 1.5
+            });
+          }
+        }, 200);
         
         console.log('All conversations cleared successfully');
       } catch (error) {
@@ -312,6 +366,16 @@ const useStore = create<StoreState>()(
           set((state) => {
             state.nodes = restoredNodes;
             state.edges = restoredEdges;
+            
+            // Find and automatically extend the initial welcome node
+            const welcomeNode = restoredNodes.find(node => 
+              node.data?.prompt === "Welcome to VizThink AI" || 
+              node.data?.response?.includes("Hello! I'm your AI assistant")
+            );
+            
+            if (welcomeNode) {
+              state.extendedNodeId = welcomeNode.id;
+            }
           });
           
           console.log(`Restored ${restoredNodes.length} nodes and ${restoredEdges.length} edges from backend`);
