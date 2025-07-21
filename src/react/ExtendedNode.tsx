@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { Box, Text, IconButton, Flex, VStack, Avatar, Input, Button, useToast } from '@chakra-ui/react';
+import { Box, Text, IconButton, Flex, VStack, Avatar, Input, Button, useToast, chakra } from '@chakra-ui/react';
 import {
   extendedNodeBackButtonStyle,
   extendedNodeCenterFlexStyle,
@@ -18,6 +18,8 @@ import {
   settingsCardBoxStyle
 } from '../typejs/style';
 import ReactMarkdown from 'react-markdown';
+import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
+import { a11yDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import { AiOutlineArrowLeft, AiOutlineDelete } from 'react-icons/ai';
 import { useSettings } from './SettingsContext';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
@@ -82,7 +84,7 @@ const ExtendedNode: React.FC<ExtendedNodeProps> = ({ nodeId, onClose }) => {
     }
   };
 
-  // Helper function to determine if background is dark for text color
+  // Helper function to determine if background is a11yDark for text color
   const isDarkBackground = (bg: string) => {
     if (bg === '#000000') return true;
     if (bg === '#ffffff') return false;
@@ -141,11 +143,32 @@ const ExtendedNode: React.FC<ExtendedNodeProps> = ({ nodeId, onClose }) => {
                 p: ({ children }) => <Text>{children}</Text>,
                 strong: ({ children }) => <Text as="strong">{children}</Text>,
                 em: ({ children }) => <Text as="em">{children}</Text>,
-                li: ({ children }) => <Text as="li" ml={4} listStyleType="disc">{children}</Text>,
+                li: ({ children }) => (
+                  <Text as="li" ml={4} listStyleType="disc">
+                    {children}
+                  </Text>
+                ),
+                code: ({ inline, className, children, ...props }: any) => {
+                  const match = /language-(\w+)/.exec(className || '');
+                  return !inline && match ? (
+                    <SyntaxHighlighter
+                      style={a11yDark}
+                      language={match[1]}
+                      PreTag="div"
+                      {...props}
+                    >
+                      {String(children).replace(/\n$/, '')}
+                    </SyntaxHighlighter>
+                  ) : (
+                    <chakra.code className={className} {...props}>
+                      {children}
+                    </chakra.code>
+                  );
+                },
               }}
-            >
-              {nodeData.response}
-            </ReactMarkdown>
+              >
+                {nodeData.response}
+              </ReactMarkdown>
             </Box>
           </Flex>
         {/* Input Section */}

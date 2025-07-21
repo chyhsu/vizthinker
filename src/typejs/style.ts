@@ -238,7 +238,6 @@ export const chatNodeVStackStyle = {
   align: 'stretch',
   w: '70%',
   minW: '300px',
-  maxW: '800px',
   p: 4,
   borderRadius: '2xl',
 };
