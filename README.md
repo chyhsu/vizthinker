@@ -68,10 +68,21 @@ Dependencies:
 
 - **Phase 1: Core Functionality (Complete)**
   - ✅ Node-based graph interface with branching logic.
+  <p align="center">
+    <img src="src/asset/images/layout.png" alt="VizThinker graph" width="500" />
+  </p>
+  
   - ✅ Integration with multiple LLM providers (Google, Ollama).
-  - ✅ Standalone desktop application powered by Electron.
+  <p align="center">
+    <img src="src/asset/images/extended.png" alt="Input" width="500" />
+  </p>
+  - ✅ Standalone desktop application 
   - ✅ Local session persistence with SQLite.
   - ✅ Customizable settings modal for themes and providers.
+  <p align="center">
+    <img src="src/asset/images/settings.png" alt="VizThinker settings" width="500" />
+  </p>
+
 
 - **Phase 2: UI/UX Polish & Advanced Features (In Progress)**
   - ⏳ Refine graph layout and node interactions.
