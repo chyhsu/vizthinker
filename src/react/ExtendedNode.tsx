@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Box, Text, IconButton, Flex, VStack, Avatar, Input, Button, useToast } from '@chakra-ui/react';
 import {
   extendedNodeBackButtonStyle,
@@ -91,18 +91,20 @@ const ExtendedNode: React.FC<ExtendedNodeProps> = ({ nodeId, onClose }) => {
 
   return (
     <Box
-      position="absolute"
-      top="60px"
-      right="20px"
-      bottom="80px"
+      position="fixed"
+      top="0"
+      right="0"
+      bottom="0"
       width="500px"
-      overflowY="auto"
+      overflow="auto"
+      resize="horizontal"
+      minW="320px"
       zIndex={1000}
       p={4}
       borderRadius="xl"
       boxShadow="2xl"
-      bg={isDarkBackground(backgroundImage) ? 'rgba(0, 0, 0, 0.85)' : 'rgba(255, 255, 255, 0.9)'}
-      color={isDarkBackground(backgroundImage) ? 'white' : 'black'}
+      bg={chatNodeColor}
+      color={fontColor}
     >
       <Flex justify="space-between" align="center" mb={4}>
         <IconButton
@@ -125,11 +127,6 @@ const ExtendedNode: React.FC<ExtendedNodeProps> = ({ nodeId, onClose }) => {
       
       <VStack spacing={6} align="stretch">
         {/* Chat Node Content */}
-        <VStack
-          {...chatNodeVStackStyle}
-          sx={{ backgroundColor: chatNodeColor }}
-          color={fontColor}
-        >
           <Flex {...chatNodeUserFlexStyle}>
             <Box {...chatNodeUserBoxStyle} color={fontColor}>
               <Text whiteSpace="pre-wrap">{nodeData.prompt}</Text>
@@ -151,8 +148,6 @@ const ExtendedNode: React.FC<ExtendedNodeProps> = ({ nodeId, onClose }) => {
             </ReactMarkdown>
             </Box>
           </Flex>
-        </VStack>
-
         {/* Input Section */}
         <VStack spacing={4} align="stretch">
           <Flex>
