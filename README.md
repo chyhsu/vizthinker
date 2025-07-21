@@ -18,10 +18,10 @@ Traditional chatbots like ChatGPT are stuck in a top-down, scroll-heavy rut. Tha
 
 - **Node-Based Chats**: Start with a root prompt, then add follow-up or branching nodes to dive deep or explore tangents.
 - **Dynamic Graph**: Watch your conversation grow into an interactive graph with clear vertical (deep dive) and horizontal (side quest) connections.
-- **LLM Power**: Send node content to an LLM (like OpenAI) and get responses as new nodes.
+- **LLM Power**: Send node content to an LLM (like Google Generative AI) and get responses as new nodes.
 - **Visually Distinct Branching**: Create follow-up nodes (solid lines) or branching nodes (dotted lines) to organize your thoughts.
 - **Interactive Canvas**: Pan, zoom, and select nodes to navigate your idea graph.
-- **Customizable Experience**: Tailor the look and feel with a settings modal for different LLM providers (OpenAI, Google, Ollama), themes, and colors.
+- **Customizable Experience**: Tailor the look and feel with a settings modal for different LLM providers (Google Generative AI, Ollama), themes, and colors.
 - **Desktop Native**: Runs as a standalone desktop application for a seamless, focused experience.
 - **Persistent Sessions**: Automatically saves your graph to a local SQLite database and restores it on startup.
 
@@ -54,13 +54,13 @@ Dependencies:
 - **3. Build the application**
   This command compiles the frontend code into a static build.
   ```bash
-  npm run build
+  make build
   ```
 
-- **4. Run the Electron App**
+- **4. Run the application**
   This command starts the backend server and launches the desktop application.
   ```bash
-  npm run electron
+  make run
   ```
 
 
@@ -68,7 +68,7 @@ Dependencies:
 
 - **Phase 1: Core Functionality (Complete)**
   - ✅ Node-based graph interface with branching logic.
-  - ✅ Integration with multiple LLM providers (OpenAI, Google, Ollama).
+  - ✅ Integration with multiple LLM providers (Google, Ollama).
   - ✅ Standalone desktop application powered by Electron.
   - ✅ Local session persistence with SQLite.
   - ✅ Customizable settings modal for themes and providers.
