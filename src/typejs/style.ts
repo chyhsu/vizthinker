@@ -236,10 +236,6 @@ export const extendedNodeSendButtonStyle = {
 export const chatNodeVStackStyle = {
   spacing: 4,
   align: 'stretch',
-  w: '70%',
-  minW: '300px',
-  p: 4,
-  borderRadius: '2xl',
 };
 
 // User prompt Flex

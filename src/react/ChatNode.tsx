@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { Box, Flex, Text, Avatar, VStack, Button, IconButton, useToast } from '@chakra-ui/react';
 import {
@@ -8,7 +8,7 @@ import {
   chatNodeUserAvatarStyle,
   chatNodeAIFlexStyle,
   chatNodeAIBoxStyle,
-  chatNodeAIAvatarStyle
+  chatNodeAIAvatarStyle,
 } from '../typejs/style';
 import { useSettings } from './SettingsContext';
 import { Handle, Position } from 'reactflow';
@@ -31,7 +31,7 @@ const ChatNode: React.FC<ChatNodeProps> = ({ data, id }) => {
   const [isResponseExpanded, setIsResponseExpanded] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const { chatNodeColor, fontColor } = useSettings();
-  const { selectedNodeId, setSelectedNodeId, deleteNode } = useStore();
+  const { deleteNode, selectedNodeId, setSelectedNodeId, updateNodeStyle } = useStore();
   const { prompt, response } = data;
   const toast = useToast();
 
@@ -40,10 +40,17 @@ const ChatNode: React.FC<ChatNodeProps> = ({ data, id }) => {
   const isSelected = selectedNodeId === id;
 
   const handleNodeClick = (e: React.MouseEvent) => {
-    e.preventDefault();
     e.stopPropagation();
-    setSelectedNodeId(isSelected ? null : id);
+    setSelectedNodeId(id);
   };
+
+  useEffect(() => {
+    updateNodeStyle(id, {
+      backgroundColor: chatNodeColor,
+      border: isSelected ? '3px solid #4299e1' : 'none',
+      boxShadow: isSelected ? '0 0 10px rgba(66, 153, 225, 0.5)' : 'none',
+    });
+  }, [id, chatNodeColor, isSelected, updateNodeStyle]);
 
   const handleDeleteNode = async (e: React.MouseEvent) => {
     e.preventDefault();
@@ -76,13 +83,12 @@ const ChatNode: React.FC<ChatNodeProps> = ({ data, id }) => {
 
   return (
     <>
-      <Handle type="target" position={Position.Top} />
+      <Handle type="target" position={Position.Top} style={{ top: '0%', transform: 'translate(-50%, -50%)' }} />
+      <Handle type="source" position={Position.Right} id="right" style={{ top: '50%', right: '0%', transform: 'translate(50%, -50%)' }} />
+      <Handle type="source" position={Position.Bottom} id="bottom" style={{ bottom: '0%', left: '50%', transform: 'translate(-50%, 50%)' }} />
       <VStack
         {...chatNodeVStackStyle}
         sx={{ 
-          backgroundColor: chatNodeColor,
-          border: isSelected ? '3px solid #4299e1' : '1px solid transparent',
-          boxShadow: isSelected ? '0 0 10px rgba(66, 153, 225, 0.5)' : 'none',
           position: 'relative'
         }}
         onClick={handleNodeClick}

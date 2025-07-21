@@ -38,6 +38,7 @@ export interface StoreState {
   createWelcome: () => Promise<void>; // Add this
   deleteNode: (nodeId: string) => Promise<void>; // Add this
   clearAllConversations: () => Promise<void>; // Add this
+  updateNodeStyle: (nodeId: string, style: React.CSSProperties) => void;
 }
 
 const useStore = create<StoreState>()(
@@ -63,6 +64,15 @@ const useStore = create<StoreState>()(
 
     setExtendedNodeId: (id) => {
       set({ extendedNodeId: id });
+    },
+
+    updateNodeStyle: (nodeId, style) => {
+      set((state) => {
+        const node = state.nodes.find((n) => n.id === nodeId);
+        if (node) {
+          node.style = { ...node.style, ...style };
+        }
+      });
     },
 
     onNodesChange: (changes) => {
@@ -135,8 +145,9 @@ const useStore = create<StoreState>()(
           const newNode = {
             id: newId,
             type: 'chatNode',
-            position: { x: 500, y: 200 },
-            data: { prompt: welcomePrompt, response: welcomeResponse }
+            position: { x: 100, y: 100 }, // Default position
+            data: { prompt: welcomePrompt, response: welcomeResponse },
+            style: { borderRadius: '1rem', padding: '1rem', width: '350px' },
           };
           state.nodes.push(newNode);
           state.extendedNodeId = newId;
@@ -239,8 +250,9 @@ const useStore = create<StoreState>()(
             const node: Node = {
               id: nodeId,
               type: 'chatNode',
-              position: positions || { x: 500, y: 200 },
-              data: { prompt, response }
+              position: positions || { x: 0, y: 0 },
+              data: { prompt, response },
+              style: { borderRadius: '1rem', padding: '1rem', width: '350px' },
             };
             restoredNodes.push(node);
             
@@ -303,16 +315,20 @@ const useStore = create<StoreState>()(
         type: 'chatNode',
         position: newNodePosition,
         data: { prompt, response: '...' },
+        style: { borderRadius: '1rem', padding: '1rem', width: '350px' },
       };
 
       set((state) => {
         state.nodes.push(newNode);
         if (lastNode) {
-          state.edges.push({
+          const newEdge: Edge = {
             id: `e${lastNode.id}-${tempNewNodeId}`,
             source: lastNode.id,
             target: tempNewNodeId,
-          });
+            sourceHandle: isBranch ? 'right' : 'bottom',
+            type: isBranch ? 'branch' : undefined,
+          };
+          state.edges.push(newEdge);
         }
       });
 

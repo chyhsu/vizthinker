@@ -16,6 +16,7 @@ import HeaderBar from './HeaderBar';
 import { useSettings } from './SettingsContext';
 import useStore from '../typejs/store';
 import ExtendedNode from './ExtendedNode';
+import BranchEdge from './BranchEdge';
 
 const ChatWindow: React.FC = () => {
   const { backgroundImage, provider } = useSettings();
@@ -27,7 +28,8 @@ const ChatWindow: React.FC = () => {
     return false; // Default for image backgrounds
   };
   const { nodes, edges, onNodesChange, onEdgesChange, onConnect, sendMessage, selectedNodeId, setSelectedNodeId, viewport, setViewport, extendedNodeId, setExtendedNodeId } = useStore();
-  const nodeTypes = useMemo(() => ({ chatNode: ChatNode }), []);
+    const nodeTypes = useMemo(() => ({ chatNode: ChatNode }), []);
+  const edgeTypes = useMemo(() => ({ branch: BranchEdge }), []);
   const clearSelection = () => {
     setSelectedNodeId(null);
   };
@@ -57,6 +59,7 @@ const ChatWindow: React.FC = () => {
           onEdgesChange={onEdgesChange}
           onConnect={onConnect}
           nodeTypes={nodeTypes}
+          edgeTypes={edgeTypes}
           onNodeClick={(_, node) => setSelectedNodeId(node.id)}
           onNodeDoubleClick={(_, node) => setExtendedNodeId(node.id)}
           onPaneClick={clearSelection}
