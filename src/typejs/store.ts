@@ -138,7 +138,8 @@ const useStore = create<StoreState>()(
           prompt: welcomePrompt,
           response: welcomeResponse,
           provider: 'google',
-          parent_id: null
+          parent_id: null,
+          isBranch: false,
         });
         const newId = response.data.new_id.toString();
         set((state) => {
@@ -243,7 +244,7 @@ const useStore = create<StoreState>()(
           const restoredNodes: Node[] = [];
           const restoredEdges: Edge[] = [];
           
-          chatRecords.forEach(([id, prompt, response, positions, parent_id]: [number, string, string, any, number | null]) => {
+          chatRecords.forEach(([id, prompt, response, positions, parent_id, isBranch]: [number, string, string, any, number | null, boolean]) => {
             const nodeId = id.toString();
             
             // Create node with position from database or default
@@ -262,12 +263,14 @@ const useStore = create<StoreState>()(
                 id: `${parent_id}-${id}`,
                 source: parent_id.toString(),
                 target: nodeId,
-                type: 'default'
+                sourceHandle: isBranch ? 'right' : 'bottom',
+                type: isBranch ? 'branch' : undefined,
               };
               restoredEdges.push(edge);
             }
           });
-          
+          console.log(restoredNodes);
+          console.log(restoredEdges);
           // Update store with restored nodes and edges
           set((state) => {
             state.nodes = restoredNodes;
@@ -345,7 +348,7 @@ const useStore = create<StoreState>()(
       }, 100);
 
       try {
-        const postData: any = { prompt, provider };
+        const postData: any = { prompt, provider, isBranch };
         if (lastNode) {
           postData.parent_id = lastNode.id;
         }else{

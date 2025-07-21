@@ -29,14 +29,17 @@ def setup_routes(app: FastAPI):
         """Send a prompt to the LLM and return its response (and optionally save it)."""
         data = await request.json()
         logger.info(f"Received request data: {data}")
+
         try:
             provider = data.get('provider', 'google')
             parent_id = data.get('parent_id')
             prompt = data.get('prompt')
+            isBranch = data.get('isBranch')
             if parent_id is None:
                 parent_id = None
                 prompt = "Welcome to VizThink AI"
                 content = "Hello! I'm your AI assistant. Type a message below to start."
+                isBranch = False
             else:
                 content = await call_llm(
                     user_prompt=prompt,
@@ -47,7 +50,7 @@ def setup_routes(app: FastAPI):
             raise HTTPException(status_code=400, detail=str(e))
         
         try:
-            new_id = await store_one_chatrecord(prompt, content, parent_id)
+            new_id = await store_one_chatrecord(prompt, content, parent_id, isBranch)
         except Exception as e:
             logger.error(f"Failed to save chat history: {e}", exc_info=True)
             raise HTTPException(status_code=500, detail="Failed to save chat history.")
