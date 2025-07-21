@@ -3,12 +3,21 @@ from fastapi import FastAPI, HTTPException, Request
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from pathlib import Path
+from pydantic import BaseModel
+from typing import Dict
 from server.llm import call_llm
 from server.logger import logger
 from server.dao.sqlite import delete_all_chatrecord, get_all_chatrecord, store_one_chatrecord, store_all_positions, delete_single_chatrecord
 
 # Define the directory for static files (the 'dist' folder)
 static_files_dir = Path(__file__).resolve().parent.parent / "dist"
+
+class ApiKeyUpdate(BaseModel):
+    provider: str
+    api_key: str
+
+class ApiKeysUpdate(BaseModel):
+    api_keys: Dict[str, str]
 
 def setup_routes(app: FastAPI):
     """Set up all routes for the application"""
@@ -23,101 +32,145 @@ def setup_routes(app: FastAPI):
     async def health_check():
         """Simple health endpoint for monitoring."""
         return {"status": "ok"}
-    
-    @app.post("/chat/new")
-    async def query_llm(request: Request):
-        """Send a prompt to the LLM and return its response (and optionally save it)."""
-        data = await request.json()
-        logger.info(f"Received request data: {data}")
 
+    @app.post("/chat")
+    async def chat_endpoint(request: Request):
+        """Handle chat requests and store conversation records."""
         try:
-            provider = data.get('provider', 'google')
-            parent_id = data.get('parent_id')
-            prompt = data.get('prompt')
-            isBranch = data.get('isBranch')
-            if parent_id is None:
-                parent_id = None
-                prompt = "Welcome to VizThink AI"
-                content = "Hello! I'm your AI assistant. Type a message below to start."
-                isBranch = False
-            else:
-                content = await call_llm(
-                    user_prompt=prompt,
-                    provider=provider,
-                    parent_id=parent_id
-                )
-        except RuntimeError as e:
-            raise HTTPException(status_code=400, detail=str(e))
-        
-        try:
-            new_id = await store_one_chatrecord(prompt, content, parent_id, isBranch)
+            body = await request.json()
+            prompt = body.get("prompt", "")
+            provider = body.get("provider", "google")
+            model = body.get("model")  # Optional model specification
+            parent_id = body.get("parent_id")
+            isBranch = body.get("isBranch", False)
+            
+            logger.info(f"Received chat request: prompt='{prompt}', provider='{provider}', model='{model}', parent_id={parent_id}, isBranch={isBranch}")
+            
+            if not prompt:
+                raise HTTPException(status_code=400, detail="Prompt is required")
+            
+            # Call LLM
+            response = await call_llm(prompt, provider, parent_id, model)
+            
+            # Store the conversation
+            record_id = await store_one_chatrecord(prompt, response, parent_id, isBranch)
+            
+            return {
+                "response": response,
+                "record_id": record_id
+            }
+            
         except Exception as e:
-            logger.error(f"Failed to save chat history: {e}", exc_info=True)
-            raise HTTPException(status_code=500, detail="Failed to save chat history.")
-        
-        return {"response": content, "new_id": new_id}
+            logger.error(f"Error in chat endpoint: {e}", exc_info=True)
+            error_message = str(e)
+            if "API key not set" in error_message:
+                raise HTTPException(status_code=400, detail=f"API key not configured for {provider}. Please set it in the settings.")
+            raise HTTPException(status_code=500, detail=f"Internal server error: {error_message}")
 
     @app.post("/chat/positions")
-    async def update_positions(request: Request):
-        """Update each chatrecord row with its current node position."""
-        data = await request.json()
-        positions = data.get("positions", [])
+    async def save_positions_endpoint(request: Request):
+        """Save node positions."""
         try:
+            body = await request.json()
+            positions = body.get("positions", [])
             await store_all_positions(positions)
-            logger.info("Positions updated successfully.")
-            return {"message": "Positions updated successfully."}
+            return {"status": "success"}
         except Exception as e:
-            logger.error(f"Failed to update positions: {e}", exc_info=True)
-            raise HTTPException(status_code=500, detail="Failed to update positions.")
-    
-    @app.get("/chat/get")
-    async def get_chat_history():
-        """Return all chat records along with saved node positions."""
+            logger.error(f"Error saving positions: {e}", exc_info=True)
+            raise HTTPException(status_code=500, detail=str(e))
+
+    @app.get("/chat/records")
+    async def get_chat_records():
+        """Get all chat records."""
         try:
-            rows = await get_all_chatrecord()
-            logger.info("Chat history retrieved successfully.")
-            return {
-                "message": "Chat history retrieved successfully.",
-                "data": rows,
-            }
+            records = await get_all_chatrecord()
+            return {"records": records}
         except Exception as e:
-            logger.error(f"Failed to retrieve chat history: {e}", exc_info=True)
-            raise HTTPException(status_code=500, detail="Failed to retrieve chat history.")
-    @app.post("/chat/clear")
-    async def clear_chat_history():
-        """Deletes all chat records from the database."""
+            logger.error(f"Error getting chat records: {e}", exc_info=True)
+            raise HTTPException(status_code=500, detail=str(e))
+
+    @app.delete("/chat/records")
+    async def delete_all_records():
+        """Delete all chat records."""
         try:
             await delete_all_chatrecord()
-            logger.info("Chat history cleared successfully.")
-            return {"message": "Chat history cleared successfully."}
+            return {"status": "success", "message": "All chat records deleted"}
         except Exception as e:
-            logger.error(f"Failed to clear chat history: {e}", exc_info=True)
-            raise HTTPException(status_code=500, detail="Failed to clear chat history.")
-    
-    @app.delete("/chat/delete/{node_id}")
-    async def delete_node(node_id: int):
-        """Delete a specific node and all its descendants."""
+            logger.error(f"Error deleting all records: {e}", exc_info=True)
+            raise HTTPException(status_code=500, detail=str(e))
+
+    @app.delete("/chat/records/{record_id}")
+    async def delete_record(record_id: int):
+        """Delete a specific chat record and its children."""
         try:
-            success = await delete_single_chatrecord(node_id)
-            if not success:
-                raise HTTPException(status_code=404, detail=f"Node with ID {node_id} not found.")
-            
-            logger.info(f"Node {node_id} and its descendants deleted successfully.")
-            return {"message": f"Node {node_id} and its descendants deleted successfully."}
-        except HTTPException:
-            raise
+            await delete_single_chatrecord(record_id)
+            return {"status": "success", "message": f"Record {record_id} and its children deleted"}
         except Exception as e:
-            logger.error(f"Failed to delete node {node_id}: {e}", exc_info=True)
-            raise HTTPException(status_code=500, detail=f"Failed to delete node {node_id}.")
-    
-    # Catch-all route to serve the main index.html for any other path.
-    # This is crucial for single-page applications (SPAs) like React.
-    # It must be placed after all other API routes.
+            logger.error(f"Error deleting record {record_id}: {e}", exc_info=True)
+            raise HTTPException(status_code=500, detail=str(e))
+
+    @app.post("/settings/api-keys")
+    async def update_api_keys(api_keys_update: ApiKeysUpdate):
+        """Update API keys configuration."""
+        try:
+            import os
+            from dotenv import set_key, find_dotenv
+            
+            # Map frontend provider names to environment variable names
+            env_var_mapping = {
+                "google": "GEMINI_API_KEY",
+                "openai": "OPENAI_API_KEY", 
+                "anthropic": "CLAUDE_API_KEY",
+                "x": "GROK_API_KEY"
+            }
+            
+            # Find or create .env file
+            env_file = find_dotenv()
+            if not env_file:
+                env_file = ".env"
+            
+            # Update environment variables
+            updated_keys = []
+            for provider, api_key in api_keys_update.api_keys.items():
+                if provider in env_var_mapping:
+                    env_var = env_var_mapping[provider]
+                    if api_key.strip():  # Only set non-empty keys
+                        set_key(env_file, env_var, api_key.strip())
+                        # Also update the current process environment
+                        os.environ[env_var] = api_key.strip()
+                        updated_keys.append(provider)
+                        logger.info(f"Updated API key for {provider}")
+                    else:
+                        # Remove empty keys from environment
+                        set_key(env_file, env_var, "")
+                        if env_var in os.environ:
+                            del os.environ[env_var]
+                        logger.info(f"Removed API key for {provider}")
+            
+            # Update the global api_key_map in llm.py
+            from server.llm import api_key_map
+            for provider in env_var_mapping:
+                env_var = env_var_mapping[provider]
+                api_key_map[provider] = os.getenv(env_var)
+            
+            return {
+                "status": "success", 
+                "message": f"API keys updated for providers: {', '.join(updated_keys) if updated_keys else 'none'}",
+                "updated_providers": updated_keys
+            }
+            
+        except Exception as e:
+            logger.error(f"Error updating API keys: {e}", exc_info=True)
+            raise HTTPException(status_code=500, detail=f"Failed to update API keys: {str(e)}")
+
+    # Serve the main React app for all other routes
     @app.get("/{full_path:path}")
     async def serve_react_app(full_path: str):
-        index_path = static_files_dir / "index.html"
-        if not index_path.exists():
-            raise HTTPException(status_code=404, detail="index.html not found")
-        return FileResponse(index_path)
+        """Serve the React application for all unmatched routes."""
+        index_file = static_files_dir / "index.html"
+        if index_file.exists():
+            return FileResponse(index_file)
+        else:
+            raise HTTPException(status_code=404, detail="React app not found. Please run 'npm run build' first.")
 
 

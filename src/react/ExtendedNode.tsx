@@ -34,20 +34,22 @@ const ExtendedNode: React.FC<ExtendedNodeProps> = ({ nodeId, onClose }) => {
   const { nodes, sendMessage, deleteNode } = useStore();
   const selectedNode = nodeId ? nodes.find(n => n.id === nodeId) : null;
   const nodeData = selectedNode?.data ?? { prompt: '', response: '' };
-  const { backgroundImage, chatNodeColor, fontColor, provider } = useSettings();
+  const { backgroundImage, chatNodeColor, fontColor, provider, providerModels } = useSettings();
   const [inputValue, setInputValue] = useState('');
   const [isDeleting, setIsDeleting] = useState(false);
   const toast = useToast();
 
   const handleSendMessage = async () => {
     if (inputValue.trim() === '') return;
-    await sendMessage(inputValue, provider, nodeId);
+    const selectedModel = providerModels[provider as keyof typeof providerModels];
+    await sendMessage(inputValue, provider, nodeId, false, selectedModel);
     setInputValue('');
   };
 
   const handleBranch = async () => {
     if (inputValue.trim() === '') return;
-    await sendMessage(inputValue, provider, nodeId, true);
+    const selectedModel = providerModels[provider as keyof typeof providerModels];
+    await sendMessage(inputValue, provider, nodeId, true, selectedModel);
     setInputValue('');
   };
 

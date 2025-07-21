@@ -36,7 +36,7 @@ export interface StoreState {
   setViewport: (viewport: Viewport) => void; // Add this
   setExtendedNodeId: (id: string | null) => void;
   Initailize: () => Promise<void>;
-  sendMessage: (prompt: string, provider: string, parentId?: string, isBranch?: boolean) => Promise<void>;
+  sendMessage: (prompt: string, provider: string, parentId?: string, isBranch?: boolean, model?: string) => Promise<void>;
   savePositions: () => Promise<void>; // Add this
   createWelcome: () => Promise<void>; // Add this
   deleteNode: (nodeId: string) => Promise<void>; // Add this
@@ -139,14 +139,13 @@ const useStore = create<StoreState>()(
       const welcomePrompt = "Welcome to VizThink AI";
       const welcomeResponse = "Hello! I'm your AI assistant. Type a message below to start.";
       try {
-        const response = await axios.post('http://127.0.0.1:8000/chat/new', {
+        const response = await axios.post('http://127.0.0.1:8000/chat', {
           prompt: welcomePrompt,
-          response: welcomeResponse,
           provider: 'google',
           parent_id: null,
           isBranch: false,
         });
-        const newId = response.data.new_id.toString();
+        const newId = response.data.record_id.toString();
         set((state) => {
           const newNode = {
             id: newId,
@@ -166,7 +165,7 @@ const useStore = create<StoreState>()(
     clearAllConversations: async () => {
       try {
         // Clear backend data
-        await axios.post('http://127.0.0.1:8000/chat/clear');
+        await axios.delete('http://127.0.0.1:8000/chat/records');
         
         // Clear frontend state
         set((state) => {
@@ -190,7 +189,7 @@ const useStore = create<StoreState>()(
     deleteNode: async (nodeId: string) => {
       try {
         // Call backend API to delete the node and its descendants
-        await axios.delete(`http://127.0.0.1:8000/chat/delete/${nodeId}`);
+        await axios.delete(`http://127.0.0.1:8000/chat/records/${nodeId}`);
         
         // Get all descendant node IDs recursively
         const getAllDescendants = (parentId: string, nodes: Node[], edges: Edge[]): string[] => {
@@ -241,8 +240,8 @@ const useStore = create<StoreState>()(
     Initailize: async () => {
       try {
         // Fetch chat records from backend
-        const response = await axios.get('http://127.0.0.1:8000/chat/get');
-        const chatRecords = response.data.data; // Backend returns {message, data}
+        const response = await axios.get('http://127.0.0.1:8000/chat/records');
+        const chatRecords = response.data.records; // Backend returns {records}
         
         if (chatRecords && chatRecords.length > 0) {
           // Convert backend data to React Flow nodes
@@ -294,7 +293,7 @@ const useStore = create<StoreState>()(
       }
     },
 
-    sendMessage: async (prompt: string, provider: string, parentId?: string, isBranch: boolean = false) => {
+    sendMessage: async (prompt: string, provider: string, parentId?: string, isBranch: boolean = false, model?: string) => {
       const { nodes, reactFlowInstance } = get();
       let lastNode: Node | undefined;
 
@@ -359,10 +358,13 @@ const useStore = create<StoreState>()(
         }else{
           postData.parent_id = null;
         }
-        const response = await axios.post('http://127.0.0.1:8000/chat/new', postData);
+        if (model) {
+          postData.model = model;
+        }
+        const response = await axios.post('http://127.0.0.1:8000/chat', postData);
 
         const aiResponse = response.data.response;
-        const actualNewId = response.data.new_id.toString();
+        const actualNewId = response.data.record_id.toString();
 
         set((state) => {
           const node = state.nodes.find((n) => n.id === tempNewNodeId);
@@ -398,12 +400,21 @@ const useStore = create<StoreState>()(
             maxZoom: 1.2
           });
         }, 200);
-      } catch (error) {
+      } catch (error: any) {
         console.error('Error fetching AI response:', error);
+        let errorMessage = 'Sorry, an error occurred.';
+        
+        // Handle specific API key errors
+        if (error.response?.status === 400 && error.response?.data?.detail?.includes('API key')) {
+          errorMessage = `❗ ${error.response.data.detail}\n\nPlease configure your API key in Settings.`;
+        } else if (error.response?.status === 500) {
+          errorMessage = 'Sorry, the AI service is temporarily unavailable. Please try again later.';
+        }
+        
         set((state) => {
           const node = state.nodes.find((n) => n.id === tempNewNodeId);
           if (node) {
-            node.data.response = 'Sorry, an error occurred.';
+            node.data.response = errorMessage;
           }
         });
       }

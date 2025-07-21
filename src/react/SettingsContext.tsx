@@ -3,15 +3,36 @@ import React, { createContext, useContext, useState } from 'react';
 // Types ----------------------------------------------------
 type Provider = 'google' | 'ollama' | 'openai' | 'x' | 'anthropic';
 
+interface ApiKeys {
+  google: string;
+  openai: string;
+  anthropic: string;
+  x: string;
+}
+
+interface ProviderModels {
+  google: string;
+  openai: string;
+  anthropic: string;
+  x: string;
+  ollama: string;
+}
+
 interface SettingsContextProps {
   backgroundImage: string;
   chatNodeColor: string;
   fontColor: string;
   provider: Provider;
+  apiKeys: ApiKeys;
+  providerModels: ProviderModels;
   setFontColor: (color: string) => void;
   setBackgroundImage: (url: string) => void;
   setChatNodeColor: (color: string) => void;
   setProvider: (provider: Provider) => void;
+  setApiKey: (provider: keyof ApiKeys, key: string) => void;
+  setApiKeys: (keys: Partial<ApiKeys>) => void;
+  setProviderModel: (provider: keyof ProviderModels, model: string) => void;
+  setProviderModels: (models: Partial<ProviderModels>) => void;
 }
 
 // Context --------------------------------------------------
@@ -31,8 +52,76 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const [provider, setProvider] = useState<Provider>(() => {
     return (localStorage.getItem('viz_provider') as Provider) ?? 'google';
   });
+  const [apiKeys, setApiKeysState] = useState<ApiKeys>(() => {
+    try {
+      const stored = localStorage.getItem('viz_api_keys');
+      return stored ? JSON.parse(stored) : {
+        google: '',
+        openai: '',
+        anthropic: '',
+        x: ''
+      };
+    } catch {
+      return {
+        google: '',
+        openai: '',
+        anthropic: '',
+        x: ''
+      };
+    }
+  });
+  const [providerModels, setProviderModelsState] = useState<ProviderModels>(() => {
+    try {
+      const stored = localStorage.getItem('viz_provider_models');
+      return stored ? JSON.parse(stored) : {
+        google: 'gemini-2.0-flash-exp',
+        openai: 'gpt-4o',
+        anthropic: 'claude-3-5-sonnet-20241022',
+        x: 'grok-beta',
+        ollama: 'gemma2'
+      };
+    } catch {
+      return {
+        google: 'gemini-2.0-flash-exp',
+        openai: 'gpt-4o',
+        anthropic: 'claude-3-5-sonnet-20241022',
+        x: 'grok-beta',
+        ollama: 'gemma2'
+      };
+    }
+  });
 
+  // Helper function to set individual API key
+  const setApiKey = (provider: keyof ApiKeys, key: string) => {
+    setApiKeysState(prev => ({
+      ...prev,
+      [provider]: key
+    }));
+  };
 
+  // Helper function to set multiple API keys
+  const updateApiKeys = (keys: Partial<ApiKeys>) => {
+    setApiKeysState(prev => ({
+      ...prev,
+      ...keys
+    }));
+  };
+
+  // Helper function to set individual provider model
+  const setProviderModel = (provider: keyof ProviderModels, model: string) => {
+    setProviderModelsState(prev => ({
+      ...prev,
+      [provider]: model
+    }));
+  };
+
+  // Helper function to set multiple provider models
+  const updateProviderModels = (models: Partial<ProviderModels>) => {
+    setProviderModelsState(prev => ({
+      ...prev,
+      ...models
+    }));
+  };
 
   // Persist to localStorage whenever they change
   React.useEffect(() => {
@@ -51,6 +140,14 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     localStorage.setItem('viz_provider', provider);
   }, [provider]);
 
+  React.useEffect(() => {
+    localStorage.setItem('viz_api_keys', JSON.stringify(apiKeys));
+  }, [apiKeys]);
+
+  React.useEffect(() => {
+    localStorage.setItem('viz_provider_models', JSON.stringify(providerModels));
+  }, [providerModels]);
+
   return (
     <SettingsContext.Provider
       value={{
@@ -58,10 +155,16 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         chatNodeColor,
         fontColor,
         provider,
+        apiKeys,
+        providerModels,
         setBackgroundImage,
         setChatNodeColor,
         setFontColor,
         setProvider,
+        setApiKey,
+        setApiKeys: updateApiKeys,
+        setProviderModel,
+        setProviderModels: updateProviderModels,
       }}
     >
       {children}
