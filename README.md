@@ -2,17 +2,17 @@
   <img src="src/asset/images/Title.jpg" alt="VizThinker logo" width="1000" />
 </p>
 
-# VizThink AI
+# VizThinker AI
 
 A desktop app for visual thinkers, powered by LLMs, that swaps the linear chat format for a dynamic, node-based graph. Explore ideas the way your brain does—branching, connecting, and visualizing concepts in an interactive canvas.
 
 ## Are You a VizThinker?
 
-A VizThinker is someone whose brain loves to map ideas like a web, not a straight line. You’re the type who doodles mind maps, sees connections everywhere, and gets frustrated scrolling through endless chat threads to find that *one* key point. VizThink AI is built for you—turning your chats with an AI into a visual graph where ideas flow, branch, and connect, just like your thoughts do.
+A VizThinker is someone whose brain loves to map ideas like a web, not a straight line. You’re the type who doodles mind maps, sees connections everywhere, and gets frustrated scrolling through endless chat threads to find that *one* key point. VizThinker AI is built for you—turning your chats with an AI into a visual graph where ideas flow, branch, and connect, just like your thoughts do.
 
 ## What's the Big Idea?
 
-Traditional chatbots like ChatGPT are stuck in a top-down, scroll-heavy rut. That’s rough for VizThinkers who see ideas as a network of connections. VizThink AI lets you interact with an LLM through a node-based interface where every prompt, response, or follow-up becomes a node in a graph. Dig deeper into a topic (vertical nodes) or branch off to explore related ideas (horizontal nodes), all while seeing your thought process come to life as a visual map.
+Traditional chatbots like ChatGPT are stuck in a top-down, scroll-heavy rut. That’s rough for VizThinkers who see ideas as a network of connections. VizThinker AI lets you interact with an LLM through a node-based interface where every prompt, response, or follow-up becomes a node in a graph. Dig deeper into a topic (vertical nodes) or branch off to explore related ideas (horizontal nodes), all while seeing your thought process come to life as a visual map.
 
 ## Key Features
 
@@ -101,7 +101,7 @@ Dependencies:
 
 ## Why It Rocks
 
-VizThink AI is built for folks who think in networks, not lists. It’s a game-changer for brainstorming, research, or just exploring big ideas on your desktop. We’re starting simple but aiming big—join us to make thinking with AI as visual as your imagination!
+VizThinker AI is built for folks who think in networks, not lists. It’s a game-changer for brainstorming, research, or just exploring big ideas on your desktop. We’re starting simple but aiming big—join us to make thinking with AI as visual as your imagination!
 
 ## Contributing
 

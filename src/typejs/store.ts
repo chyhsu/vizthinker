@@ -132,10 +132,10 @@ const useStore = create<StoreState>()(
         return;
       }
 
-      const welcomePrompt = "Hi there! What is VizThink?";
+      const welcomePrompt = "Hi there! What is VizThinker?";
       const actualWelcomeId = '0'
       const welcomeResponse = `
-# Welcome to VizThink!\n\nVizThink is a new way to interact with AI. Instead of a linear chat, your conversation becomes a **dynamic thinking map**.\n\n### Key Features:\n\n*   **Graph-Based Chat**: Each prompt and response creates a new node in the graph, visualizing the flow of your ideas.\n*   **Branching Conversations**: Explore different lines of thought by creating branches from any node.\n*   **Interactive Map**: Pan and zoom around your conversation map. Single-click to select a node, and double-click to see more details.\n*   **Export Your Map**: Save your thinking map as an image or an HTML file to share or review later.\n\nTo get started, just type a message below!\n`;
+# Welcome to VizThinker!\n\nVizThink is a new way to interact with AI. Instead of a linear chat, your conversation becomes a **dynamic thinking map**.\n\n### Key Features:\n\n*   **Graph-Based Chat**: Each prompt and response creates a new node in the graph, visualizing the flow of your ideas.\n*   **Branching Conversations**: Explore different lines of thought by creating branches from any node.\n*   **Interactive Map**: Pan and zoom around your conversation map. Single-click to select a node, and double-click to see more details.\n*   **Export Your Map**: Save your thinking map as an image or an HTML file to share or review later.\n\nTo get started, just type a message below!\n`;
       
       // Create loading welcome node first - positioned in center
       set((state) => {
@@ -300,7 +300,7 @@ const useStore = create<StoreState>()(
             
             // // Find and automatically extend the initial welcome node
             // const welcomeNode = restoredNodes.find(node => 
-            //   node.data?.prompt === "Welcome to VizThink AI" || 
+            //   node.data?.prompt === "Welcome to VizThinker AI" || 
             //   node.data?.response?.includes("Hello! I'm your AI assistant")
             // );
             
@@ -532,7 +532,7 @@ const useStore = create<StoreState>()(
           nodes: nodes.map(node => ({
             id: node.id,
             label: `Node ${node.id}`,
-            title: node.data.prompt && node.data.prompt !== "Welcome to VizThink AI" 
+            title: node.data.prompt && node.data.prompt !== "Welcome to VizThinker AI" 
               ? (node.data.prompt.length > 50 ? node.data.prompt.substring(0, 50) + '...' : node.data.prompt)
               : 'Welcome',
             x: node.position.x,
@@ -804,7 +804,7 @@ const useStore = create<StoreState>()(
                     <strong>${edges.length}</strong> Connections
                 </div>
                 <div class="stat">
-                    <strong>${sortedNodes.filter(n => n.data.prompt && n.data.prompt !== "Welcome to VizThink AI").length}</strong> Exchanges
+                    <strong>${sortedNodes.filter(n => n.data.prompt && n.data.prompt !== "Welcome to VizThinker AI").length}</strong> Exchanges
                 </div>
             </div>
         </div>
@@ -837,7 +837,7 @@ const useStore = create<StoreState>()(
 
         // Table of Contents
         const conversationNodes = sortedNodes.filter(node => 
-          node.data.prompt && node.data.prompt !== "Welcome to VizThink AI"
+          node.data.prompt && node.data.prompt !== "Welcome to VizThinker AI"
         );
         
         if (conversationNodes.length > 3) {
@@ -889,7 +889,7 @@ const useStore = create<StoreState>()(
                     <div class="node-connections">${connectionInfo}</div>
                 </div>`;
           
-          if (prompt && prompt !== "Welcome to VizThink AI") {
+          if (prompt && prompt !== "Welcome to VizThinker AI") {
             html += `
                 <div class="human-section">
                     <div class="section-label human-label">

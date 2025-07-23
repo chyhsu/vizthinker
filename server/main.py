@@ -14,7 +14,7 @@ async def lifespan(app: FastAPI):
     yield                  # application runs between here …
     logger.info("Shutting down...") # (optional) cleanup   # … and here on shutdown
 
-app = FastAPI(title="VizThink AI Backend", lifespan=lifespan)
+app = FastAPI(title="VizThinker AI Backend", lifespan=lifespan)
 
 # Allow React (vite / CRA) dev server & Electron renderer process
 ALLOWED_ORIGINS = [

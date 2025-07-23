@@ -189,7 +189,7 @@ export const extendedNodeAIBoxStyle = {
 export const extendedNodeAIAvatarStyle = {
   size: 'sm',
   mr: 2,
-  name: 'VizThink AI',
+  name: 'VizThinker AI',
 };
 
 // Bottom input Flex
@@ -278,7 +278,7 @@ export const chatNodeAIBoxStyle = {
 export const chatNodeAIAvatarStyle = {
   size: 'sm',
   mr: 2,
-  name: 'VizThink AI',
+  name: 'VizThinker AI',
 };
 
 //////////////////////////////////////////////////////////

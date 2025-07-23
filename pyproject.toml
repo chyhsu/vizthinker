@@ -1,8 +1,8 @@
 [tool.poetry]
-name = "vizthink-backend"
+name = "vizthinker-backend"
 version = "0.1.0"
-description = "Backend service for VizThink AI desktop application"
-authors = ["VizThink AI Team <team@vizthink.ai>"]
+description = "Backend service for VizThinker AI desktop application"
+authors = ["VizThinker AI Team <team@vizthinker.ai>"]
 
 [tool.poetry.dependencies]
 python = "^3.10"
