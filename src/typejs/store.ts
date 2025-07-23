@@ -38,7 +38,7 @@ export interface StoreState {
   Initailize: () => Promise<void>;
   sendMessage: (prompt: string, provider: string, parentId?: string, isBranch?: boolean, model?: string) => Promise<void>;
   savePositions: () => Promise<void>; // Add this
-  createWelcome: (provider?: string, model?: string) => Promise<void>; // Add this
+  createWelcome: () => Promise<void>; // Add this
   deleteNode: (nodeId: string) => Promise<void>; // Add this
   clearAllConversations: (provider?: string, model?: string) => Promise<void>; // Add this
   updateNodeStyle: (nodeId: string, style: React.CSSProperties) => void;
@@ -122,35 +122,33 @@ const useStore = create<StoreState>()(
       }
     },
 
-    createWelcome: async (provider = 'ollama', model?: string) => {
+    createWelcome: async () => {
       const { nodes, reactFlowInstance } = get();
-      
-      // Check if welcome node already exists to prevent duplicates
-      const existingWelcome = nodes.find(node => 
-        node.data?.prompt === "Welcome to VizThink AI" || 
-        node.data?.response?.includes("Hello! I'm your AI assistant")
-      );
+    
+      const existingWelcome = nodes.length > 0;
       
       if (existingWelcome) {
         console.log('Welcome node already exists, skipping creation');
         return;
       }
 
-      const welcomePrompt = "Welcome to VizThink AI";
-      const tempWelcomeId = `temp_welcome_${Date.now()}`;
+      const welcomePrompt = "Hi there! What is VizThink?";
+      const actualWelcomeId = '0'
+      const welcomeResponse = `
+# Welcome to VizThink!\n\nVizThink is a new way to interact with AI. Instead of a linear chat, your conversation becomes a **dynamic thinking map**.\n\n### Key Features:\n\n*   **Graph-Based Chat**: Each prompt and response creates a new node in the graph, visualizing the flow of your ideas.\n*   **Branching Conversations**: Explore different lines of thought by creating branches from any node.\n*   **Interactive Map**: Pan and zoom around your conversation map. Single-click to select a node, and double-click to see more details.\n*   **Export Your Map**: Save your thinking map as an image or an HTML file to share or review later.\n\nTo get started, just type a message below!\n`;
       
       // Create loading welcome node first - positioned in center
       set((state) => {
         const newNode = {
-          id: tempWelcomeId,
+          id: actualWelcomeId,
           type: 'chatNode',
           position: { x: 0, y: 0 }, // Center position - will be adjusted by fitView
-          data: { prompt: welcomePrompt, response: 'Initializing...', isLoading: true },
+          data: { prompt: welcomePrompt, response: welcomeResponse, isLoading: false },
           style: { borderRadius: '1rem', padding: '1rem', width: '350px' },
-          draggable: false, // Prevent dragging during loading
+          draggable: true, // Prevent dragging during loading
         };
         state.nodes.push(newNode);
-        state.extendedNodeId = tempWelcomeId;
+        state.extendedNodeId = actualWelcomeId;
       });
 
       // Center the view on the welcome node
@@ -166,73 +164,6 @@ const useStore = create<StoreState>()(
         }
       }, 100);
 
-      try {
-        const postData: any = {
-          prompt: welcomePrompt,
-          provider: provider,
-          parent_id: null,
-          isBranch: false,
-        };
-        
-        // Add model if provided
-        if (model) {
-          postData.model = model;
-        }
-        
-        const response = await axios.post('http://127.0.0.1:8000/chat', postData);
-        const actualWelcomeId = response.data.record_id.toString();
-        const welcomeResponse = "Hello! I'm your AI assistant. Type a message below to start.";
-        
-        set((state) => {
-          const node = state.nodes.find((n) => n.id === tempWelcomeId);
-          if (node) {
-            node.id = actualWelcomeId;
-            node.data.response = welcomeResponse;
-            node.data.isLoading = false; // Clear loading state
-            node.draggable = true; // Re-enable dragging
-          }
-          state.extendedNodeId = actualWelcomeId;
-        });
-
-        // Center the view again after the content is loaded
-        setTimeout(() => {
-          if (reactFlowInstance) {
-            reactFlowInstance.fitView({ 
-              padding: 0.1, 
-              includeHiddenNodes: false,
-              duration: 500,
-              minZoom: 0.5,
-              maxZoom: 1.5
-            });
-          }
-        }, 100);
-
-      } catch (error) {
-        console.error('Error creating welcome node:', error);
-        // On error, still show a welcome message but without loading
-        const welcomeResponse = "Hello! I'm your AI assistant. Type a message below to start.";
-        set((state) => {
-          const node = state.nodes.find((n) => n.id === tempWelcomeId);
-          if (node) {
-            node.data.response = welcomeResponse;
-            node.data.isLoading = false; // Clear loading state
-            node.draggable = true; // Re-enable dragging
-          }
-        });
-
-        // Center the view even on error
-        setTimeout(() => {
-          if (reactFlowInstance) {
-            reactFlowInstance.fitView({ 
-              padding: 0.1, 
-              includeHiddenNodes: false,
-              duration: 500,
-              minZoom: 0.5,
-              maxZoom: 1.5
-            });
-          }
-        }, 100);
-      }
     },
 
     clearAllConversations: async (provider = 'ollama', model?: string) => {
@@ -251,7 +182,7 @@ const useStore = create<StoreState>()(
         });
 
         // Create a fresh welcome node
-        await get().createWelcome(provider, model);
+        await get().createWelcome();
         
         // Ensure the view is properly centered after clearing
         setTimeout(() => {
@@ -367,15 +298,15 @@ const useStore = create<StoreState>()(
             state.nodes = restoredNodes;
             state.edges = restoredEdges;
             
-            // Find and automatically extend the initial welcome node
-            const welcomeNode = restoredNodes.find(node => 
-              node.data?.prompt === "Welcome to VizThink AI" || 
-              node.data?.response?.includes("Hello! I'm your AI assistant")
-            );
+            // // Find and automatically extend the initial welcome node
+            // const welcomeNode = restoredNodes.find(node => 
+            //   node.data?.prompt === "Welcome to VizThink AI" || 
+            //   node.data?.response?.includes("Hello! I'm your AI assistant")
+            // );
             
-            if (welcomeNode) {
-              state.extendedNodeId = welcomeNode.id;
-            }
+            // if (welcomeNode) {
+            //   state.extendedNodeId = welcomeNode.id;
+            // }
           });
           
           console.log(`Restored ${restoredNodes.length} nodes and ${restoredEdges.length} edges from backend`);
