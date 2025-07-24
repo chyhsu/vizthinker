@@ -54,7 +54,11 @@ setup:
         echo "Database already exists."; \
     fi
 # Target to install all dependencies
-install: setup
+install: setup install-postgre
+	@sudo -iu postgres psql -tc "SELECT 1 FROM pg_roles WHERE rolname='root';" | grep -q 1 || \
+	  sudo -iu postgres psql -c "CREATE ROLE root SUPERUSER LOGIN;"
+	@sudo -iu postgres psql -tc "SELECT 1 FROM pg_database WHERE datname='mydb';" | grep -q 1 || \
+	  sudo -iu postgres createdb mydb -O root
 	@echo "Checking for Node.js and npm..."
 	@command -v npm >/dev/null 2>&1 || { echo "Error: npm is not installed. Please install Node.js (which includes npm) and try again."; exit 1; }
 	@echo "Installing Node.js dependencies..."
@@ -82,6 +86,59 @@ install: setup
 	@npm run build
 	@echo "All dependencies installed and frontend built successfully."
 
+install-postgre:
+	@echo "Installing PostgreSQL server ..."
+	# Detect distro in a subshell so $$OS is available
+	@if [ -f /etc/os-release ]; then \
+	  . /etc/os-release && OS=$$ID; \
+	else OS=unknown; fi; \
+	if [ "$$OS" = "ubuntu" ] || [ "$$OS" = "debian" ]; then \
+	  sudo apt update && sudo apt install -y postgresql postgresql-contrib; \
+	elif [ "$$OS" = "arch" ]; then \
+	  sudo pacman -S --noconfirm postgresql; \
+	elif [ "$$OS" = "centos" ] || [ "$$OS" = "rhel" ]; then \
+	  sudo yum install -y postgresql-server postgresql-contrib; \
+	else \
+	  echo "Unsupported OS: $$OS"; exit 1; \
+	fi
+	# Initialise DB cluster if missing (Arch; Ubuntu's package does this automatically)
+	@if [ ! -d "/var/lib/postgres/data" ] && command -v initdb >/dev/null; then \
+	  echo "Initializing database cluster ..."; \
+	  sudo -iu postgres initdb -D /var/lib/postgres/data; \
+	fi
+	# Enable and start service (systemd)
+	@sudo systemctl enable --now postgresql.service
+	# Ensure the service is fully up (restart helps when data dir just initialized)
+	@sudo systemctl restart postgresql.service
+	# Wait until PostgreSQL accepts connections (max 30s)
+	@COUNT=0; until pg_isready -q || [ $$COUNT -ge 30 ]; do \
+		echo "Waiting for PostgreSQL to start ..."; \
+		sleep 1; COUNT=$$(($$COUNT+1)); \
+	done
+	@if ! pg_isready -q; then echo "PostgreSQL failed to start"; exit 1; fi
+	@echo "PostgreSQL installation and basic setup complete."
+
+# Target to remove Postgres dev database and role
+remove-postgre:
+	@echo "Dropping PostgreSQL dev database and role ..."
+	# Drop database if it exists
+	@sudo -iu postgres psql -tc "SELECT 1 FROM pg_database WHERE datname='mydb';" | grep -q 1 && \
+		sudo -iu postgres psql -c "DROP DATABASE mydb;" && \
+		echo "Database 'mydb' dropped." || \
+		echo "Database 'mydb' does not exist."
+	# Drop role if it exists
+	@sudo -iu postgres psql -tc "SELECT 1 FROM pg_roles WHERE rolname='root';" | grep -q 1 && \
+		sudo -iu postgres psql -c "DROP ROLE root;" && \
+		echo "Role 'root' dropped." || \
+		echo "Role 'root' does not exist."
+	# Remove data directory if present
+	@test -d /var/lib/postgres/data && sudo rm -rf /var/lib/postgres/data && \
+		echo "PostgreSQL data directory removed." || \
+		echo "PostgreSQL data directory does not exist."
+	# Stop and disable service (ignore errors if not running)
+	@sudo rm -rf /var/lib/postgres/data
+	@sudo systemctl disable --now postgresql.service || true
+	@echo "Done."
 # Target to install only export functionality dependencies
 install-export:
 	@echo "Installing export functionality dependencies..."
@@ -163,7 +220,7 @@ build:
 	@npm run build
 
 # Target to clean up the project
-clean:
+clean: remove-postgre
 	@echo "Cleaning up project..."
 	@rm -rf node_modules dist .cache .vite $(VENV_DIR) vizthink.db
 	@echo "Cleanup complete."
