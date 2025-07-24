@@ -7,7 +7,7 @@ from pydantic import BaseModel
 from typing import Dict
 from server.llm import call_llm
 from server.logger import logger
-from server.dao.postgre import create_user, search_user, store_one_message, store_all_positions, get_messages, delete_all_messages, delete_single_message
+from server.dao.postgre import create_user, search_user, store_one_message, store_all_positions, get_messages, delete_all_messages, delete_single_message, create_chatrecord
 
 # Define the directory for static files (the 'dist' folder)
 static_files_dir = Path(__file__).resolve().parent.parent / "dist"
@@ -83,14 +83,12 @@ def setup_routes(app: FastAPI):
             logger.error(f"Error saving positions: {e}", exc_info=True)
             raise HTTPException(status_code=500, detail=str(e))
 
-    @app.get("/chat/records")
-    async def get_chat_records(request: Request):
-        """Get all chat records."""
+    @app.get("/chat/records/{chatrecord_id}")
+    async def get_chat_records(chatrecord_id: int):
+        """Handle get all chat records requests."""
         try:
-            body = await request.json()
-            chatrecord_id = body.get("chatrecord_id")
             records = await get_messages(chatrecord_id)
-            return {"records": records}
+            return {"status": "success", "records": records}
         except Exception as e:
             logger.error(f"Error getting chat records: {e}", exc_info=True)
             raise HTTPException(status_code=500, detail=str(e))
@@ -183,7 +181,7 @@ def setup_routes(app: FastAPI):
             if not username or not password:
                 raise HTTPException(status_code=400, detail="Username and password are required")
             
-            user_id, _, returned_password = await search_user(username)
+            user_id, _, returned_password, chatrecords = await search_user(username)
             if user_id is None:
                 raise HTTPException(status_code=401, detail="Invalid username")
             if returned_password != password:
@@ -191,7 +189,7 @@ def setup_routes(app: FastAPI):
             # For now, just log the credentials
             logger.info(f"Login attempt for user '{username}' with password '{password}'")
             
-            return {"status": "success", "message": "Login successful", "user_id": user_id}
+            return {"status": "success", "message": "Login successful", "user_id": user_id, "chatrecord_id": chatrecords[0]}
             
         except Exception as e:
             logger.error(f"Error in login endpoint: {e}", exc_info=True)
@@ -210,12 +208,13 @@ def setup_routes(app: FastAPI):
                 raise HTTPException(status_code=400, detail="Username and password are required")
             
             user_id = await create_user(username, password)
+            chatrecord_id = await create_chatrecord(user_id)
             if user_id is None:
                 raise HTTPException(status_code=400, detail="Failed to create user")
             # For now, just log the credentials
             logger.info(f"Signup attempt for user '{username}' with password '{password}'")
             
-            return {"status": "success", "message": "Signup successful", "user_id": user_id}
+            return {"status": "success", "message": "Signup successful", "chatrecord_id": chatrecord_id, "user_id": user_id}
             
         except Exception as e:
             logger.error(f"Error in signup endpoint: {e}", exc_info=True)

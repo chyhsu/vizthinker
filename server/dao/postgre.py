@@ -93,10 +93,10 @@ async def search_user(username: str) -> Optional[Tuple[int, str, str]]:
     pool = await _get_pool()
     async with pool.acquire() as conn:
         row = await conn.fetchrow(
-            "SELECT id,username, password FROM users WHERE username = $1",
+            "SELECT id,username, password, chatrecords FROM users WHERE username = $1",
             username,
         )
-        return row["id"], row["username"], row["password"] if row else None
+        return row["id"], row["username"], row["password"], row["chatrecords"] if row else None
     
 async def create_user(username: str, password: str) -> int:
     pool = await _get_pool()

@@ -4,7 +4,7 @@ import { useReactFlow, ReactFlowProvider } from 'reactflow';
 import useStore from '../typejs/store';
 
 const ChatLayoutFlow: React.FC = () => {
-  const { Initailize, setReactFlowInstance } = useStore();
+  const { Initialize, setReactFlowInstance } = useStore();
   const reactFlowInstance = useReactFlow();
   
   useEffect(() => {
@@ -12,11 +12,11 @@ const ChatLayoutFlow: React.FC = () => {
     setReactFlowInstance(reactFlowInstance);
     // Small delay to ensure the instance is properly set before initializing
     const timer = setTimeout(() => {
-      Initailize();
+      Initialize();
     }, 100);
     
     return () => clearTimeout(timer);
-  }, [setReactFlowInstance, reactFlowInstance, Initailize]);
+  }, [setReactFlowInstance, reactFlowInstance, Initialize]);
 
   return <Outlet />;
 };

@@ -48,11 +48,12 @@ const AuthPage: React.FC = () => {
         throw new Error(detail ?? 'Login failed');
       }
   
-      const { user_id } = await res.json();  // {status, message, user_id}
+      const { user_id, chatrecord_id } = await res.json();  // {status, message, user_id, chatrecord_id}
       if (user_id === null) {
         throw new Error('Login failed');
       }
       localStorage.setItem('user_id', String(user_id));
+      localStorage.setItem('chatrecord_id', String(chatrecord_id));
       toast({ title: 'Logged in', status: 'success', duration: 1500, isClosable: true });
       navigate('/main', { replace: true });
     } catch (err: any) {
@@ -77,11 +78,12 @@ const AuthPage: React.FC = () => {
         }),
       });
       console.log('Signing up with', signup);
-      const { user_id } = await res.json();  // {status, message, user_id}
+      const { user_id, chatrecord_id } = await res.json();
       if (user_id === null) {
         throw new Error('Signup failed');
       }
       localStorage.setItem('user_id', String(user_id));
+      localStorage.setItem('chatrecord_id', String(chatrecord_id));
       toast({ title: 'Account created', status: 'success', duration: 1500, isClosable: true });
       navigate('/main', { replace: true });
     } catch (err: any) {

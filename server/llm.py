@@ -24,7 +24,8 @@ async def call_llm(user_prompt: str, provider: str, parent_id: Optional[int] = N
             raise RuntimeError(provider+" API key not set.")
     
     if parent_id is not None:
-        chat_history = await get_path_history(chatrecord_id, parent_id)
+        # get_path_history now expects only message_id
+        chat_history = await get_path_history(parent_id)
     else:
         chat_history = []
     system_prompt = "You are a LLM chat box. Give response within 300 tokens.\n\nChat history: " + str(chat_history)

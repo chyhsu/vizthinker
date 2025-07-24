@@ -35,7 +35,7 @@ export interface StoreState {
   setSelectedNodeId: (nodeId: string | null) => void;
   setViewport: (viewport: Viewport) => void; // Add this
   setExtendedNodeId: (id: string | null) => void;
-  Initailize: () => Promise<void>;
+  Initialize: () => Promise<void>;
   sendMessage: (prompt: string, provider: string, parentId?: string, isBranch?: boolean, model?: string) => Promise<void>;
   savePositions: () => Promise<void>; // Add this
   createWelcome: () => Promise<void>; // Add this
@@ -115,8 +115,10 @@ const useStore = create<StoreState>()(
       const { nodes } = get();
       const sortedNodes = [...nodes].sort((a, b) => parseInt(a.id) - parseInt(b.id));
       const positions = sortedNodes.map(n => n.position);
+      const chatrecord_id = localStorage.getItem('chatrecord_id');
       try {
-        await axios.post('http://127.0.0.1:8000/chat/positions', { positions });
+        await axios.post('http://127.0.0.1:8000/chat/positions', { chatrecord_id, positions });
+        console.log('Positions saved successfully');
       } catch (err) {
         console.error('Error saving positions:', err);
       }
@@ -170,7 +172,11 @@ const useStore = create<StoreState>()(
       const { reactFlowInstance } = get();
       try {
         // Clear backend data
-        await axios.delete('http://127.0.0.1:8000/chat/records');
+        await axios.delete('http://127.0.0.1:8000/chat/records', {
+          data: {
+            chatrecord_id: localStorage.getItem('chatrecord_id'),
+          },
+        });
         
         // Clear frontend state
         set((state) => {
@@ -255,18 +261,20 @@ const useStore = create<StoreState>()(
       }
     },
 
-    Initailize: async () => {
+    Initialize: async () => {
       try {
         // Fetch chat records from backend
-        const response = await axios.get('http://127.0.0.1:8000/chat/records');
+        const chatrecord_id = localStorage.getItem('chatrecord_id');
+        const response = await axios.get(`http://127.0.0.1:8000/chat/records/${chatrecord_id}`);
         const chatRecords = response.data.records; // Backend returns {records}
+        console.log(chatRecords);
         
         if (chatRecords && chatRecords.length > 0) {
           // Convert backend data to React Flow nodes
           const restoredNodes: Node[] = [];
           const restoredEdges: Edge[] = [];
           
-          chatRecords.forEach(([id, prompt, response, positions, parent_id, isBranch]: [number, string, string, any, number | null, boolean]) => {
+          chatRecords.forEach(([id, chatrecord_id, prompt, response, positions, parent_id, isBranch]: [number, number, string, string, any, number | null, boolean]) => {
             const nodeId = id.toString();
             
             // Create node with position from database or default
@@ -381,7 +389,9 @@ const useStore = create<StoreState>()(
       }, 100);
 
       try {
-        const postData: any = { prompt, provider, isBranch };
+        const user_id = localStorage.getItem('user_id');
+        const chatrecord_id = localStorage.getItem('chatrecord_id');
+        const postData: any = { prompt, provider, isBranch, chatrecord_id, user_id};
         if (lastNode) {
           postData.parent_id = lastNode.id;
         }else{
@@ -393,7 +403,7 @@ const useStore = create<StoreState>()(
         const response = await axios.post('http://127.0.0.1:8000/chat', postData);
 
         const aiResponse = response.data.response;
-        const actualNewId = response.data.record_id.toString();
+        const actualNewId = response.data.message_id.toString();
 
         set((state) => {
           const node = state.nodes.find((n) => n.id === tempNewNodeId);
