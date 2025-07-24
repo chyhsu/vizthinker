@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import List
 from contextlib import asynccontextmanager
-from server.dao.sqlite import init_db
+from server.dao.postgre import init_db
 from server.logger import logger
 
 

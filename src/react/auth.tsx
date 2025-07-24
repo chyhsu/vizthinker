@@ -31,26 +31,62 @@ const AuthPage: React.FC = () => {
   const toast = useToast();
 
   // ===== Handlers =====
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Logging in with', login);
-    // Mock: write token for session check
-    localStorage.setItem('auth_token', 'dummy');
-    toast({ title: 'Logged in (mock)', status: 'success', duration: 1500, isClosable: true });
-    navigate('/main', { replace: true });
+    try {
+      const res = await fetch('http://127.0.0.1:8000/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          username: login.username,
+          password: login.password,
+        }),
+      });
+  
+      if (!res.ok) {
+        const { detail } = await res.json();
+        throw new Error(detail ?? 'Login failed');
+      }
+  
+      const { user_id } = await res.json();  // {status, message, user_id}
+      if (user_id === null) {
+        throw new Error('Login failed');
+      }
+      localStorage.setItem('user_id', String(user_id));
+      toast({ title: 'Logged in', status: 'success', duration: 1500, isClosable: true });
+      navigate('/main', { replace: true });
+    } catch (err: any) {
+      toast({ title: err.message, status: 'error', duration: 2000, isClosable: true });
+    }
   };
 
-  const handleSignup = (e: React.FormEvent) => {
+  const handleSignup = async (e: React.FormEvent) => {
+    
     e.preventDefault();
-    if (signup.password !== signup.confirm) {
-      toast({ title: 'Passwords do not match', status: 'error', duration: 3000, isClosable: true });
-      return;
+    try {
+      if (signup.password !== signup.confirm) {
+        toast({ title: 'Passwords do not match', status: 'error', duration: 3000, isClosable: true });
+        return;
+      }
+      const res = await fetch('http://127.0.0.1:8000/auth/signup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          username: signup.username,
+          password: signup.password,
+        }),
+      });
+      console.log('Signing up with', signup);
+      const { user_id } = await res.json();  // {status, message, user_id}
+      if (user_id === null) {
+        throw new Error('Signup failed');
+      }
+      localStorage.setItem('user_id', String(user_id));
+      toast({ title: 'Account created', status: 'success', duration: 1500, isClosable: true });
+      navigate('/main', { replace: true });
+    } catch (err: any) {
+      toast({ title: err.message, status: 'error', duration: 2000, isClosable: true });
     }
-    console.log('Signing up with', signup);
-    // Mock: write token for session check
-    localStorage.setItem('auth_token', 'dummy');
-    toast({ title: 'Account created (mock)', status: 'success', duration: 1500, isClosable: true });
-    navigate('/main', { replace: true });
   };
 
   // ===== Render =====
@@ -70,9 +106,9 @@ const AuthPage: React.FC = () => {
             <form onSubmit={handleLogin}>
               <VStack spacing={4} align="stretch">
                 <FormControl id="login-username" isRequired>
-                  <FormLabel>Username / Email</FormLabel>
+                  <FormLabel>Username</FormLabel>
                   <Input
-                    placeholder="your@email.com"
+                    placeholder="username"
                     value={login.username}
                     onChange={(e) => setLogin({ ...login, username: e.target.value })}
                   />
@@ -97,9 +133,9 @@ const AuthPage: React.FC = () => {
             <form onSubmit={handleSignup}>
               <VStack spacing={4} align="stretch">
                 <FormControl id="signup-username" isRequired>
-                  <FormLabel>Username / Email</FormLabel>
+                  <FormLabel>Username</FormLabel>
                   <Input
-                    placeholder="your@email.com"
+                    placeholder="username"
                     value={signup.username}
                     onChange={(e) => setSignup({ ...signup, username: e.target.value })}
                   />

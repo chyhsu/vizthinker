@@ -7,7 +7,7 @@ from pydantic import BaseModel
 from typing import Dict
 from server.llm import call_llm
 from server.logger import logger
-from server.dao.sqlite import delete_all_chatrecord, get_all_chatrecord, store_one_chatrecord, store_all_positions, delete_single_chatrecord
+from server.dao.postgre import create_user, search_user
 
 # Define the directory for static files (the 'dist' folder)
 static_files_dir = Path(__file__).resolve().parent.parent / "dist"
@@ -162,7 +162,56 @@ def setup_routes(app: FastAPI):
         except Exception as e:
             logger.error(f"Error updating API keys: {e}", exc_info=True)
             raise HTTPException(status_code=500, detail=f"Failed to update API keys: {str(e)}")
-
+    @app.post("/auth/login")
+    async def login(request: Request):
+        """Handle login requests."""
+        try:
+            body = await request.json()
+            username = body.get("username", "")
+            password = body.get("password", "")
+            
+            logger.info(f"Received login request: username='{username}'")
+            
+            if not username or not password:
+                raise HTTPException(status_code=400, detail="Username and password are required")
+            
+            user_id, _, returned_password = await search_user(username)
+            if user_id is None:
+                raise HTTPException(status_code=401, detail="Invalid username")
+            if returned_password != password:
+                raise HTTPException(status_code=401, detail="Invalid password")
+            # For now, just log the credentials
+            logger.info(f"Login attempt for user '{username}' with password '{password}'")
+            
+            return {"status": "success", "message": "Login successful", "user_id": user_id}
+            
+        except Exception as e:
+            logger.error(f"Error in login endpoint: {e}", exc_info=True)
+            raise HTTPException(status_code=500, detail=str(e))
+    @app.post("/auth/signup")
+    async def signup(request: Request):
+        """Handle signup requests."""
+        try:
+            body = await request.json()
+            username = body.get("username", "")
+            password = body.get("password", "")
+            
+            logger.info(f"Received signup request: username='{username}'")
+            
+            if not username or not password:
+                raise HTTPException(status_code=400, detail="Username and password are required")
+            
+            user_id = await create_user(username, password)
+            if user_id is None:
+                raise HTTPException(status_code=400, detail="Failed to create user")
+            # For now, just log the credentials
+            logger.info(f"Signup attempt for user '{username}' with password '{password}'")
+            
+            return {"status": "success", "message": "Signup successful", "user_id": user_id}
+            
+        except Exception as e:
+            logger.error(f"Error in signup endpoint: {e}", exc_info=True)
+            raise HTTPException(status_code=500, detail=str(e))
     # Serve the main React app for all other routes
     @app.get("/{full_path:path}")
     async def serve_react_app(full_path: str):

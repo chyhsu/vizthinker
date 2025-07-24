@@ -11,7 +11,7 @@ interface ProtectedRouteProps {
  * Replace this logic with a real session check once backend auth is implemented.
  */
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
-  const isAuthenticated = !!localStorage.getItem('auth_token');
+  const isAuthenticated = !!localStorage.getItem('user_id');
   return isAuthenticated ? children : <Navigate to="/auth" replace />;
 };
 
