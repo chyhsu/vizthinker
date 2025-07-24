@@ -3,9 +3,8 @@ import google.generativeai as genai
 import ollama
 from dotenv import load_dotenv
 from server.logger import logger
-from server.dao.sqlite import get_all_chatrecord
+from server.dao.postgre import get_path_history
 from typing import Optional
-from server.dao.sqlite import get_path_history
 
 load_dotenv()
 api_key_map={
@@ -16,7 +15,7 @@ api_key_map={
     "ollama": None,  # Ollama doesn't need API key for local models
 }
 
-async def call_llm(user_prompt: str, provider: str, parent_id: Optional[int] = None, model: Optional[str] = None):
+async def call_llm(user_prompt: str, provider: str, parent_id: Optional[int] = None, chatrecord_id: Optional[int] = None, model: Optional[str] = None):
 
     # Get Api Key (except for ollama which runs locally)
     if provider != "ollama":
@@ -25,7 +24,7 @@ async def call_llm(user_prompt: str, provider: str, parent_id: Optional[int] = N
             raise RuntimeError(provider+" API key not set.")
     
     if parent_id is not None:
-        chat_history = await get_path_history(parent_id)
+        chat_history = await get_path_history(chatrecord_id, parent_id)
     else:
         chat_history = []
     system_prompt = "You are a LLM chat box. Give response within 300 tokens.\n\nChat history: " + str(chat_history)

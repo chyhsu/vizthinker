@@ -7,7 +7,7 @@ from pydantic import BaseModel
 from typing import Dict
 from server.llm import call_llm
 from server.logger import logger
-from server.dao.postgre import create_user, search_user
+from server.dao.postgre import create_user, search_user, store_one_message, store_all_positions, get_messages, delete_all_messages, delete_single_message
 
 # Define the directory for static files (the 'dist' folder)
 static_files_dir = Path(__file__).resolve().parent.parent / "dist"
@@ -38,26 +38,29 @@ def setup_routes(app: FastAPI):
         """Handle chat requests and store conversation records."""
         try:
             body = await request.json()
+            user_id = body.get("user_id")
+            chatrecord_id = body.get("chatrecord_id")
             prompt = body.get("prompt", "")
             provider = body.get("provider", "google")
             model = body.get("model")  # Optional model specification
             parent_id = body.get("parent_id")
             isBranch = body.get("isBranch", False)
             
-            logger.info(f"Received chat request: prompt='{prompt}', provider='{provider}', model='{model}', parent_id={parent_id}, isBranch={isBranch}")
+            logger.info(f"Received chat request: prompt='{prompt}', provider='{provider}', model='{model}', parent_id={parent_id}, isBranch={isBranch}, user_id={user_id}, chatrecord_id={chatrecord_id}")
             
             if not prompt:
                 raise HTTPException(status_code=400, detail="Prompt is required")
             
             # Call LLM
-            response = await call_llm(prompt, provider, parent_id, model)
+            response = await call_llm(prompt, provider, parent_id, chatrecord_id, model)
             
             # Store the conversation
-            record_id = await store_one_chatrecord(prompt, response, parent_id, isBranch)
+            message_id = await store_one_message(prompt, response, parent_id, isBranch, chatrecord_id)
             
             return {
                 "response": response,
-                "record_id": record_id
+                "chatrecord_id": chatrecord_id,
+                "message_id": message_id
             }
             
         except Exception as e:
@@ -72,41 +75,46 @@ def setup_routes(app: FastAPI):
         """Save node positions."""
         try:
             body = await request.json()
+            chatrecord_id = body.get("chatrecord_id")
             positions = body.get("positions", [])
-            await store_all_positions(positions)
+            await store_all_positions(chatrecord_id, positions)
             return {"status": "success"}
         except Exception as e:
             logger.error(f"Error saving positions: {e}", exc_info=True)
             raise HTTPException(status_code=500, detail=str(e))
 
     @app.get("/chat/records")
-    async def get_chat_records():
+    async def get_chat_records(request: Request):
         """Get all chat records."""
         try:
-            records = await get_all_chatrecord()
+            body = await request.json()
+            chatrecord_id = body.get("chatrecord_id")
+            records = await get_messages(chatrecord_id)
             return {"records": records}
         except Exception as e:
             logger.error(f"Error getting chat records: {e}", exc_info=True)
             raise HTTPException(status_code=500, detail=str(e))
 
     @app.delete("/chat/records")
-    async def delete_all_records():
+    async def delete_all_records(request: Request):
         """Delete all chat records."""
         try:
-            await delete_all_chatrecord()
+            body = await request.json()
+            chatrecord_id = body.get("chatrecord_id")
+            await delete_all_messages(chatrecord_id)
             return {"status": "success", "message": "All chat records deleted"}
         except Exception as e:
             logger.error(f"Error deleting all records: {e}", exc_info=True)
             raise HTTPException(status_code=500, detail=str(e))
 
-    @app.delete("/chat/records/{record_id}")
-    async def delete_record(record_id: int):
+    @app.delete("/chat/records/{message_id}")
+    async def delete_record(message_id: int):
         """Delete a specific chat record and its children."""
         try:
-            await delete_single_chatrecord(record_id)
-            return {"status": "success", "message": f"Record {record_id} and its children deleted"}
+            await delete_single_message(message_id)
+            return {"status": "success", "message": f"Record {message_id} and its children deleted"}
         except Exception as e:
-            logger.error(f"Error deleting record {record_id}: {e}", exc_info=True)
+            logger.error(f"Error deleting record {message_id}: {e}", exc_info=True)
             raise HTTPException(status_code=500, detail=str(e))
 
     @app.post("/settings/api-keys")
