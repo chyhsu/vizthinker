@@ -225,11 +225,12 @@ def setup_routes(app: FastAPI):
             
             if not username or not password:
                 raise HTTPException(status_code=400, detail="Username and password are required")
-            
             user_id = await create_user(username, password)
-            chatrecord_id = await create_chatrecord(user_id)
             if user_id is None:
                 raise HTTPException(status_code=400, detail="Failed to create user")
+            chatrecord_id = await create_chatrecord(user_id)
+            if chatrecord_id is None:
+                raise HTTPException(status_code=400, detail="Failed to create chatrecord")
             # For now, just log the credentials
             logger.info(f"Signup attempt for user '{username}' with password '{password}'")
             

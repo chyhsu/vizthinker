@@ -77,6 +77,10 @@ const AuthPage: React.FC = () => {
           password: signup.password,
         }),
       });
+      if (!res.ok) {
+        const { detail } = await res.json();
+        throw new Error(detail ?? 'Signup failed');
+      }
       console.log('Signing up with', signup);
       const { user_id, chatrecord_id } = await res.json();
       if (user_id === null) {
