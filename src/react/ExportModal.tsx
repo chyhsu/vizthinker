@@ -23,6 +23,7 @@ import {
   FaGlobe
 } from 'react-icons/fa';
 import useStore from '../typejs/store';
+import { exportAsImage, exportAsHTML } from '../typejs/export';
 import { useSettings } from './SettingsContext';
 
 interface ExportModalProps {
@@ -32,8 +33,6 @@ interface ExportModalProps {
 
 const ExportModal: React.FC<ExportModalProps> = ({ isOpen, onClose }) => {
   const { 
-    exportAsImage, 
-    exportAsHTML,
     nodes 
   } = useStore();
   const { fontColor } = useSettings();
