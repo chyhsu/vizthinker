@@ -16,8 +16,13 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="VizThinker AI Backend", lifespan=lifespan)
 
-# Allow React (vite / CRA) dev server & Electron renderer process
+# Allow external access from server IP
 ALLOWED_ORIGINS = [
+    "http://140.114.88.157",
+    "http://140.114.88.157:80",
+    "http://140.114.88.157:3000",
+    "http://140.114.88.157:5173",
+    "https://140.114.88.157",
     "http://localhost:3000",      # For create-react-app
     "http://127.0.0.1:3000",
     "http://localhost:5173",      # For Vite dev server
@@ -26,7 +31,7 @@ ALLOWED_ORIGINS = [
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=ALLOWED_ORIGINS + ["*"],  # 允許所有來源作為備份
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

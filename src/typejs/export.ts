@@ -42,7 +42,8 @@ export const exportAsMarkdown = async () => {
             isbranch: false
         };
         
-        const response = await axios.post('http://127.0.0.1:8000/markdown', postData);
+        const { API_ENDPOINTS } = await import('../config/api');
+    const response = await axios.post(API_ENDPOINTS.MARKDOWN, postData);
         const markdown = response.data.response;
         
         // Create and download the markdown file

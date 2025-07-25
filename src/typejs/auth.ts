@@ -25,7 +25,8 @@ export const handleLogin = async (
 ) => {
   e.preventDefault();
   try {
-    const res = await fetch('http://127.0.0.1:8000/auth/login', {
+    const { API_ENDPOINTS } = await import('../config/api');
+    const res = await fetch(API_ENDPOINTS.AUTH_LOGIN, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -64,7 +65,8 @@ export const handleSignup = async (
       toast({ title: 'Passwords do not match', status: 'error', duration: 3000, isClosable: true });
       return;
     }
-    const res = await fetch('http://127.0.0.1:8000/auth/signup', {
+    const { API_ENDPOINTS } = await import('../config/api');
+    const res = await fetch(API_ENDPOINTS.AUTH_SIGNUP, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({

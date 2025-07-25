@@ -3,12 +3,15 @@ name = "vizthinker-backend"
 version = "0.1.0"
 description = "Backend service for VizThinker AI desktop application"
 authors = ["VizThinker AI Team <team@vizthinker.ai>"]
+package-mode = false
 
 [tool.poetry.dependencies]
 python = "^3.10"
 fastapi = "^0.111.0"
 uvicorn = {extras = ["standard"], version = "^0.29.0"}
 aiosqlite = "^0.19.0"
+asyncpg = "^0.29.0"
+psycopg2-binary = "^2.9.9"
 openai = "^1.30.1"
 ollama = "^0.3.3"
 google-generativeai = "^0.8.3"

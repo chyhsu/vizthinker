@@ -161,7 +161,8 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
 
       // Send API keys to backend
       try {
-        await axios.post('http://127.0.0.1:8000/settings/api-keys', {
+        const { API_ENDPOINTS } = await import('../config/api');
+        await axios.post(API_ENDPOINTS.SETTINGS_API_KEYS, {
           api_keys: draftApiKeys
         });
         toast({
