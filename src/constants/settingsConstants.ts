@@ -11,7 +11,7 @@ export const DEFAULT_SETTINGS = {
   PROVIDER: 'ollama',
   OPACITY: 0.7,
   PROVIDER_MODELS: {
-    google: 'gemini-2.5-flash',
+    google: 'gemini-1.5-flash',
     openai: 'gpt-4o',
     anthropic: 'claude-3-5-sonnet-20240620',
     x: 'grok-1',
@@ -41,9 +41,8 @@ export const PROVIDER_OPTIONS = [
 // Model options for each provider
 export const MODEL_OPTIONS = {
   google: [
-    { value: 'gemini-2.5-flash', label: 'Gemini 2.5 Flash' },
-    { value: 'gemini-1.5-flash-latest', label: 'Gemini 1.5 Flash' },
-    { value: 'gemini-1.5-pro-latest', label: 'Gemini 1.5 Pro' },
+    { value: 'gemini-1.5-flash', label: 'Gemini 1.5 Flash' },
+    { value: 'gemini-1.5-pro', label: 'Gemini 1.5 Pro' },
     { value: 'gemini-1.0-pro', label: 'Gemini 1.0 Pro' },
   ],
   openai: [

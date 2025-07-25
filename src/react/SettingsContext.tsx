@@ -74,7 +74,7 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     try {
       const stored = localStorage.getItem('viz_provider_models');
       return stored ? JSON.parse(stored) : {
-        google: 'gemini-2.0-flash-exp',
+        google: 'gemini-1.5-flash',
         openai: 'gpt-4o',
         anthropic: 'claude-3-5-sonnet-20241022',
         x: 'grok-beta',
@@ -82,7 +82,7 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       };
     } catch {
       return {
-        google: 'gemini-2.0-flash-exp',
+        google: 'gemini-1.5-flash',
         openai: 'gpt-4o',
         anthropic: 'claude-3-5-sonnet-20241022',
         x: 'grok-beta',

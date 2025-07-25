@@ -78,8 +78,8 @@ async def call_llm(user_prompt: str, provider: str, parent_id: Optional[int] = N
     if provider == "google":
         try:
             genai.configure(api_key=api_key_map["google"])
-            # Use provided model or default
-            model_name = model or 'gemini-1.5-flash-latest'
+            # Use provided model or default - use available models
+            model_name = model or 'gemini-1.5-flash'
             gemini_model = genai.GenerativeModel(
                 model_name=model_name,
                 system_instruction=system_prompt
@@ -88,7 +88,7 @@ async def call_llm(user_prompt: str, provider: str, parent_id: Optional[int] = N
 
             response = await gemini_model.generate_content_async(
                 user_prompt,
-                request_options={'timeout': 30}  # Set a 30-second timeout
+                request_options={'timeout': 60}  # Increase timeout to 60 seconds
             )
 
             logger.info(f"Received response from LLM: {len(response.text)} tokens")
@@ -100,11 +100,22 @@ async def call_llm(user_prompt: str, provider: str, parent_id: Optional[int] = N
             raise RuntimeError(f"Invalid input: {str(ve)}")
             
         except Exception as e:
-            if "quota" in str(e).lower():
+            error_str = str(e).lower()
+            if "quota" in error_str or "rate" in error_str:
                 logger.error(f"API usage limit hit for Google: {e}", exc_info=True)
                 raise RuntimeError(f"API usage limit hit for {provider}. Please check your plan and billing details.")
-            logger.error(f"An unexpected error occurred when calling Google Gemini API: {e}", exc_info=True)
-            raise RuntimeError(f"Failed to generate content: {e}")
+            elif "not found" in error_str:
+                logger.error(f"Model not found for Google: {e}", exc_info=True)
+                raise RuntimeError(f"Model '{model_name}' not found. Please check if the model name is correct.")
+            elif "permission" in error_str or "forbidden" in error_str:
+                logger.error(f"API permission error for Google: {e}", exc_info=True)
+                raise RuntimeError(f"API permission denied. Please check your API key permissions.")
+            elif "network" in error_str or "connection" in error_str or "timeout" in error_str:
+                logger.error(f"Network error for Google: {e}", exc_info=True)
+                raise RuntimeError(f"Network connection error. Please check your internet connection.")
+            else:
+                logger.error(f"An unexpected error occurred when calling Google Gemini API: {e}", exc_info=True)
+                raise RuntimeError(f"Failed to generate content: {e}")
 
     elif provider == "ollama":
         try:
