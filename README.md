@@ -12,101 +12,86 @@ A VizThinker is someone whose brain loves to map ideas like a web, not a straigh
 
 ## What's the Big Idea?
 
-Traditional chatbots like ChatGPT are stuck in a top-down, scroll-heavy rut. That’s rough for VizThinkers who see ideas as a network of connections. VizThinker AI lets you interact with an LLM through a node-based interface where every prompt, response, or follow-up becomes a node in a graph. Dig deeper into a topic (vertical nodes) or branch off to explore related ideas (horizontal nodes), all while seeing your thought process come to life as a visual map.
+# VizThinker AI
+
+**VizThinker is a node-based AI chat interface that transforms your conversations into dynamic, interactive thinking maps. Move beyond linear chats and visualize the flow of your ideas.**
+
+Traditional chatbots are restrictive, forcing conversations into a single, linear thread. VizThinker breaks that mold by allowing you to branch off at any point, explore tangents, and build a visual network of your thoughts. Each interaction with the LLM creates a new node on an infinite canvas, letting you see how your ideas connect and evolve.
+
+<p align="center">
+  <img src="src/asset/images/layout.png" alt="VizThinker Graph Interface" width="700" />
+</p>
 
 ## Key Features
 
-- **Node-Based Chats**: Start with a root prompt, then add follow-up or branching nodes to dive deep or explore tangents.
-- **Dynamic Graph**: Watch your conversation grow into an interactive graph with clear vertical (deep dive) and horizontal (side quest) connections.
-- **LLM Power**: Send node content to an LLM (like Google Generative AI) and get responses as new nodes.
-- **Visually Distinct Branching**: Create follow-up nodes (solid lines) or branching nodes (dotted lines) to organize your thoughts.
-- **Interactive Canvas**: Pan, zoom, and select nodes to navigate your idea graph.
-- **Customizable Experience**: Tailor the look and feel with a settings modal for different LLM providers (Google Generative AI, Ollama), themes, and colors.
-- **Desktop Native**: Runs as a standalone desktop application for a seamless, focused experience.
-- **Persistent Sessions**: Automatically saves your graph to a local SQLite database and restores it on startup.
+- **🧠 Node-Based Conversations**: Every prompt and response becomes a node in a graph. Create direct follow-ups or branch out to explore new ideas without losing context.
+- **🔗 Visual Branching**: Differentiate between deep dives (vertical, solid lines) and exploratory tangents (horizontal, dotted lines) for a clear, organized thought process.
+- **🤖 Multi-Provider LLM Integration**: Connect to your favorite LLM providers, including **Google (Gemini)**, **OpenAI (GPT)**, **Anthropic (Claude)**, **X (Grok)**, and local instances via **Ollama**.
+- **🔐 User Authentication**: Secure login and signup system to keep your conversation maps private and persistent.
+- **💾 Persistent Sessions**: Your conversations are automatically saved. Log in from anywhere and pick up right where you left off.
+- **⚙️ Customizable Experience**: Use the settings panel to configure API keys, select your preferred provider and model, and customize the look and feel of your graph.
+- **📤 Multiple Export Options**:
+  - **HTML**: Export your conversation as a fully interactive, self-contained web page.
+  - **PNG**: Save a high-quality image of your entire thinking map.
+  - **Markdown**: Use the AI to generate a structured, professional summary of your conversation, perfect for documentation or sharing.
+- **🖱️ Intuitive Interface**: A polished and responsive interface with an infinite canvas, smooth panning/zooming, and a clean, modern design.
 
+<p align="center">
+  <img src="src/asset/images/settings.png" alt="VizThinker Settings" width="500" />
+</p>
 
-## User Stories
+## Tech Stack
 
-- As a VizThinker, I want to see my chat as a graph to track how ideas connect.
-- As a VizThinker, I want to branch off a specific point in an LLM response to dig into it without losing the main thread.
-- As a VizThinker, I want to save my idea graph locally and revisit it later.
+- **Frontend**: React, Vite, TypeScript, Chakra UI, ReactFlow, Zustand
+- **Backend**: FastAPI (Python), Uvicorn
+- **Database**: PostgreSQL
+- **LLM Integration**: Direct API calls to Google, OpenAI, Anthropic, X, and Ollama.
 
 ## Installation & Running
-Dependencies:
-- Node.js
-- Python
-- SQLite
-- Modern web browser (Chrome, Firefox, Safari, Edge)
 
-- **1. Clone the repository**
-  ```bash
-  git clone https://github.com/jasoncyhsu/vizthinker.git
-  cd vizthinker
-  ```
+**Prerequisites:**
+- Node.js & npm
+- Python & pip
+- PostgreSQL
 
-- **2. Install all dependencies**
-  This single command will verify your setup, create a Python virtual environment, and install all required Node.js and Python packages.
-  ```bash
-  make install
-  ```
+**1. Clone the repository:**
+```bash
+git clone https://github.com/jasoncyhsu/vizthinker.git
+cd vizthinker
+```
 
-- **3. Build the application**
-  This command compiles the frontend code into a static build.
-  ```bash
-  make build
-  ```
+**2. Configure Environment Variables:**
+Create a `.env` file in the root directory and add your PostgreSQL database connection details:
+```
+DB_USER=your_db_user
+DB_PASSWORD=your_db_password
+DB_HOST=localhost
+DB_PORT=5432
+DB_NAME=vizthinker
+```
 
-- **4. Run the application**
-  This command starts the backend server and launches the desktop application.
-  ```bash
-  make run
-  ```
+**3. Install Dependencies:**
+A convenient `Makefile` command is provided to set up everything.
+```bash
+make install
+```
+This will create a Python virtual environment (`.venv`) and install all required `npm` and `pip` packages.
 
+**4. Build the Application:**
+This command compiles the frontend code into a static build (`dist` folder).
+```bash
+make build
+```
 
-## Roadmap
+**5. Run the Application:**
+This command starts the backend server and launches the application.
+```bash
+make run
+```
 
-- **Phase 1: Core Functionality (Complete)**
-  - ✅ Node-based graph interface with branching logic.
-  <p align="center">
-    <img src="src/asset/images/layout.png" alt="VizThinker graph" width="500" />
-  </p>
-  <p align="center">
-    <img src="src/asset/images/extended.png" alt="Input" width="500" />
-  </p>
-  - ✅ Integration with multiple LLM providers (Google, Ollama).
-  - ✅ Standalone desktop application 
-  - ✅ Local session persistence with SQLite.
-  - ✅ Customizable settings modal for themes and providers.
-  <p align="center">
-    <img src="src/asset/images/settings.png" alt="VizThinker settings" width="500" />
-  </p>
-
-
-- **Phase 2: UI/UX Polish & Advanced Features (In Progress)**
-  - ⏳ Refine graph layout and node interactions.
-  - ⏳ Implement node content editing and styling.
-  - ⏳ Explore automatic graph layout algorithms.
-
-- **Phase 3: Testing & Release**
-  - 📋 Beta testing with fellow VizThinkers.
-  - 🚀 First official release.
-
-### Future Vibes
-- Drag nodes around and try new graph layouts.
-- Add images or links to nodes.
-- Export graphs as PNG or JSON.
-- Let multiple VizThinkers collaborate on the same graph.
-- Search and navigate huge graphs easily.
-
-## Why It Rocks
-
-VizThinker AI is built for folks who think in networks, not lists. It’s a game-changer for brainstorming, research, or just exploring big ideas on your desktop. We’re starting simple but aiming big—join us to make thinking with AI as visual as your imagination!
-
-## Contributing
-
-Got ideas? Found a bug? Open an issue or submit a PR! We’re all about feedback from VizThinkers to make this app shine.
+The application will be available at `http://127.0.0.1:8000`.
 
 ## License
 
-MIT License—feel free to fork and play around!
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+

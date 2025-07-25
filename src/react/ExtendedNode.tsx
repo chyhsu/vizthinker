@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Box, Text, IconButton, Flex, VStack, Avatar, Input, Button, useToast, chakra, Spinner } from '@chakra-ui/react';
 import {
   extendedNodeBackButtonStyle,
@@ -35,6 +35,38 @@ const ExtendedNode: React.FC<ExtendedNodeProps> = ({ nodeId, onClose }) => {
   const selectedNode = nodeId ? nodes.find(n => n.id === nodeId) : null;
   const nodeData = selectedNode?.data ?? { prompt: '', response: '', isLoading: false };
   const { backgroundImage, chatNodeColor, fontColor, provider, providerModels } = useSettings();
+  // Width state for horizontal resize
+  const [panelWidth, setPanelWidth] = useState<number>(500);
+  const resizeActive = useRef(false);
+  const startX = useRef(0);
+  const startWidth = useRef(500);
+
+  // Mouse move / up listeners
+  useEffect(() => {
+    const onMove = (e: MouseEvent) => {
+      if (!resizeActive.current) return;
+      const delta = startX.current - e.clientX;
+      const newWidth = Math.min(Math.max(320, startWidth.current + delta), window.innerWidth - 100);
+      setPanelWidth(newWidth);
+    };
+    const onUp = () => {
+      resizeActive.current = false;
+      document.body.style.cursor = '';
+    };
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('mouseup', onUp);
+    return () => {
+      window.removeEventListener('mousemove', onMove);
+      window.removeEventListener('mouseup', onUp);
+    };
+  }, []);
+
+  const startResize = (e: React.MouseEvent) => {
+    resizeActive.current = true;
+    startX.current = e.clientX;
+    startWidth.current = panelWidth;
+    document.body.style.cursor = 'ew-resize';
+  };
   const [inputValue, setInputValue] = useState('');
   const [isDeleting, setIsDeleting] = useState(false);
   const toast = useToast();
@@ -99,9 +131,9 @@ const ExtendedNode: React.FC<ExtendedNodeProps> = ({ nodeId, onClose }) => {
       top="0"
       right="0"
       bottom="0"
-      width="500px"
+      width={`${panelWidth}px`}
       overflow="auto"
-      resize="horizontal"
+      
       minW="320px"
       zIndex={1000}
       p={4}
@@ -110,6 +142,9 @@ const ExtendedNode: React.FC<ExtendedNodeProps> = ({ nodeId, onClose }) => {
       bg={chatNodeColor}
       color={fontColor}
     >
+      {/* Left edge resize grip */}
+      <Box position="absolute" left="-4px" top="0" bottom="0" width="8px" cursor="ew-resize" onMouseDown={startResize} />
+
       <Flex justify="space-between" align="center" mb={4}>
         <IconButton
           {...extendedNodeBackButtonStyle}
