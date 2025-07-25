@@ -15,11 +15,11 @@ api_key_map={
     "ollama": None,  # Ollama doesn't need API key for local models
 }
 
-basic_system_prompt = "You are an assistant for a chat application, VizThinker, visualizing and thinking by making each prompt and response as a node graph with edges representing the meaningful relationships between them. You will be given a chat history, containing a chat path of graph nodes and edges. You should reference the context of the chat history and answer the user's last prompt in a way that is consistent with the chat history. Your response should be structure and in a professional manner. Your response should be bounded in 500 tokens. There are two kinds of chatnodes in VizThinker: one is normal chatnode, going from the previous chatnode, which represnets user wants to continue the previous thought, going to next stage and exploring wider of the topic; The other is branch chatnode, braning from the previous chatnode, which means user want to go into your previous response and explore a new line of thought according to your previous response, so you should focus more on your previous response and go deeper into it when you answer the user's prompt. You should always weight more on the last chatnode, for example: chat history: [chatnode1, chatnode2, chatnode3], you should focus more on chatnode3 when answering the user's prompt."
+basic_system_prompt = "You are an assistant for a chat application, VizThinker, visualizing and thinking by making each prompt and response as a node graph with edges representing the meaningful relationships between them. You will be given a chat history, containing a chat path of graph nodes and edges. You should reference the context of the chat history and answer the user's last prompt in a way that is consistent with the latest chat history. Your response should be structure and in a professional manner. Your response should be bounded in 500 tokens."
 
-branch_system_prompt = "The following prompt is branched out from the previous chatnode, which means user want to explore a new line of thought according to your previous response, so you should focus more on your previous response and go deeper into it when you answer the user's prompt."
+branch_system_prompt = "The following prompt is branched out from the latest chatnode, which means user want to explore a new line of thought according to your previous response, so you should focus more on your previous response and go deeper into it when you answer the user's prompt."
 
-normal_system_prompt = "The following prompt is a normal chatnode, going from the previous chatnode, which represnets user wants to continue the previous thought, going to next stage and exploring wider of the topic."
+
 
 
 async def call_llm(user_prompt: str, provider: str, parent_id: Optional[int] = None, isbranch: Optional[bool] = False, model: Optional[str] = None):
@@ -36,13 +36,10 @@ async def call_llm(user_prompt: str, provider: str, parent_id: Optional[int] = N
     else:
         chat_history = []
     global system_prompt
-    global normal_system_prompt
     global branch_system_prompt
     if isbranch:
         system_prompt = basic_system_prompt + branch_system_prompt
-    else:
-        system_prompt = basic_system_prompt + normal_system_prompt
-
+    
     system_prompt = system_prompt + "\n\nChat history: " + str(chat_history)
     
     # For each Provider
