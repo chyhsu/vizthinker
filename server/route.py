@@ -42,11 +42,12 @@ def setup_routes(app: FastAPI):
             chatrecord_id = int(body.get("chatrecord_id"))
             prompt = body.get("prompt", "")
             provider = body.get("provider", "google")
+            position = body.get("position")
             model = body.get("model")  # Optional model specification
             parent_id = int(body.get("parent_id"))
-            isBranch = body.get("isBranch", False)
+            isbranch = body.get("isbranch", False)
             
-            logger.info(f"Received chat request: prompt='{prompt}', provider='{provider}', model='{model}', parent_id={parent_id}, isBranch={isBranch}, user_id={user_id}, chatrecord_id={chatrecord_id}")
+            logger.info(f"Received chat request: prompt='{prompt}', provider='{provider}', model='{model}', parent_id={parent_id}, isbranch={isbranch}, positions={position},user_id={user_id}, chatrecord_id={chatrecord_id}")
             
             if not prompt:
                 raise HTTPException(status_code=400, detail="Prompt is required")
@@ -55,7 +56,7 @@ def setup_routes(app: FastAPI):
             response = await call_llm(prompt, provider, parent_id, chatrecord_id, model)
             
             # Store the conversation
-            message_id = await store_one_message(chatrecord_id, prompt, response, parent_id, isBranch)
+            message_id = await store_one_message(chatrecord_id, prompt, response, parent_id, position,isbranch)
             
             return {
                 "response": response,
@@ -88,6 +89,7 @@ def setup_routes(app: FastAPI):
         """Handle get all chat records requests."""
         try:
             records = await get_messages(chatrecord_id)
+            logger.info(f"Retrieved chat records: {records}")
             return {"status": "success", "records": records}
         except Exception as e:
             logger.error(f"Error getting chat records: {e}", exc_info=True)

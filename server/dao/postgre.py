@@ -63,7 +63,7 @@ CREATE TABLE IF NOT EXISTS messages (
     response   text,
     parent_id  integer,
     positions  jsonb,
-    isBranch   boolean
+    isbranch   boolean
 );
 """
 
@@ -125,6 +125,10 @@ async def create_chatrecord(user_id: int) -> int:
             user_id,
         )
         await conn.execute("UPDATE users SET chatrecords = array_append(chatrecords, $1) WHERE id = $2", row["id"], user_id)
+        welcome_prompt = "Hi there! What is VizThinker?"
+        welcome_response = """
+# Welcome to VizThinker!\n\nVizThink is a new way to interact with AI. Instead of a linear chat, your conversation becomes a **dynamic thinking map**.\n\n### Key Features:\n\n*   **Graph-Based Chat**: Each prompt and response creates a new node in the graph, visualizing the flow of your ideas.\n*   **Branching Conversations**: Explore different lines of thought by creating branches from any node.\n*   **Interactive Map**: Pan and zoom around your conversation map. Single-click to select a node, and double-click to see more details.\n*   **Export Your Map**: Save your thinking map as an image or an HTML file to share or review later.\n\nTo get started, just type a message below!\n"""
+        await store_one_message(row["id"], welcome_prompt, welcome_response, None, '{"x": 100, "y": 100}', False)
         return row["id"]
 
 async def delete_chatrecord(chatrecord_id: int) -> None:
@@ -134,21 +138,40 @@ async def delete_chatrecord(chatrecord_id: int) -> None:
         await conn.execute("DELETE FROM messages WHERE chatrecord_id = $1", chatrecord_id)
         await conn.execute("UPDATE users SET chatrecords = array_remove(chatrecords, $1) WHERE id = $2", chatrecord_id, user_id)
 
-async def get_messages(chatrecord_id: int) -> Optional[List[Tuple[int, int, str, str, Optional[int], bool]]]:
+async def get_messages(chatrecord_id: int) -> Optional[List[Tuple[int, int, str, str, Any, Optional[int], bool]]]:
     pool = await _get_pool()
     async with pool.acquire() as conn:
         rows = await conn.fetch(
-            "SELECT id, chatrecord_id, prompt, response, parent_id, isBranch FROM messages WHERE chatrecord_id = $1",
+            "SELECT id, chatrecord_id, prompt, response, parent_id,positions,isbranch FROM messages WHERE chatrecord_id = $1",
             chatrecord_id,
         )
         if rows is None:
             return None
+        for row in rows:
+            logger.info(type(row["positions"]))
+        def parse_position(pos_str):
+            if not pos_str:
+                return None
+            try:
+                # Try to parse as JSON
+                parsed = json.loads(pos_str)
+                # Validate that it's a proper position object
+                if isinstance(parsed, dict) and 'x' in parsed and 'y' in parsed:
+                    return parsed
+                else:
+                    logger.warning("Invalid position format: %s", pos_str)
+                    return None
+            except (json.JSONDecodeError, TypeError) as e:
+                logger.warning("Failed to parse position '%s': %s", pos_str, e)
+                return None
+        
         return [
             (
                 row["id"],
                 row["chatrecord_id"],
                 row["prompt"],
                 row["response"],
+                parse_position(row["positions"]),
                 row["parent_id"],
                 row["isbranch"],
             )
@@ -160,21 +183,23 @@ async def store_one_message(
     prompt: str,
     response: str,
     parent_id: Optional[int] = None,
-    isBranch: bool = False,
+    position: Optional[dict] = None,
+    isbranch: bool = False,
 ) -> int:
     pool = await _get_pool()
     async with pool.acquire() as conn:
         row = await conn.fetchrow(
             """
-            INSERT INTO messages (chatrecord_id, prompt, response, parent_id, isBranch)
-            VALUES ($1, $2, $3, $4, $5)
+            INSERT INTO messages (chatrecord_id, prompt, response, parent_id, positions, isbranch)
+            VALUES ($1, $2, $3, $4, $5, $6)
             RETURNING id
             """,
             chatrecord_id,
             prompt,
             response,
             parent_id,
-            isBranch,
+            position,
+            isbranch,
         )
         await conn.execute("UPDATE chatrecords SET messages = array_append(messages, $1) WHERE id = $2", row["id"], chatrecord_id)
 
@@ -183,10 +208,19 @@ async def store_one_message(
         return new_id
 
 
-async def store_all_positions(chatrecord_id: int, positions: List[dict[str, Any]]):
+async def store_all_positions(chatrecord_id: int, positions: str):
     pool = await _get_pool()
     async with pool.acquire() as conn:
-
+        logger.info("Storing positions for chatrecord %d.", chatrecord_id)
+        logger.info("Positions: %s", positions)
+        
+        # Parse the JSON string to get the positions array
+        try:
+            positions_array = json.loads(positions)
+        except json.JSONDecodeError:
+            logger.error("Invalid JSON in positions: %s", positions)
+            return 0
+            
         chat_row = await conn.fetchrow(
             "SELECT messages FROM chatrecords WHERE id = $1",
             chatrecord_id,
@@ -203,13 +237,13 @@ async def store_all_positions(chatrecord_id: int, positions: List[dict[str, Any]
             logger.warning("No messages found for chatrecord_id=%d", chatrecord_id)
             return 0
 
-        count = min(len(msg_rows), len(positions))
+        count = min(len(msg_rows), len(positions_array))
         async with conn.transaction():
             for i in range(count):
                 msg_id = msg_rows[i]["id"]
                 await conn.execute(
                     "UPDATE messages SET positions = $1 WHERE id = $2",
-                    json.dumps(positions[i]),
+                    json.dumps(positions_array[i]),
                     msg_id,
                 )
         logger.info("Updated positions for %d messages in chatrecords %d.", count, chatrecord_id)

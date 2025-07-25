@@ -36,7 +36,7 @@ export interface StoreState {
   setViewport: (viewport: Viewport) => void; // Add this
   setExtendedNodeId: (id: string | null) => void;
   Initialize: () => Promise<void>;
-  sendMessage: (prompt: string, provider: string, parentId?: string, isBranch?: boolean, model?: string) => Promise<void>;
+  sendMessage: (prompt: string, provider: string, parentId?: string, isbranch?: boolean, model?: string) => Promise<void>;
   savePositions: () => Promise<void>; // Add this
   createWelcome: () => Promise<void>; // Add this
   deleteNode: (nodeId: string) => Promise<void>; // Add this
@@ -44,6 +44,7 @@ export interface StoreState {
   updateNodeStyle: (nodeId: string, style: React.CSSProperties) => void;
   exportAsImage: () => Promise<void>;
   exportAsHTML: () => void;
+  logout: () => void;
 }
 
 const useStore = create<StoreState>()(
@@ -116,8 +117,9 @@ const useStore = create<StoreState>()(
       const sortedNodes = [...nodes].sort((a, b) => parseInt(a.id) - parseInt(b.id));
       const positions = sortedNodes.map(n => n.position);
       const chatrecord_id = localStorage.getItem('chatrecord_id');
+      console.log('Saving positions for chatrecord %s : %s', chatrecord_id, JSON.stringify(positions));
       try {
-        await axios.post('http://127.0.0.1:8000/chat/positions', { chatrecord_id, positions });
+        await axios.post('http://127.0.0.1:8000/chat/positions', { chatrecord_id, positions: JSON.stringify(positions) });
         console.log('Positions saved successfully');
       } catch (err) {
         console.error('Error saving positions:', err);
@@ -133,16 +135,19 @@ const useStore = create<StoreState>()(
         console.log('Welcome node already exists, skipping creation');
         return;
       }
-
-      const welcomePrompt = "Hi there! What is VizThinker?";
-      const actualWelcomeId = '0'
-      const welcomeResponse = `
-# Welcome to VizThinker!\n\nVizThink is a new way to interact with AI. Instead of a linear chat, your conversation becomes a **dynamic thinking map**.\n\n### Key Features:\n\n*   **Graph-Based Chat**: Each prompt and response creates a new node in the graph, visualizing the flow of your ideas.\n*   **Branching Conversations**: Explore different lines of thought by creating branches from any node.\n*   **Interactive Map**: Pan and zoom around your conversation map. Single-click to select a node, and double-click to see more details.\n*   **Export Your Map**: Save your thinking map as an image or an HTML file to share or review later.\n\nTo get started, just type a message below!\n`;
+      const chatrecord_id = localStorage.getItem('chatrecord_id');
+      const response = await axios.get('http://127.0.0.1:8000/chat/records/' + chatrecord_id);
+      const { records } = response.data;
+      const node_id = records[0]['id'];
+      const parent_id = records[0]['parent_id'];
+      const isbranch = records[0]['isbranch'];
+      const welcomePrompt = records[0]['prompt'];
+      const welcomeResponse = records[0]['response'];
       
       // Create loading welcome node first - positioned in center
       set((state) => {
         const newNode = {
-          id: actualWelcomeId,
+          id:   node_id.toString(),
           type: 'chatNode',
           position: { x: 0, y: 0 }, // Center position - will be adjusted by fitView
           data: { prompt: welcomePrompt, response: welcomeResponse, isLoading: false },
@@ -150,7 +155,7 @@ const useStore = create<StoreState>()(
           draggable: true, // Prevent dragging during loading
         };
         state.nodes.push(newNode);
-        state.extendedNodeId = actualWelcomeId;
+        state.extendedNodeId = node_id.toString();
       });
 
       // Center the view on the welcome node
@@ -272,14 +277,25 @@ const useStore = create<StoreState>()(
           const restoredNodes: Node[] = [];
           const restoredEdges: Edge[] = [];
           
-          chatRecords.forEach(([id, chatrecord_id, prompt, response, positions, parent_id, isBranch]: [number, number, string, string, any, number | null, boolean]) => {
+          chatRecords.forEach(([id, chatrecord_id, prompt, response, positions, parent_id, isbranch]: [number, number, string, string, any, number | null, boolean], index: number) => {
             const nodeId = id.toString();
             
-            // Create node with position from database or default
+            // Create node with position from database or calculate default position
+            let nodePosition;
+            if (positions && typeof positions === 'object' && positions.x !== undefined && positions.y !== undefined) {
+              nodePosition = positions;
+            } else {
+              // Calculate default position based on index
+              nodePosition = {
+                x: 100 + (index % 3) * 400, // Spread horizontally
+                y: 100 + Math.floor(index / 3) * 200 // Stack vertically
+              };
+            }
+            
             const node: Node = {
               id: nodeId,
               type: 'chatNode',
-              position: positions || { x: 0, y: 0 },
+              position: nodePosition,
               data: { prompt, response },
               style: { borderRadius: '1rem', padding: '1rem', width: '350px' },
             };
@@ -291,8 +307,8 @@ const useStore = create<StoreState>()(
                 id: `${parent_id}-${id}`,
                 source: parent_id.toString(),
                 target: nodeId,
-                sourceHandle: isBranch ? 'right' : 'bottom',
-                type: isBranch ? 'branch' : undefined,
+                sourceHandle: isbranch ? 'right' : 'bottom',
+                type: isbranch ? 'branch' : undefined,
               };
               restoredEdges.push(edge);
             }
@@ -327,7 +343,7 @@ const useStore = create<StoreState>()(
       }
     },
 
-    sendMessage: async (prompt: string, provider: string, parentId?: string, isBranch: boolean = false, model?: string) => {
+    sendMessage: async (prompt: string, provider: string, parentId?: string, isbranch: boolean = false, model?: string) => {
       const { nodes, reactFlowInstance } = get();
       let lastNode: Node | undefined;
 
@@ -342,11 +358,11 @@ const useStore = create<StoreState>()(
       }
 
       // Calculate optimal position for final content (not placeholder)
-      const newNodePosition = calculateOptimalPosition(
+      const position = calculateOptimalPosition(
         nodes,
         get().edges,
         lastNode,
-        isBranch,
+        isbranch,
         { prompt, response: 'Thinking...' } // Use estimated content for positioning
       );
 
@@ -354,7 +370,7 @@ const useStore = create<StoreState>()(
       const newNode: Node = {
         id: tempNewNodeId,
         type: 'chatNode',
-        position: newNodePosition, // Fixed position during loading
+        position: position, // Fixed position during loading
         data: { prompt, response: 'Thinking...', isLoading: true },
         style: { borderRadius: '1rem', padding: '1rem', width: '350px' },
         draggable: false, // Prevent dragging during loading
@@ -367,8 +383,8 @@ const useStore = create<StoreState>()(
             id: `e${lastNode.id}-${tempNewNodeId}`,
             source: lastNode.id,
             target: tempNewNodeId,
-            sourceHandle: isBranch ? 'right' : 'bottom',
-            type: isBranch ? 'branch' : undefined,
+            sourceHandle: isbranch ? 'right' : 'bottom',
+            type: isbranch ? 'branch' : undefined,
           };
           state.edges.push(newEdge);
         }
@@ -389,7 +405,7 @@ const useStore = create<StoreState>()(
       try {
         const user_id = localStorage.getItem('user_id');
         const chatrecord_id = localStorage.getItem('chatrecord_id');
-        const postData: any = { prompt, provider, isBranch, chatrecord_id, user_id};
+        const postData: any = { prompt, provider, isbranch, chatrecord_id, position: JSON.stringify(position), user_id};
         if (lastNode) {
           postData.parent_id = lastNode.id;
         }else{
@@ -1112,6 +1128,25 @@ const useStore = create<StoreState>()(
         console.error('Error exporting HTML:', error);
         throw error;
       }
+    },
+
+    logout: () => {
+      // Clear localStorage
+      localStorage.removeItem('user_id');
+      localStorage.removeItem('chatrecord_id');
+      
+      // Reset store state
+      set((state) => {
+        state.nodes = [];
+        state.edges = [];
+        state.selectedNodeId = null;
+        state.extendedNodeId = null;
+        state.viewport = undefined;
+        state.reactFlowInstance = null;
+      });
+      
+      // Redirect to auth page
+      window.location.href = '/auth';
     },
   })),
 );

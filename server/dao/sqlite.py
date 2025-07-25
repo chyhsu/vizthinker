@@ -18,7 +18,7 @@ async def init_db() -> None:
                 response TEXT,
                 parent_id INTEGER,
                 positions TEXT,
-                isBranch BOOLEAN
+                isbranch BOOLEAN
             )
             """
         )
@@ -28,18 +28,18 @@ async def init_db() -> None:
         column_names = [col[1] for col in columns]
         if 'parent_id' not in column_names:
             await db.execute("ALTER TABLE chatrecord ADD COLUMN parent_id INTEGER")
-        if 'isBranch' not in column_names:
-            await db.execute("ALTER TABLE chatrecord ADD COLUMN isBranch BOOLEAN")
+        if 'isbranch' not in column_names:
+            await db.execute("ALTER TABLE chatrecord ADD COLUMN isbranch BOOLEAN")
         await db.commit()
         # Note: Removed automatic deletion of chat records on startup
         # This was causing issues with duplicate welcome nodes
 
-async def store_one_chatrecord(prompt: str, response: str, parent_id: Optional[int] = None, isBranch: bool = False) -> int:
+async def store_one_chatrecord(prompt: str, response: str, parent_id: Optional[int] = None, isbranch: bool = False) -> int:
     """Store a single prompt/response pair along with the parent_id"""
     async with aiosqlite.connect(DB_PATH) as db:
         cursor = await db.execute(
-            "INSERT INTO chatrecord (prompt, response, parent_id, isBranch) VALUES (?, ?, ?, ?)",
-            (prompt, response, parent_id, isBranch),
+            "INSERT INTO chatrecord (prompt, response, parent_id, isbranch) VALUES (?, ?, ?, ?)",
+            (prompt, response, parent_id, isbranch),
         )
         new_id = cursor.lastrowid
         await db.commit()
@@ -83,13 +83,13 @@ async def get_path_history(node_id: int) -> List[Tuple[str, str]]:
 async def get_all_chatrecord():
     """Return list of tuples: (id, prompt, response, positions, parent_id)"""
     async with aiosqlite.connect(DB_PATH) as db:
-        cursor = await db.execute("SELECT id, prompt, response, positions, parent_id, isBranch FROM chatrecord")
+        cursor = await db.execute("SELECT id, prompt, response, positions, parent_id, isbranch FROM chatrecord")
         rows = await cursor.fetchall()
         parsed = []
         for row in rows:
-            id_, prompt, response, pos_json, parent_id, isBranch = row
+            id_, prompt, response, pos_json, parent_id, isbranch = row
             positions = json.loads(pos_json) if pos_json else None
-            parsed.append((id_, prompt, response, positions, parent_id, isBranch))
+            parsed.append((id_, prompt, response, positions, parent_id, isbranch))
         logger.info(f"Retrieved chatrecord: {parsed}")
         return parsed
 async def delete_all_chatrecord():

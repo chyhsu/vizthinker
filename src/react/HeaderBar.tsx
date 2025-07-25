@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Box, Button, Flex, Heading, HStack, Icon, useToast } from '@chakra-ui/react';
-import { FaDownload, FaTrash } from 'react-icons/fa';
+import { FaDownload, FaTrash, FaSignOutAlt } from 'react-icons/fa';
 import { headerBarOuterBoxStyle, headerBarFlexStyle, headerBarHeadingStyle, headerBarSettingsButtonStyle } from '../typejs/style';
 import SettingsModal from './Settings';
 import ExportModal from './ExportModal';
@@ -11,7 +11,7 @@ const HeaderBar: React.FC = () => {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isExportOpen, setIsExportOpen] = useState(false);
   const [isClearing, setIsClearing] = useState(false);
-  const { clearAllConversations } = useStore();
+  const { clearAllConversations, logout } = useStore();
   const { provider, providerModels } = useSettings();
   const toast = useToast();
 
@@ -40,6 +40,10 @@ const HeaderBar: React.FC = () => {
     } finally {
       setIsClearing(false);
     }
+  };
+
+  const handleLogout = () => {
+    logout();
   };
 
   return (
@@ -73,6 +77,13 @@ const HeaderBar: React.FC = () => {
               {...headerBarSettingsButtonStyle}
             >
               Settings
+            </Button>
+            <Button
+              onClick={handleLogout}
+              {...headerBarSettingsButtonStyle}
+              leftIcon={<Icon as={FaSignOutAlt} />}
+            >
+              Logout
             </Button>
           </HStack>
         </Flex>

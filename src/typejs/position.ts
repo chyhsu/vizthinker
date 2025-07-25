@@ -21,7 +21,7 @@ export const estimateNodeHeight = (prompt: string, response: string): number => 
     nodes: Node[],
     edges: Edge[],
     parentNode: Node | undefined,
-    isBranch: boolean,
+    isbranch: boolean,
     newNodeContent: { prompt: string; response: string }
   ): { x: number; y: number } => {
     const verticalSpacing = 250; // Reduced vertical spacing to bring nodes closer vertically
@@ -33,7 +33,7 @@ export const estimateNodeHeight = (prompt: string, response: string): number => 
       return { x: 0, y: 0 }; // Center position - ReactFlow will handle the actual centering with fitView
     }
   
-    if (isBranch) {
+    if (isbranch) {
       // For branching, position horizontally with proper spacing, but also below the parent
       const parentHeight = estimateNodeHeight(
         parentNode.data?.prompt || '', 
