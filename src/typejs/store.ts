@@ -172,11 +172,8 @@ const useStore = create<StoreState>()(
       const { reactFlowInstance } = get();
       try {
         // Clear backend data
-        await axios.delete('http://127.0.0.1:8000/chat/records', {
-          data: {
-            chatrecord_id: localStorage.getItem('chatrecord_id'),
-          },
-        });
+        const chatrecord_id= localStorage.getItem('chatrecord_id')
+        await axios.delete(`http://127.0.0.1:8000/chat/records/${chatrecord_id}`);
         
         // Clear frontend state
         set((state) => {
@@ -213,7 +210,8 @@ const useStore = create<StoreState>()(
     deleteNode: async (nodeId: string) => {
       try {
         // Call backend API to delete the node and its descendants
-        await axios.delete(`http://127.0.0.1:8000/chat/records/${nodeId}`);
+        const chatrecord_id= localStorage.getItem('chatrecord_id')
+        await axios.delete(`http://127.0.0.1:8000/chat/records/${chatrecord_id}/${nodeId}`);
         
         // Get all descendant node IDs recursively
         const getAllDescendants = (parentId: string, nodes: Node[], edges: Edge[]): string[] => {

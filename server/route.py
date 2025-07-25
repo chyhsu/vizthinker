@@ -38,12 +38,12 @@ def setup_routes(app: FastAPI):
         """Handle chat requests and store conversation records."""
         try:
             body = await request.json()
-            user_id = body.get("user_id")
-            chatrecord_id = body.get("chatrecord_id")
+            user_id = int(body.get("user_id"))
+            chatrecord_id = int(body.get("chatrecord_id"))
             prompt = body.get("prompt", "")
             provider = body.get("provider", "google")
             model = body.get("model")  # Optional model specification
-            parent_id = body.get("parent_id")
+            parent_id = int(body.get("parent_id"))
             isBranch = body.get("isBranch", False)
             
             logger.info(f"Received chat request: prompt='{prompt}', provider='{provider}', model='{model}', parent_id={parent_id}, isBranch={isBranch}, user_id={user_id}, chatrecord_id={chatrecord_id}")
@@ -55,7 +55,7 @@ def setup_routes(app: FastAPI):
             response = await call_llm(prompt, provider, parent_id, chatrecord_id, model)
             
             # Store the conversation
-            message_id = await store_one_message(prompt, response, parent_id, isBranch, chatrecord_id)
+            message_id = await store_one_message(chatrecord_id, prompt, response, parent_id, isBranch)
             
             return {
                 "response": response,
@@ -75,7 +75,7 @@ def setup_routes(app: FastAPI):
         """Save node positions."""
         try:
             body = await request.json()
-            chatrecord_id = body.get("chatrecord_id")
+            chatrecord_id = int(body.get("chatrecord_id"))
             positions = body.get("positions", [])
             await store_all_positions(chatrecord_id, positions)
             return {"status": "success"}
@@ -93,23 +93,21 @@ def setup_routes(app: FastAPI):
             logger.error(f"Error getting chat records: {e}", exc_info=True)
             raise HTTPException(status_code=500, detail=str(e))
 
-    @app.delete("/chat/records")
-    async def delete_all_records(request: Request):
+    @app.delete("/chat/records/{chatrecord_id}")
+    async def delete_all_records(chatrecord_id: int):
         """Delete all chat records."""
         try:
-            body = await request.json()
-            chatrecord_id = body.get("chatrecord_id")
             await delete_all_messages(chatrecord_id)
             return {"status": "success", "message": "All chat records deleted"}
         except Exception as e:
             logger.error(f"Error deleting all records: {e}", exc_info=True)
             raise HTTPException(status_code=500, detail=str(e))
 
-    @app.delete("/chat/records/{message_id}")
-    async def delete_record(message_id: int):
+    @app.delete("/chat/records/{chatrecord_id}/{message_id}")
+    async def delete_record(chatrecord_id: int, message_id: int):
         """Delete a specific chat record and its children."""
         try:
-            await delete_single_message(message_id)
+            await delete_single_message(chatrecord_id, message_id)
             return {"status": "success", "message": f"Record {message_id} and its children deleted"}
         except Exception as e:
             logger.error(f"Error deleting record {message_id}: {e}", exc_info=True)

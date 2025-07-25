@@ -40,7 +40,7 @@ async def _get_pool() -> asyncpg.Pool:
 
 
 CREATE_CHATRECORD = """
-CREATE TABLE IF NOT EXISTS chatrecord (
+CREATE TABLE IF NOT EXISTS chatrecords (
     id         serial PRIMARY KEY,
     user_id    integer REFERENCES users(id) ON DELETE CASCADE,
     messages   integer[]
@@ -58,10 +58,10 @@ CREATE TABLE IF NOT EXISTS users (
 CREATE_MESSAGES = """
 CREATE TABLE IF NOT EXISTS messages (
     id         serial PRIMARY KEY,
-    chatrecord_id integer REFERENCES chatrecord(id) ON DELETE CASCADE,
+    chatrecord_id integer REFERENCES chatrecords(id) ON DELETE CASCADE,
     prompt     text,
     response   text,
-    parent_id  integer REFERENCES messages(id) ON DELETE CASCADE,
+    parent_id  integer,
     positions  jsonb,
     isBranch   boolean
 );
@@ -71,12 +71,12 @@ async def init_db() -> None:
     """Ensure schema exists."""
     pool = await _get_pool()
     async with pool.acquire() as conn:
-        # Create tables in dependency order: users -> chatrecord -> messages
+        # Create tables in dependency order: users -> chatrecords -> messages
         await conn.execute(CREATE_USER)
         await conn.execute(CREATE_CHATRECORD)
         await conn.execute(CREATE_MESSAGES)
-        await conn.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS chatrecords integer[] REFERENCES chatrecord(id) ON DELETE CASCADE;")
-        await conn.execute("ALTER TABLE chatrecord ADD COLUMN IF NOT EXISTS messages integer[] REFERENCES messages(id) ON DELETE CASCADE;")
+        await conn.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS chatrecords integer[] REFERENCES chatrecords(id) ON DELETE CASCADE;")
+        await conn.execute("ALTER TABLE chatrecords ADD COLUMN IF NOT EXISTS messages integer[] REFERENCES messages(id) ON DELETE CASCADE;")
     # sanity-check credentials
     async with pool.acquire() as con:
         who = await con.fetchval("select current_user")
@@ -121,7 +121,7 @@ async def create_chatrecord(user_id: int) -> int:
     pool = await _get_pool()
     async with pool.acquire() as conn:
         row = await conn.fetchrow(
-            "INSERT INTO chatrecord (user_id) VALUES ($1) RETURNING id",
+            "INSERT INTO chatrecords (user_id) VALUES ($1) RETURNING id",
             user_id,
         )
         await conn.execute("UPDATE users SET chatrecords = array_append(chatrecords, $1) WHERE id = $2", row["id"], user_id)
@@ -130,11 +130,11 @@ async def create_chatrecord(user_id: int) -> int:
 async def delete_chatrecord(chatrecord_id: int) -> None:
     pool = await _get_pool()
     async with pool.acquire() as conn:
-        await conn.execute("DELETE FROM chatrecord WHERE id = $1", chatrecord_id)
+        await conn.execute("DELETE FROM chatrecords WHERE id = $1", chatrecord_id)
         await conn.execute("DELETE FROM messages WHERE chatrecord_id = $1", chatrecord_id)
         await conn.execute("UPDATE users SET chatrecords = array_remove(chatrecords, $1) WHERE id = $2", chatrecord_id, user_id)
 
-async def get_messages(chatrecord_id: int) -> Optional[List[Tuple[int, int, int, str, str, Optional[int], bool]]]:
+async def get_messages(chatrecord_id: int) -> Optional[List[Tuple[int, int, str, str, Optional[int], bool]]]:
     pool = await _get_pool()
     async with pool.acquire() as conn:
         rows = await conn.fetch(
@@ -150,7 +150,7 @@ async def get_messages(chatrecord_id: int) -> Optional[List[Tuple[int, int, int,
                 row["prompt"],
                 row["response"],
                 row["parent_id"],
-                row["isBranch"],
+                row["isbranch"],
             )
             for row in rows
         ]
@@ -176,10 +176,10 @@ async def store_one_message(
             parent_id,
             isBranch,
         )
-        await conn.execute("UPDATE chatrecord SET messages = array_append(messages, $1) WHERE id = $2", row["id"], chatrecord_id)
+        await conn.execute("UPDATE chatrecords SET messages = array_append(messages, $1) WHERE id = $2", row["id"], chatrecord_id)
 
         new_id = row["id"]  # type: ignore[index]
-        logger.info("Message saved with id %d in chatrecord %d.", new_id, chatrecord_id)
+        logger.info("Message saved with id %d in chatrecords %d.", new_id, chatrecord_id)
         return new_id
 
 
@@ -188,7 +188,7 @@ async def store_all_positions(chatrecord_id: int, positions: List[dict[str, Any]
     async with pool.acquire() as conn:
 
         chat_row = await conn.fetchrow(
-            "SELECT messages FROM chatrecord WHERE id = $1",
+            "SELECT messages FROM chatrecords WHERE id = $1",
             chatrecord_id,
         )
         if chat_row and chat_row["messages"]:
@@ -212,7 +212,7 @@ async def store_all_positions(chatrecord_id: int, positions: List[dict[str, Any]
                     json.dumps(positions[i]),
                     msg_id,
                 )
-        logger.info("Updated positions for %d messages in chatrecord %d.", count, chatrecord_id)
+        logger.info("Updated positions for %d messages in chatrecords %d.", count, chatrecord_id)
         return count
 
 
@@ -238,11 +238,11 @@ async def delete_all_messages(chatrecord_id: int) -> None:
     pool = await _get_pool()
     async with pool.acquire() as conn:
         await conn.execute("DELETE FROM messages WHERE chatrecord_id = $1", chatrecord_id)
-        await conn.execute("UPDATE chatrecord SET messages = array_remove(messages, $1) WHERE id = $2", chatrecord_id, chatrecord_id)
+        await conn.execute("UPDATE chatrecords SET messages = '{}' WHERE id = $1", chatrecord_id)
     logger.info("Chat history cleared successfully.")
 
 
-async def delete_single_message(message_id: int) -> bool:
+async def delete_single_message(chatrecord_id: int, message_id: int) -> bool:
     """Delete a single chat record and its descendants."""
     pool = await _get_pool()
     async with pool.acquire() as conn:
@@ -256,7 +256,7 @@ async def delete_single_message(message_id: int) -> bool:
             "DELETE FROM messages WHERE id = ANY($1::int[])",
             ids_to_delete,
         )
-        await conn.execute("UPDATE chatrecord SET messages = array_remove(messages, $1) WHERE id = $2", message_id, chatrecord_id)
+        await conn.execute("UPDATE chatrecords SET messages = array_remove(messages, $1) WHERE id = $2", message_id, chatrecord_id)
         return True
 
 
