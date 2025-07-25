@@ -42,7 +42,6 @@ export interface StoreState {
   deleteNode: (nodeId: string) => Promise<void>; // Add this
   clearAllConversations: (provider?: string, model?: string) => Promise<void>; // Add this
   updateNodeStyle: (nodeId: string, style: React.CSSProperties) => void;
-  logout: () => void;
 }
 
 const useStore = create<StoreState>()(
@@ -433,26 +432,6 @@ const useStore = create<StoreState>()(
       }
     },
 
-   
-
-    logout: () => {
-      // Clear localStorage
-      localStorage.removeItem('user_id');
-      localStorage.removeItem('chatrecord_id');
-      
-      // Reset store state
-      set((state) => {
-        state.nodes = [];
-        state.edges = [];
-        state.selectedNodeId = null;
-        state.extendedNodeId = null;
-        state.viewport = undefined;
-        state.reactFlowInstance = null;
-      });
-      
-      // Redirect to auth page
-      window.location.href = '/auth';
-    },
   })),
 );
 

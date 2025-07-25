@@ -15,6 +15,7 @@ import {
   useToast,
 } from '@chakra-ui/react';
 import { useNavigate } from 'react-router-dom';
+import { handleLogin as authHandleLogin, handleSignup as authHandleSignup } from '../typejs/auth';
 
 /**
  * A standalone authentication page that allows users to either log in or sign up.
@@ -30,70 +31,16 @@ const AuthPage: React.FC = () => {
   const navigate = useNavigate();
   const toast = useToast();
 
-  // ===== Handlers =====
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    try {
-      const res = await fetch('http://127.0.0.1:8000/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          username: login.username.trim(),
-          password: login.password.trim(),
-        }),
-      });
-  
-      if (!res.ok) {
-        const { detail } = await res.json();
-        throw new Error(detail ?? 'Login failed');
-      }
-  
-      const { user_id, chatrecord_id } = await res.json();  // {status, message, user_id, chatrecord_id}
-      if (user_id === null) {
-        throw new Error('Login failed');
-      }
-      localStorage.setItem('user_id', String(user_id));
-      localStorage.setItem('chatrecord_id', String(chatrecord_id));
-      toast({ title: 'Logged in', status: 'success', duration: 1500, isClosable: true });
-      navigate('/main', { replace: true });
-    } catch (err: any) {
-      toast({ title: err.message, status: 'error', duration: 2000, isClosable: true });
-    }
+  // Wrapper functions that call the imported auth handlers
+  const handleLogin = (e: React.FormEvent) => {
+    authHandleLogin(e, login, toast, navigate);
   };
 
-  const handleSignup = async (e: React.FormEvent) => {
-    
-    e.preventDefault();
-    try {
-      if (signup.password !== signup.confirm) {
-        toast({ title: 'Passwords do not match', status: 'error', duration: 3000, isClosable: true });
-        return;
-      }
-      const res = await fetch('http://127.0.0.1:8000/auth/signup', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          username: signup.username.trim(),
-          password: signup.password.trim(),  
-        }),
-      });
-      if (!res.ok) {
-        const { detail } = await res.json();
-        throw new Error(detail ?? 'Signup failed');
-      }
-      console.log('Signing up with', signup);
-      const { user_id, chatrecord_id } = await res.json();
-      if (user_id === null) {
-        throw new Error('Signup failed');
-      }
-      localStorage.setItem('user_id', String(user_id));
-      localStorage.setItem('chatrecord_id', String(chatrecord_id));
-      toast({ title: 'Account created', status: 'success', duration: 1500, isClosable: true });
-      navigate('/main', { replace: true });
-    } catch (err: any) {
-      toast({ title: err.message, status: 'error', duration: 2000, isClosable: true });
-    }
+  const handleSignup = (e: React.FormEvent) => {
+    authHandleSignup(e, signup, toast, navigate);
   };
+
+  
 
   // ===== Render =====
   return (

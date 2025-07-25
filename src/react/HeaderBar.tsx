@@ -2,16 +2,17 @@ import React, { useState } from 'react';
 import { Box, Button, Flex, Heading, HStack, Icon, useToast } from '@chakra-ui/react';
 import { FaDownload, FaTrash, FaSignOutAlt } from 'react-icons/fa';
 import { headerBarOuterBoxStyle, headerBarFlexStyle, headerBarHeadingStyle, headerBarSettingsButtonStyle } from '../typejs/style';
-import SettingsModal from './Settings';
-import ExportModal from './ExportModal';
+import { logout } from '../typejs/auth';
 import useStore from '../typejs/store';
 import { useSettings } from './SettingsContext';
+import SettingsModal from './Settings';
+import ExportModal from './ExportModal';
 
 const HeaderBar: React.FC = () => {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isExportOpen, setIsExportOpen] = useState(false);
   const [isClearing, setIsClearing] = useState(false);
-  const { clearAllConversations, logout } = useStore();
+  const { clearAllConversations } = useStore();
   const { provider, providerModels } = useSettings();
   const toast = useToast();
 
