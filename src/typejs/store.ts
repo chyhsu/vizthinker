@@ -126,12 +126,12 @@ const useStore = create<StoreState>()(
     createWelcome: async () => {
       const { nodes, reactFlowInstance } = get();
     
-      const existingWelcome = nodes.length > 0;
+      // const existingWelcome = nodes.length > 0;
       
-      if (existingWelcome) {
-        console.log('Welcome node already exists, skipping creation');
-        return;
-      }      
+      // if (existingWelcome) {
+      //   console.log('Welcome node already exists, skipping creation');
+      //   return;
+      // }      
       const chatrecord_id = localStorage.getItem('chatrecord_id');
       let response = await axios.post('http://127.0.0.1:8000/welcome', { chatrecord_id });
       const node_id = response.data.message_id?.toString() ?? '0';
@@ -249,9 +249,12 @@ const useStore = create<StoreState>()(
           if (state.extendedNodeId && nodesToDelete.includes(state.extendedNodeId)) {
             state.extendedNodeId = null;
           }
+          if (state.nodes.length === 0) {
+            console.log("No nodes left, creating welcome node");
+            get().createWelcome();
+          }
         });
-  
-        get().Initialize();
+        
         console.log(`Node ${nodeId} and its descendants deleted successfully.`);
       } catch (error) {
         console.error('Error deleting node:', error);
