@@ -39,7 +39,8 @@ async def call_llm(user_prompt: str, provider: str, parent_id: Optional[int] = N
     global branch_system_prompt
     if isbranch:
         system_prompt = basic_system_prompt + branch_system_prompt
-    
+    else:
+        system_prompt = basic_system_prompt
     system_prompt = system_prompt + "\n\nChat history: " + str(chat_history)
     
     # For each Provider
