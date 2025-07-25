@@ -38,8 +38,8 @@ const AuthPage: React.FC = () => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          username: login.username,
-          password: login.password,
+          username: login.username.trim(),
+          password: login.password.trim(),
         }),
       });
   
@@ -73,8 +73,8 @@ const AuthPage: React.FC = () => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          username: signup.username,
-          password: signup.password,
+          username: signup.username.trim(),
+          password: signup.password.trim(),  
         }),
       });
       if (!res.ok) {

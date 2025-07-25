@@ -272,7 +272,7 @@ const useStore = create<StoreState>()(
         const response = await axios.get(`http://127.0.0.1:8000/chat/records/${chatrecord_id}`);
         const chatRecords = response.data.records; // Backend returns {records}
         console.log("chatrecord length: ", chatRecords.length);
-        
+        const { reactFlowInstance } = get();
         if (chatRecords && chatRecords.length > 0) {
           // Convert backend data to React Flow nodes
           const restoredNodes: Node[] = [];
@@ -321,17 +321,18 @@ const useStore = create<StoreState>()(
             state.nodes = restoredNodes;
             state.edges = restoredEdges;
             
-            // // Find and automatically extend the initial welcome node
-            // const welcomeNode = restoredNodes.find(node => 
-            //   node.data?.prompt === "Welcome to VizThinker AI" || 
-            //   node.data?.response?.includes("Hello! I'm your AI assistant")
-            // );
-            
-            // if (welcomeNode) {
-            //   state.extendedNodeId = welcomeNode.id;
-            // }
           });
-          
+          setTimeout(() => {
+            if (reactFlowInstance) {
+              reactFlowInstance.fitView({ 
+                padding: 0.1, 
+                includeHiddenNodes: false,
+                duration: 800,
+                minZoom: 0.5,
+                maxZoom: 1.5
+              });
+            }
+          }, 200);
           console.log(`Restored ${restoredNodes.length} nodes and ${restoredEdges.length} edges from backend`);
         } else {
           // No existing data, create welcome node
