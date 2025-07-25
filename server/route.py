@@ -5,7 +5,7 @@ from fastapi.responses import FileResponse
 from pathlib import Path
 from pydantic import BaseModel
 from typing import Dict
-from server.llm import call_llm
+from server.llm import call_llm, generate_markdown
 from server.logger import logger
 from server.dao.postgre import create_user, search_user, store_one_message, store_all_positions, get_messages, delete_all_messages, delete_single_message, create_chatrecord
 
@@ -71,7 +71,7 @@ def setup_routes(app: FastAPI):
                 raise HTTPException(status_code=400, detail="Prompt is required")
             
             # Call LLM
-            response = await call_llm(prompt, provider, parent_id, isbranch, model)
+            response = await call_llm(prompt, provider, parent_id, chatrecord_id, isbranch, False, model)
             
             # Store the conversation
             message_id = await store_one_message(chatrecord_id, prompt, response, parent_id, position,isbranch)
@@ -239,6 +239,41 @@ def setup_routes(app: FastAPI):
         except Exception as e:
             logger.error(f"Error in signup endpoint: {e}", exc_info=True)
             raise HTTPException(status_code=500, detail=str(e))
+
+    @app.post("/markdown")
+    async def markdown_endpoint(request: Request):
+        """Handle markdown requests and store conversation records."""
+        
+        try:
+            body = await request.json()
+            user_id = int(body.get("user_id"))
+            chatrecord_id = int(body.get("chatrecord_id"))
+            prompt = "Please generate a structured markdown according to the chat history."
+            provider = body.get("provider", "google")
+            model = body.get("model")  # Optional model specification
+            parent_id = int(body.get("parent_id"))
+            isbranch = body.get("isbranch", False)
+            
+            logger.info(f"Received markdown request: prompt='{prompt}', provider='{provider}', model='{model}', parent_id={parent_id}, isbranch={isbranch},user_id={user_id}, chatrecord_id={chatrecord_id}")
+            
+            if not prompt:
+                raise HTTPException(status_code=400, detail="Prompt is required")
+            
+            # Call LLM
+            response = await generate_markdown(user_prompt=prompt, provider=provider, parent_id=parent_id, chatrecord_id=chatrecord_id, isbranch=isbranch, model=model)
+            
+            return {
+                "response": response,
+                "chatrecord_id": chatrecord_id,
+            }
+            
+        except Exception as e:
+            logger.error(f"Error in markdown endpoint: {e}", exc_info=True)
+            error_message = str(e)
+            if "API key not set" in error_message:
+                raise HTTPException(status_code=400, detail=f"API key not configured for {provider}. Please set it in the settings.")
+            raise HTTPException(status_code=500, detail=f"Internal server error: {error_message}")
+            
     # Serve the main React app for all other routes
     @app.get("/{full_path:path}")
     async def serve_react_app(full_path: str):

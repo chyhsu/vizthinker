@@ -3,7 +3,7 @@ import google.generativeai as genai
 import ollama
 from dotenv import load_dotenv
 from server.logger import logger
-from server.dao.postgre import get_path_history
+from server.dao.postgre import get_path_history, get_messages
 from typing import Optional
 
 load_dotenv()
@@ -21,10 +21,31 @@ Focus especially on the most recent chat node—e.g., in [chatnode1, chatnode2, 
 
 branch_system_prompt = "This prompt branches from the latest chat node, meaning the user wants to explore a new direction based on your most recent response. Focus primarily on your last reply, expanding or deepening the ideas introduced there. Avoid repeating the chat history. Instead, develop a well-structured, professional response that pushes the current line of thought further."
 
+markdown_system_prompt = """You are an assistant in VizThinker, a chat-based application that visualizes conversations as graph nodes (representing prompts and responses) connected by edges (representing meaningful relationships). You will receive a chat history composed of a sequence of these nodes and edges.
 
+Your task is to generate a Markdown-formatted response to the user's latest prompt, referencing the context of the chat history. Each node’s relationship should inform your reasoning:
 
+    If the current node is a branch of its parent, treat it as a deeper elaboration or detail of the parent node.
 
-async def call_llm(user_prompt: str, provider: str, parent_id: Optional[int] = None, isbranch: Optional[bool] = False, model: Optional[str] = None):
+    If it is not a branch, treat it as a progression to the next stage of the conversation.
+
+Your response should be structured, professional, and reflect the graph’s conversational logic. Do not repeat the chat history. Do not include the earliest chat history, which is introducing VizThinker to help user understand how to use the application, as it is not relevant to the current conversation.
+
+Use Markdown formatting to improve clarity. For example:
+
+## Key Takeaways
+
+- The user wants to explore the scalability of the current solution.
+- A distributed architecture was previously mentioned and should be elaborated.
+
+## Recommendation
+
+Consider implementing a message queue (e.g., RabbitMQ or Kafka) to decouple services and improve scalability."""
+
+async def generate_markdown(user_prompt: str, provider: str, parent_id: Optional[int] = None, chatrecord_id: Optional[int] = None, isbranch: Optional[bool] = False, model: Optional[str] = None):
+    return await call_llm(user_prompt, provider, parent_id, chatrecord_id, isbranch, True, model)
+
+async def call_llm(user_prompt: str, provider: str, parent_id: Optional[int] = None, chatrecord_id: Optional[int] = None, isbranch: Optional[bool] = False, ismarkdown: Optional[bool] = False,model: Optional[str] = None):
 
     # Get Api Key (except for ollama which runs locally)
     if provider != "ollama":
@@ -37,12 +58,20 @@ async def call_llm(user_prompt: str, provider: str, parent_id: Optional[int] = N
         chat_history = await get_path_history(parent_id)
     else:
         chat_history = []
+    
+    if ismarkdown:
+        chat_history = await get_messages(chatrecord_id)
     global system_prompt
     global branch_system_prompt
+
     if isbranch:
         system_prompt = basic_system_prompt + branch_system_prompt
     else:
         system_prompt = basic_system_prompt
+
+    if ismarkdown:
+        system_prompt = markdown_system_prompt
+    
     system_prompt = system_prompt + "\n\nChat history: " + str(chat_history)[1:]
     
     # For each Provider

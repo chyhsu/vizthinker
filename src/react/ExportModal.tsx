@@ -20,10 +20,11 @@ import {
 import { 
   FaFileImage, 
   FaDownload,
-  FaGlobe
+  FaGlobe,
+  FaMarkdown
 } from 'react-icons/fa';
 import useStore from '../typejs/store';
-import { exportAsImage, exportAsHTML } from '../typejs/export';
+import { exportAsImage, exportAsHTML, exportAsMarkdown } from '../typejs/export';
 import { useSettings } from './SettingsContext';
 
 interface ExportModalProps {
@@ -76,6 +77,15 @@ const ExportModal: React.FC<ExportModalProps> = ({ isOpen, onClose }) => {
       featured: true,
     },
     {
+      id: 'markdown',
+      title: 'Export as Markdown',
+      description: 'Generate structured markdown document using AI - perfect for documentation and sharing',
+      icon: FaMarkdown,
+      color: 'purple',
+      action: () => handleExport('markdown', exportAsMarkdown),
+      disabled: nodes.length === 0,
+    },
+    {
       id: 'image',
       title: 'Export as Image',
       description: 'Download the entire graph as a high-quality PNG image',
@@ -116,7 +126,10 @@ const ExportModal: React.FC<ExportModalProps> = ({ isOpen, onClose }) => {
               Choose your preferred export format. 
               <Text as="span" fontWeight="semibold" color="teal.600">
                 HTML export
-              </Text> provides the complete interactive view, while 
+              </Text> provides the complete interactive view, 
+              <Text as="span" fontWeight="semibold" color="purple.600">
+                Markdown export
+              </Text> generates AI-structured documentation, while 
               <Text as="span" fontWeight="semibold" color="blue.600">
                 PNG export
               </Text> gives you a high-quality image of your graph.

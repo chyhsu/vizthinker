@@ -1,7 +1,67 @@
 import html2canvas from 'html2canvas';
 import { getNodesBounds } from 'reactflow';
 import useStore from './store';
+import axios from 'axios';
 
+export const exportAsMarkdown = async () => {
+    const { nodes, edges, reactFlowInstance } = useStore.getState();
+    
+    if (!nodes || nodes.length === 0) {
+        console.error('No conversation data to export');
+        throw new Error('No conversation data to export');
+    }
+    
+    try {
+        const user_id = localStorage.getItem('user_id');
+        const chatrecord_id = localStorage.getItem('chatrecord_id');
+        
+        if (!user_id || !chatrecord_id) {
+            throw new Error('User not authenticated or no conversation found');
+        }
+        
+        // Get provider and model from settings
+        const provider = localStorage.getItem('viz_provider') || 'google';
+        let model: string | undefined;
+        
+        try {
+            const providerModels = localStorage.getItem('viz_provider_models');
+            if (providerModels) {
+                const models = JSON.parse(providerModels);
+                model = models[provider];
+            }
+        } catch (error) {
+            console.warn('Failed to parse provider models from settings:', error);
+        }
+        
+        const postData = {
+            user_id: parseInt(user_id),
+            chatrecord_id: parseInt(chatrecord_id),
+            provider,
+            model,
+            parent_id: 0, // Use 0 as default parent_id for markdown export
+            isbranch: false
+        };
+        
+        const response = await axios.post('http://127.0.0.1:8000/markdown', postData);
+        const markdown = response.data.response;
+        
+        // Create and download the markdown file
+        const blob = new Blob([markdown], { type: 'text/markdown' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `conversation-${chatrecord_id}.md`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+        
+        return markdown;
+    } catch (error) {
+        console.error('Error exporting as markdown:', error);
+        throw error;
+    }
+}
 export const exportAsImage = async () => {
     const { nodes, edges, reactFlowInstance } = useStore.getState();
     
