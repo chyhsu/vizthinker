@@ -96,7 +96,9 @@ async def search_user(username: str) -> Optional[Tuple[int, str, str]]:
             "SELECT id,username, password, chatrecords FROM users WHERE username = $1",
             username,
         )
-        return row["id"], row["username"], row["password"], row["chatrecords"] if row else None
+        if row is None:
+            return None
+        return row["id"], row["username"], row["password"], row["chatrecords"]
     
 async def create_user(username: str, password: str) -> int:
     pool = await _get_pool()

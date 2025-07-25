@@ -199,9 +199,10 @@ def setup_routes(app: FastAPI):
             if not username or not password:
                 raise HTTPException(status_code=400, detail="Username and password are required")
             
-            user_id, _, returned_password, chatrecords = await search_user(username)
-            if user_id is None:
+            res = await search_user(username)
+            if res is None:
                 raise HTTPException(status_code=401, detail="Invalid username")
+            user_id, _, returned_password, chatrecords = res
             if returned_password != password:
                 raise HTTPException(status_code=401, detail="Invalid password")
             # For now, just log the credentials
@@ -211,7 +212,7 @@ def setup_routes(app: FastAPI):
             
         except Exception as e:
             logger.error(f"Error in login endpoint: {e}", exc_info=True)
-            raise HTTPException(status_code=500, detail=str(e))
+            raise HTTPException(status_code=401, detail=str(e))
     @app.post("/auth/signup")
     async def signup(request: Request):
         """Handle signup requests."""
