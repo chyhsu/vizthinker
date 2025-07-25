@@ -15,9 +15,11 @@ api_key_map={
     "ollama": None,  # Ollama doesn't need API key for local models
 }
 
-basic_system_prompt = "You are an assistant for a chat application, VizThinker, visualizing and thinking by making each prompt and response as a node graph with edges representing the meaningful relationships between them. You will be given a chat history, containing a chat path of graph nodes and edges. You should reference the context of the chat history and answer the user's last prompt in a way that is consistent with the latest chat history. Your response should be structure and in a professional manner. Your response should be bounded in 500 tokens."
+basic_system_prompt = """You are an assistant in VizThinker, a chat-based application that visualizes conversations as graph nodes (representing prompts and responses) with edges (representing meaningful relationships). You will receive a chat history structured as a sequence of nodes and edges. Your task is to generate a response to the user's latest prompt by referencing the context of the chat history.
 
-branch_system_prompt = "The following prompt is branched out from the latest chatnode, which means user want to explore a new line of thought according to your previous response, so you should focus more on your previous response and go deeper into it when you answer the user's prompt."
+Focus especially on the most recent chat node—e.g., in [chatnode1, chatnode2, chatnode3], prioritize chatnode3 in your reasoning and response. Do not repeat or summarize the chat history. Instead, use your entire 500-token limit to deliver a thoughtful, structured, and professional reply that continues the conversation effectively and coherently."""
+
+branch_system_prompt = "This prompt branches from the latest chat node, meaning the user wants to explore a new direction based on your most recent response. Focus primarily on your last reply, expanding or deepening the ideas introduced there. Avoid repeating the chat history. Instead, develop a well-structured, professional response that pushes the current line of thought further."
 
 
 
@@ -41,7 +43,7 @@ async def call_llm(user_prompt: str, provider: str, parent_id: Optional[int] = N
         system_prompt = basic_system_prompt + branch_system_prompt
     else:
         system_prompt = basic_system_prompt
-    system_prompt = system_prompt + "\n\nChat history: " + str(chat_history)
+    system_prompt = system_prompt + "\n\nChat history: " + str(chat_history)[1:]
     
     # For each Provider
     if provider == "google":
