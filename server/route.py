@@ -71,7 +71,7 @@ def setup_routes(app: FastAPI):
                 raise HTTPException(status_code=400, detail="Prompt is required")
             
             # Call LLM
-            response = await call_llm(prompt, provider, parent_id, chatrecord_id, model)
+            response = await call_llm(prompt, provider, parent_id, isbranch, model)
             
             # Store the conversation
             message_id = await store_one_message(chatrecord_id, prompt, response, parent_id, position,isbranch)
