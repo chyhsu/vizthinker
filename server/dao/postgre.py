@@ -125,10 +125,6 @@ async def create_chatrecord(user_id: int) -> int:
             user_id,
         )
         await conn.execute("UPDATE users SET chatrecords = array_append(chatrecords, $1) WHERE id = $2", row["id"], user_id)
-        welcome_prompt = "Hi there! What is VizThinker?"
-        welcome_response = """
-# Welcome to VizThinker!\n\nVizThink is a new way to interact with AI. Instead of a linear chat, your conversation becomes a **dynamic thinking map**.\n\n### Key Features:\n\n*   **Graph-Based Chat**: Each prompt and response creates a new node in the graph, visualizing the flow of your ideas.\n*   **Branching Conversations**: Explore different lines of thought by creating branches from any node.\n*   **Interactive Map**: Pan and zoom around your conversation map. Single-click to select a node, and double-click to see more details.\n*   **Export Your Map**: Save your thinking map as an image or an HTML file to share or review later.\n\nTo get started, just type a message below!\n"""
-        await store_one_message(row["id"], welcome_prompt, welcome_response, None, '{"x": 100, "y": 100}', False)
         return row["id"]
 
 async def delete_chatrecord(chatrecord_id: int) -> None:

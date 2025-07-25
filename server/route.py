@@ -32,10 +32,28 @@ def setup_routes(app: FastAPI):
     async def health_check():
         """Simple health endpoint for monitoring."""
         return {"status": "ok"}
+    @app.post("/welcome")
+    async def create_welcome(request: Request):
+        welcome_prompt = "Hi there! What is VizThinker?"
+        welcome_response = "# Welcome to VizThinker!\n\nVizThink is a new way to interact with AI. Instead of a linear chat, your conversation becomes a **dynamic thinking map**.\n\n### Key Features:\n\n*   **Graph-Based Chat**: Each prompt and response creates a new node in the graph, visualizing the flow of your ideas.\n*   **Branching Conversations**: Explore different lines of thought by creating branches from any node.\n*   **Interactive Map**: Pan and zoom around your conversation map. Single-click to select a node, and double-click to see more details.\n*   **Export Your Map**: Save your thinking map as an image or an HTML file to share or review later.\n\nTo get started, just type a message below!\n" 
+        try:
+            body = await request.json()
+            chatrecord_id = int(body.get("chatrecord_id"))
+            message_id = await store_one_message(chatrecord_id, welcome_prompt, welcome_response, None, '{"x": 100, "y": 100}', False)
+            return {
+                "response": welcome_response,
+                "chatrecord_id": chatrecord_id,
+                "message_id": message_id
+            }
+        except Exception as e:
+            logger.error(f"Error in create_welcome endpoint: {e}", exc_info=True)
+            raise HTTPException(status_code=500, detail=str(e))
 
+            
     @app.post("/chat")
     async def chat_endpoint(request: Request):
         """Handle chat requests and store conversation records."""
+        
         try:
             body = await request.json()
             user_id = int(body.get("user_id"))

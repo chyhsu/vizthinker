@@ -134,15 +134,12 @@ const useStore = create<StoreState>()(
       if (existingWelcome) {
         console.log('Welcome node already exists, skipping creation');
         return;
-      }
+      }      
       const chatrecord_id = localStorage.getItem('chatrecord_id');
-      const response = await axios.get('http://127.0.0.1:8000/chat/records/' + chatrecord_id);
-      const { records } = response.data;
-      const node_id = records[0]['id'];
-      const parent_id = records[0]['parent_id'];
-      const isbranch = records[0]['isbranch'];
-      const welcomePrompt = records[0]['prompt'];
-      const welcomeResponse = records[0]['response'];
+      let response = await axios.post('http://127.0.0.1:8000/welcome', { chatrecord_id });
+      const node_id = response.data.message_id?.toString() ?? '0';
+      const welcomePrompt = 'Hi there! What is VizThinker?';
+      const welcomeResponse = response.data.response as string;
       
       // Create loading welcome node first - positioned in center
       set((state) => {
@@ -270,7 +267,7 @@ const useStore = create<StoreState>()(
         const chatrecord_id = localStorage.getItem('chatrecord_id');
         const response = await axios.get(`http://127.0.0.1:8000/chat/records/${chatrecord_id}`);
         const chatRecords = response.data.records; // Backend returns {records}
-        console.log(chatRecords);
+        console.log("chatrecord length: ", chatRecords.length);
         
         if (chatRecords && chatRecords.length > 0) {
           // Convert backend data to React Flow nodes
