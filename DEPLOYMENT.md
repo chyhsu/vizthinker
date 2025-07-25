@@ -1,89 +1,112 @@
-# 🚀 VizThinker 快速部署指南
+# 🚀 VizThinker Quick Deployment Guide
 
-此應用已配置為在服務器 `140.114.88.157` 上運行，支持外部訪問。
+This application supports deployment to any specified server IP address.
 
-## 🎯 一鍵部署
+## 🎯 One-Click Deployment
 
+### Method 1: Interactive Deployment (Recommended)
 ```bash
-# 確保您在項目根目錄
+# Ensure you are in the project root directory
 cd /home/jemmy/vizthinker
 
-# 運行部署腳本
+# Run the deployment script, the system will prompt you to enter the IP address
 ./deploy/deploy.sh
 ```
 
-## 📋 部署前檢查清單
+### Method 2: Command Line Argument Deployment
+```bash
+# Directly specify the IP address
+./deploy/deploy.sh 192.168.1.100
+```
 
-- [ ] 系統已安裝 Node.js 18+
-- [ ] 系統已安裝 Python 3.10+
-- [ ] 系統已安裝 nginx
-- [ ] 系統已安裝 PostgreSQL
-- [ ] 數據庫用戶 `root` 已創建，密碼為 `00000000`
-- [ ] 數據庫 `mydb` 已創建
-- [ ] 防火牆允許端口 80 和 8000
+## 📋 Pre-Deployment Checklist
 
-## 🌐 訪問地址
+- [ ] System has Node.js 18+ installed
+- [ ] System has Python 3.10+ installed
+- [ ] System has nginx installed
+- [ ] System has PostgreSQL installed
+- [ ] Database user `root` is created with password `00000000`
+- [ ] Database `mydb` is created
+- [ ] Firewall allows ports 80 and 8000
+- [ ] Target server IP address is accessible
 
-部署成功後，您可以通過以下地址訪問：
+## 🌐 Access Addresses
 
-- **前端應用**: http://140.114.88.157
-- **後端API**: http://140.114.88.157:8000
-- **健康檢查**: http://140.114.88.157:8000/health
+After successful deployment, you can access the application at the following addresses (assuming your IP is 192.168.1.100):
 
-## 🔧 服務管理
+- **Frontend Application**: http://[Your IP Address]
+- **Backend API**: http://[Your IP Address]:8000
+- **Health Check**: http://[Your IP Address]:8000/health
+
+## 🔧 Service Management
 
 ```bash
-# 檢查服務狀態
+# Check service status
 sudo systemctl status vizthinker-backend
 sudo systemctl status nginx
 
-# 重啟服務
+# Restart services
 sudo systemctl restart vizthinker-backend
 sudo systemctl restart nginx
 
-# 查看日誌
+# View logs
 sudo journalctl -u vizthinker-backend -f
 ```
 
-## 🧪 測試部署
+## 🧪 Test Deployment
 
+### Auto-Detect IP Address
 ```bash
-# 運行測試腳本
+# If the deployment script has been run, the test script will auto-detect the IP
 ./deploy/test-deployment.sh
 ```
 
-## 📁 項目結構變更
+### Specify IP Address for Testing
+```bash
+# Manually specify the IP address for testing
+./deploy/test-deployment.sh 192.168.1.100
+```
 
-以下文件已被修改/創建以支持部署：
+## ⚙️ Dynamic Configuration Explanation
 
-### 新增文件：
-- `deploy/deploy.sh` - 自動部署腳本
-- `deploy/nginx.conf` - nginx 配置
-- `deploy/vizthinker-backend.service` - systemd 服務文件
-- `deploy/README.md` - 詳細部署文檔
-- `deploy/test-deployment.sh` - 部署測試腳本
-- `src/config/api.ts` - API 配置管理
+The new deployment system automatically generates the following configuration files based on the IP address you enter:
 
-### 修改文件：
-- `server/main.py` - 更新 CORS 配置
-- `src/typejs/store.ts` - 更新 API URL
-- `src/typejs/auth.ts` - 更新 API URL
-- `src/react/Settings.tsx` - 更新 API URL
-- `src/typejs/export.ts` - 更新 API URL
-- `config/vite.config.ts` - 添加生產環境配置
-- `pyproject.toml` - 修復 poetry 配置問題
+- `deploy/nginx.conf` - nginx server configuration
+- `deploy/backend_config.py` - Backend CORS configuration
+- `src/config/api.ts` - Frontend API configuration
 
-## 🔧 關鍵配置變更
+These files are regenerated with each deployment to ensure consistency with the target IP address.
 
-1. **後端 CORS 配置**: 允許服務器 IP 訪問
-2. **前端 API 配置**: 動態根據環境選擇 API URL
-3. **nginx 反向代理**: 處理前端靜態文件和 API 路由
-4. **systemd 服務**: 自動啟動後端服務
+## 📁 Project Structure Changes
 
-## 🆘 故障排除
+The following files have been modified/created to support dynamic IP deployment:
 
-如果遇到問題，請參考 `deploy/README.md` 中的詳細故障排除指南。
+### New Files:
+- `deploy/deploy.sh` - Automatic deployment script supporting dynamic IP
+- `deploy/test-deployment.sh` - Deployment test script supporting dynamic IP
+- `deploy/vizthinker-backend.service` - systemd service file
+- `deploy/README.md` - Detailed deployment documentation
 
----
+### Dynamically Generated Files:
+- `deploy/nginx.conf` - Generated based on target IP
+- `deploy/backend_config.py` - Generated based on target IP  
+- `src/config/api.ts` - Generated based on target IP
 
-💡 **提示**: 首次部署可能需要幾分鐘時間來安裝依賴和配置服務。 
+### Modified Files:
+- `server/main.py` - Updated CORS configuration to use dynamic settings
+- `config/vite.config.ts` - Added production environment configuration
+- `pyproject.toml` - Fixed poetry configuration issues
+
+## 🔧 Key Configuration Changes
+
+1. **Dynamic IP Support**: All configuration files are now dynamically generated based on the IP address entered by the user
+2. **Backend CORS Configuration**: Automatically configured to allow access from the target IP
+3. **Frontend API Configuration**: Automatically selects the correct API URL based on the deployment environment
+4. **Configuration File Management**: Deployment script regenerates configuration files with each run
+
+## 🚨 Important Reminders
+
+- Configuration files are regenerated each time the deployment script is run
+- If you need to customize the configuration, modify it after running the deployment script
+- Ensure the target server's firewall allows access to ports 80 and 8000
+- It is recommended to run the test script to confirm connectivity before deploying in a new environment 

@@ -1,53 +1,81 @@
 #!/bin/bash
 
-# VizThinker 部署測試腳本
-# 用於測試部署是否成功
+# VizThinker Deployment Test Script
 
-echo "🧪 測試 VizThinker 部署..."
+set -e
 
-# 測試後端健康檢查
-echo "測試後端健康檢查..."
-if curl -f -s http://127.0.0.1:8000/health > /dev/null; then
-    echo "✅ 後端健康檢查通過"
+echo "🧪 VizThinker Deployment Test"
+echo "===================="
+
+# Get target IP address
+if [ -n "$1" ]; then
+    TARGET_IP="$1"
+    echo "Using IP address provided as command line argument: $TARGET_IP"
+elif [ -f "deploy/backend_config.py" ]; then
+    # Attempt to extract IP address from backend_config.py
+    TARGET_IP=$(grep -o 'http://[0-9.]*' deploy/backend_config.py | head -n1 | sed 's/http:\/\///')
+    if [ -n "$TARGET_IP" ]; then
+        echo "Detected IP address from configuration file: $TARGET_IP"
+    else
+        echo "❌ Unable to detect IP address from configuration file, please provide IP as an argument"
+        echo "Usage: $0 <IP address>"
+        exit 1
+    fi
 else
-    echo "❌ 後端健康檢查失敗"
+    echo "❌ Please provide an IP address as an argument or ensure the deployment script has been run"
+    echo "Usage: $0 <IP address>"
     exit 1
 fi
 
-# 測試前端是否可訪問
-echo "測試前端是否可訪問..."
-if curl -f -s http://140.114.88.157 > /dev/null; then
-    echo "✅ 前端可以訪問"
+echo ""
+
+# Test backend health check
+echo "🏥 Testing backend health check..."
+if curl -f -s http://127.0.0.1:8000/health > /dev/null; then
+    echo "✅ Backend health check: Passed"
 else
-    echo "❌ 前端無法訪問"
+    echo "❌ Backend health check: Failed"
+    exit 1
 fi
 
-# 檢查服務狀態
-echo "檢查服務狀態..."
-if systemctl is-active --quiet vizthinker-backend; then
-    echo "✅ 後端服務運行中"
+# Test frontend access
+echo "🌐 Testing frontend access..."
+if curl -f -s http://$TARGET_IP > /dev/null; then
+    echo "✅ Frontend access: Passed"
 else
-    echo "❌ 後端服務未運行"
+    echo "❌ Frontend access: Failed"
+    exit 1
+fi
+
+# Test nginx configuration
+echo "⚙️ Testing nginx configuration..."
+if sudo nginx -t > /dev/null 2>&1; then
+    echo "✅ nginx configuration: Valid"
+else
+    echo "❌ nginx configuration: Invalid"
+    exit 1
+fi
+
+# Test service status
+echo "🔧 Testing service status..."
+if systemctl is-active --quiet vizthinker-backend; then
+    echo "✅ Backend service: Running"
+else
+    echo "❌ Backend service: Not running"
+    exit 1
 fi
 
 if systemctl is-active --quiet nginx; then
-    echo "✅ nginx 服務運行中"
+    echo "✅ nginx service: Running"
 else
-    echo "❌ nginx 服務未運行"
+    echo "❌ nginx service: Not running"
+    exit 1
 fi
 
-# 檢查端口監聽
-echo "檢查端口監聽..."
-if ss -tlnp | grep -q :8000; then
-    echo "✅ 端口 8000 正在監聽"
-else
-    echo "❌ 端口 8000 未在監聽"
-fi
-
-if ss -tlnp | grep -q :80; then
-    echo "✅ 端口 80 正在監聽"
-else
-    echo "❌ 端口 80 未在監聽"
-fi
-
-echo "🎉 測試完成！" 
+echo ""
+echo "🎉 All tests passed!"
+echo "Application successfully deployed to: $TARGET_IP"
+echo ""
+echo "Access addresses:"
+echo "  - Frontend: http://$TARGET_IP"
+echo "  - Backend API: http://$TARGET_IP:8000" 
