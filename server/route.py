@@ -127,8 +127,8 @@ def setup_routes(app: FastAPI):
     async def delete_record(chatrecord_id: int, message_id: int):
         """Delete a specific chat record and its children."""
         try:
-            await delete_single_message(chatrecord_id, message_id)
-            return {"status": "success", "message": f"Record {message_id} and its children deleted"}
+            count = await delete_single_message(chatrecord_id, message_id)
+            return {"status": "success", "message": f"Record {message_id} and its children deleted", "left_count": count}
         except Exception as e:
             logger.error(f"Error deleting record {message_id}: {e}", exc_info=True)
             raise HTTPException(status_code=500, detail=str(e))

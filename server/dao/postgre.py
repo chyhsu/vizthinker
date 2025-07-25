@@ -274,7 +274,7 @@ async def delete_all_messages(chatrecord_id: int) -> None:
     logger.info("Chat history cleared successfully.")
 
 
-async def delete_single_message(chatrecord_id: int, message_id: int) -> bool:
+async def delete_single_message(chatrecord_id: int, message_id: int) -> int:
     """Delete a single chat record and its descendants."""
     pool = await _get_pool()
     async with pool.acquire() as conn:
@@ -282,14 +282,20 @@ async def delete_single_message(chatrecord_id: int, message_id: int) -> bool:
         ids_to_delete.append(message_id)
         if not ids_to_delete:
             logger.warning("No records found to delete for message_id=%d", message_id)
-            return False
+            return 0
         logger.info("Deleting %d chat records: %s", len(ids_to_delete), ids_to_delete)
         await conn.execute(
             "DELETE FROM messages WHERE id = ANY($1::int[])",
             ids_to_delete,
         )
-        await conn.execute("UPDATE chatrecords SET messages = array_remove(messages, $1) WHERE id = $2", message_id, chatrecord_id)
-        return True
+        for message_id in ids_to_delete:
+            await conn.execute("UPDATE chatrecords SET messages = array_remove(messages, $1) WHERE id = $2", message_id, chatrecord_id)
+        left_count = await conn.fetchval(
+            "SELECT COALESCE(array_length(messages, 1), 0) FROM chatrecords WHERE id = $1",
+            chatrecord_id,
+        )
+        logger.info("Left count: %d", left_count)
+        return left_count
 
 
 async def _get_all_descendants(conn: asyncpg.Connection, parent_id: int) -> List[int]:

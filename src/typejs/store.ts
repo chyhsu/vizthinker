@@ -213,8 +213,12 @@ const useStore = create<StoreState>()(
       try {
         // Call backend API to delete the node and its descendants
         const chatrecord_id= localStorage.getItem('chatrecord_id')
-        await axios.delete(`http://127.0.0.1:8000/chat/records/${chatrecord_id}/${nodeId}`);
-        
+        const res = await axios.delete(`http://127.0.0.1:8000/chat/records/${chatrecord_id}/${nodeId}`);
+        const left_count = parseInt(res.data.left_count);
+        if (left_count === 0) {
+          await get().Initialize();
+          return;
+        }
         // Get all descendant node IDs recursively
         const getAllDescendants = (parentId: string, nodes: Node[], edges: Edge[]): string[] => {
           const descendants: string[] = [];
