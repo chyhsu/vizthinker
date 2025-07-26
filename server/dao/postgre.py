@@ -8,14 +8,18 @@ from typing import Optional, List, Tuple, Any
 import asyncpg
 from dotenv import load_dotenv
 
+# Load variables from a .env file if present (useful for local development)
+load_dotenv()
+
 from server.logger import logger
 
-config ={
+# Default local development config (used if DATABASE_URL env var is absent)
+config = {
     "host": "localhost",
     "port": 5432,
-    "user": "root",
-    "password": "00000000",
-    "dbname": "mydb",
+    "user": "postgres",
+    "password": "postgres",
+    "dbname": "postgres",
 }
 
 # Global connection pool
@@ -26,15 +30,20 @@ async def _get_pool() -> asyncpg.Pool:
     """Create (or return existing) asyncpg connection pool."""
     global _pool
     if _pool is None:
-        _pool = await asyncpg.create_pool(
-            host=config["host"],
-            port=config["port"],
-            user=config["user"],
-            password=config["password"],
-            database=config["dbname"],
-            min_size=1,
-            max_size=5,
-        )
+        # Prefer DATABASE_URL environment variable when running inside Docker
+        database_url = os.getenv("DATABASE_URL")
+        if database_url:
+            _pool = await asyncpg.create_pool(dsn=database_url, min_size=1, max_size=5)
+        else:
+            _pool = await asyncpg.create_pool(
+                host=config["host"],
+                port=config["port"],
+                user=config["user"],
+                password=config["password"],
+                database=config["dbname"],
+                min_size=1,
+                max_size=5,
+            )
         logger.info("PostgreSQL connection pool created.")
     return _pool
 
