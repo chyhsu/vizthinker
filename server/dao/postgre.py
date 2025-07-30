@@ -321,22 +321,45 @@ async def _get_all_descendants(conn: asyncpg.Connection, parent_id: int) -> List
         descendants.extend(await _get_all_descendants(conn, cid))
     return descendants
 
+# Whitelist of allowed API key providers and their corresponding column names
+ALLOWED_PROVIDERS = {
+    "google": "google_api_key",
+    "openai": "openai_api_key", 
+    "anthropic": "anthropic_api_key",
+    "x": "x_api_key"
+}
+
 async def update_user_api_key(user_id: int, provider: str, api_key: str) -> None:
+    if provider not in ALLOWED_PROVIDERS:
+        raise ValueError(f"Invalid provider: {provider}")
+    
+    column_name = ALLOWED_PROVIDERS[provider]
     pool = await _get_pool()
     async with pool.acquire() as conn:
-        await conn.execute("UPDATE users SET " + provider + "_api_key = $1 WHERE id = $2", api_key, user_id)
+        # Use f-string with whitelisted column name - safe from injection
+        await conn.execute(f"UPDATE users SET {column_name} = $1 WHERE id = $2", api_key, user_id)
 
 async def get_user_api_key(user_id: int, provider: str) -> Optional[str]:
+    if provider not in ALLOWED_PROVIDERS:
+        raise ValueError(f"Invalid provider: {provider}")
+    
+    column_name = ALLOWED_PROVIDERS[provider]
     pool = await _get_pool()
     async with pool.acquire() as conn:
-        row = await conn.fetchrow("SELECT " + provider + "_api_key FROM users WHERE id = $1", user_id)
+        # Use f-string with whitelisted column name - safe from injection
+        row = await conn.fetchrow(f"SELECT {column_name} FROM users WHERE id = $1", user_id)
         if row is None:
             return None
-        return row[provider + "_api_key"]
+        return row[column_name]
     
 
 async def delete_user_api_key(user_id: int, provider: str) -> None:
+    if provider not in ALLOWED_PROVIDERS:
+        raise ValueError(f"Invalid provider: {provider}")
+    
+    column_name = ALLOWED_PROVIDERS[provider]
     pool = await _get_pool()
     async with pool.acquire() as conn:
-        await conn.execute("UPDATE users SET " + provider + "_api_key = NULL WHERE id = $1", user_id)
+        # Use f-string with whitelisted column name - safe from injection
+        await conn.execute(f"UPDATE users SET {column_name} = NULL WHERE id = $1", user_id)
     

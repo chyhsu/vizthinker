@@ -1,19 +1,18 @@
 import os
 import google.generativeai as genai
 import ollama
-from dotenv import load_dotenv
 from server.logger import logger
 from server.dao.postgre import get_path_history, get_messages
 from typing import Optional
+from server.dao.postgre import get_user_api_key
 
-load_dotenv()
-api_key_map={
-    "google": os.getenv("GEMINI_API_KEY"),
-    "openai": os.getenv("OPENAI_API_KEY"),
-    "x": os.getenv("GROK_API_KEY"),
-    "anthropic": os.getenv("CLAUDE_API_KEY"),
-    "ollama": None,  # Ollama doesn't need API key for local models
-}
+# api_key_map={
+#     "google": os.getenv("GEMINI_API_KEY"),
+#     "openai": os.getenv("OPENAI_API_KEY"),
+#     "x": os.getenv("GROK_API_KEY"),
+#     "anthropic": os.getenv("CLAUDE_API_KEY"),
+#     "ollama": None,  # Ollama doesn't need API key for local models
+# }
 
 basic_system_prompt = """You are an assistant in VizThinker, a chat-based application that visualizes conversations as graph nodes (representing prompts and responses) with edges (representing meaningful relationships). You will receive a chat history structured as a sequence of nodes and edges. Your task is to generate a response to the user's latest prompt by referencing the context of the chat history.
 
@@ -42,16 +41,15 @@ Use Markdown formatting to improve clarity. For example:
 
 Consider implementing a message queue (e.g., RabbitMQ or Kafka) to decouple services and improve scalability."""
 
-async def generate_markdown(user_prompt: str, provider: str, parent_id: Optional[int] = None, chatrecord_id: Optional[int] = None, isbranch: Optional[bool] = False, model: Optional[str] = None):
-    return await call_llm(user_prompt, provider, parent_id, chatrecord_id, isbranch, True, model)
+async def generate_markdown(user_id: int, user_prompt: str, provider: str, parent_id: Optional[int] = None, chatrecord_id: Optional[int] = None, isbranch: Optional[bool] = False, model: Optional[str] = None):
+    return await call_llm(user_id, user_prompt, provider, parent_id, chatrecord_id, isbranch, True, model)
 
-async def call_llm(user_prompt: str, provider: str, parent_id: Optional[int] = None, chatrecord_id: Optional[int] = None, isbranch: Optional[bool] = False, ismarkdown: Optional[bool] = False,model: Optional[str] = None):
+async def call_llm(user_id: int, user_prompt: str, provider: str, parent_id: Optional[int] = None, chatrecord_id: Optional[int] = None, isbranch: Optional[bool] = False, ismarkdown: Optional[bool] = False,model: Optional[str] = None):
+    
+    api_key = await get_user_api_key(user_id, provider)
 
-    # Get Api Key (except for ollama which runs locally)
-    if provider != "ollama":
-        api_key = api_key_map[provider]
-        if not api_key:
-            raise RuntimeError(provider+" API key not set.")
+    if not api_key:
+        raise RuntimeError(provider+" API key not set.")
     
     if parent_id is not None:
         # get_path_history now expects only message_id

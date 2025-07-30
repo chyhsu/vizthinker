@@ -161,8 +161,14 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
 
       // Send API keys to backend
       try {
+        const user_id = localStorage.getItem('user_id');
+        if (!user_id) {
+          throw new Error('User not authenticated');
+        }
+        
         await axios.post('http://127.0.0.1:8000/settings/api-keys', {
-          api_keys: draftApiKeys
+          api_keys: draftApiKeys,
+          user_id: parseInt(user_id)
         });
         toast({
           ...TOAST_MESSAGES.SETTINGS_SAVED,

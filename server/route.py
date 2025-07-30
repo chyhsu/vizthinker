@@ -1,5 +1,5 @@
 
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, HTTPException, Request, Query
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from pathlib import Path
@@ -7,7 +7,7 @@ from pydantic import BaseModel
 from typing import Dict
 from server.llm import call_llm, generate_markdown
 from server.logger import logger
-from server.dao.postgre import create_user, search_user, store_one_message, store_all_positions, get_messages, delete_all_messages, delete_single_message, create_chatrecord
+from server.dao.postgre import create_user, search_user, store_one_message, store_all_positions, get_messages, delete_all_messages, delete_single_message, create_chatrecord,update_user_api_key,get_user_api_key,delete_user_api_key
 
 # Define the directory for static files (the 'dist' folder)
 static_files_dir = Path(__file__).resolve().parent.parent / "dist"
@@ -18,6 +18,8 @@ class ApiKeyUpdate(BaseModel):
 
 class ApiKeysUpdate(BaseModel):
     api_keys: Dict[str, str]
+    user_id: int
+
 
 def setup_routes(app: FastAPI):
     """Set up all routes for the application"""
@@ -71,7 +73,7 @@ def setup_routes(app: FastAPI):
                 raise HTTPException(status_code=400, detail="Prompt is required")
             
             # Call LLM
-            response = await call_llm(prompt, provider, parent_id, chatrecord_id, isbranch, False, model)
+            response = await call_llm(user_id, prompt, provider, parent_id, chatrecord_id, isbranch, False, model)
             
             # Store the conversation
             message_id = await store_one_message(chatrecord_id, prompt, response, parent_id, position,isbranch)
@@ -137,9 +139,6 @@ def setup_routes(app: FastAPI):
     async def update_api_keys(api_keys_update: ApiKeysUpdate):
         """Update API keys configuration."""
         try:
-            import os
-            from dotenv import set_key, find_dotenv
-            
             # Map frontend provider names to environment variable names
             env_var_mapping = {
                 "google": "GEMINI_API_KEY",
@@ -147,35 +146,24 @@ def setup_routes(app: FastAPI):
                 "anthropic": "CLAUDE_API_KEY",
                 "x": "GROK_API_KEY"
             }
-            
-            # Find or create .env file
-            env_file = find_dotenv()
-            if not env_file:
-                env_file = ".env"
-            
             # Update environment variables
             updated_keys = []
             for provider, api_key in api_keys_update.api_keys.items():
                 if provider in env_var_mapping:
-                    env_var = env_var_mapping[provider]
-                    if api_key.strip():  # Only set non-empty keys
-                        set_key(env_file, env_var, api_key.strip())
-                        # Also update the current process environment
-                        os.environ[env_var] = api_key.strip()
-                        updated_keys.append(provider)
-                        logger.info(f"Updated API key for {provider}")
-                    else:
-                        # Remove empty keys from environment
-                        set_key(env_file, env_var, "")
-                        if env_var in os.environ:
-                            del os.environ[env_var]
-                        logger.info(f"Removed API key for {provider}")
-            
-            # Update the global api_key_map in llm.py
-            from server.llm import api_key_map
-            for provider in env_var_mapping:
-                env_var = env_var_mapping[provider]
-                api_key_map[provider] = os.getenv(env_var)
+                    try:
+                        env_var = env_var_mapping[provider]
+                        if api_key.strip():  # Only set non-empty keys
+                            await update_user_api_key(api_keys_update.user_id, provider, api_key.strip())
+                            updated_keys.append(provider)
+                            logger.info(f"Updated API key for {provider}")
+                        else:
+                            await delete_user_api_key(api_keys_update.user_id, provider)
+                            logger.info(f"Removed API key for {provider}")
+                    except ValueError as ve:
+                        logger.error(f"Invalid provider {provider}: {ve}")
+                        raise HTTPException(status_code=400, detail=f"Invalid provider: {provider}")
+                else:
+                    logger.warning(f"Unknown provider: {provider}")
             
             return {
                 "status": "success", 
