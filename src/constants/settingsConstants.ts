@@ -15,7 +15,7 @@ export const DEFAULT_SETTINGS = {
     openai: 'gpt-4o',
     anthropic: 'claude-3-5-sonnet-20240620',
     x: 'grok-1',
-    ollama: 'gemma3:latest'
+    // ollama: 'gemma3:latest'
   }
 } as const;
 
@@ -34,7 +34,7 @@ export const PROVIDER_OPTIONS = [
   { value: 'google', label: 'Google' },
   { value: 'openai', label: 'OpenAI' },
   { value: 'anthropic', label: 'Anthropic' },
-  { value: 'ollama', label: 'Ollama' },
+  // { value: 'ollama', label: 'Ollama' },
   { value: 'x', label: 'X (Grok)' },
 ] as const;
 
@@ -61,11 +61,12 @@ export const MODEL_OPTIONS = {
   ],
   x: [
     { value: 'grok-1', label: 'Grok-1' },
-  ],
-  ollama: [
-    { value: 'gemma3:latest', label: 'Gemma 3 (Latest)' },
-    { value: 'gemma3n:latest', label: 'Gemma 3n (Latest)' },
-  ],
+  ]
+  // ,
+  // ollama: [
+  //   { value: 'gemma3:latest', label: 'Gemma 3 (Latest)' },
+  //   { value: 'gemma3n:latest', label: 'Gemma 3n (Latest)' },
+  // ],
 } as const;
 
 // API Key configuration for each provider

@@ -9,12 +9,12 @@ services:
       - "8000:8000"
     environment:
       - DATABASE_URL=postgresql://vizthinker:password@postgres:5432/vizthinker
-      - OLLAMA_HOST=http://ollama:11434
+      # - OLLAMA_HOST=http://ollama:11434
     depends_on:
       postgres:
         condition: service_healthy
-      ollama-init:
-        condition: service_completed_successfully
+      # ollama-init:
+      #   condition: service_completed_successfully
     restart: on-failure
     volumes:
       - ./.env:/app/.env:ro
@@ -42,45 +42,45 @@ services:
       timeout: 5s
       retries: 5
 
-  # Ollama for local AI inference
-  ollama:
-    image: ollama/ollama:latest
-    ports:
-      - "11434:11434"
-    volumes:
-      - ollama_data:/root/.ollama
-    environment:
-      - OLLAMA_HOST=0.0.0.0
-    healthcheck:
-      test: ["CMD", "ollama", "list"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 5s
+  # # Ollama for local AI inference
+  # ollama:
+  #   image: ollama/ollama:latest
+  #   ports:
+  #     - "11434:11434"
+  #   volumes:
+  #     - ollama_data:/root/.ollama
+  #   environment:
+  #     - OLLAMA_HOST=0.0.0.0
+  #   healthcheck:
+  #     test: ["CMD", "ollama", "list"]
+  #     interval: 10s
+  #     timeout: 5s
+  #     retries: 5
+  #     start_period: 5s
 
   # Optional: Ollama model initialization
-  ollama-init:
-    image: ollama/ollama:latest
-    depends_on:
-      ollama:
-        condition: service_healthy
-    volumes:
-      - ollama_data:/root/.ollama
-    environment:
-      - OLLAMA_HOST=http://ollama:11434
-    entrypoint: ["/bin/sh", "-c"]
-    command: >
-      "
-        echo 'Pulling models...' &&
-        echo 'Pulling gemma3n:latest...' &&
-        ollama pull gemma3n:latest &&
-        echo 'Pulling gemma3:latest...' &&
-        ollama pull gemma3:latest &&
-        ollama list &&
-        echo 'Models ready!'
-      "
-    restart: "no"
+  # ollama-init:
+  #   image: ollama/ollama:latest
+  #   depends_on:
+  #     ollama:
+  #       condition: service_healthy
+  #   volumes:
+  #     - ollama_data:/root/.ollama
+  #   environment:
+  #     - OLLAMA_HOST=http://ollama:11434
+  #   entrypoint: ["/bin/sh", "-c"]
+    # command: >
+    #   "
+    #     echo 'Pulling models...' &&
+    #     echo 'Pulling gemma3n:latest...' &&
+    #     ollama pull gemma3n:latest &&
+    #     echo 'Pulling gemma3:latest...' &&
+    #     ollama pull gemma3:latest &&
+    #     ollama list &&
+    #     echo 'Models ready!'
+    #   "
+    # restart: "no"
 
 volumes:
   postgres_data:
-  ollama_data:
+  # ollama_data:
