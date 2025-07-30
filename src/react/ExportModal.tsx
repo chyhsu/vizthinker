@@ -36,7 +36,7 @@ const ExportModal: React.FC<ExportModalProps> = ({ isOpen, onClose }) => {
   const { 
     nodes 
   } = useStore();
-  const { fontColor } = useSettings();
+  const fontColor ="rgba(122, 194, 207, 0.69)";
   const [isExporting, setIsExporting] = useState<string | null>(null);
   const toast = useToast();
 

@@ -28,7 +28,7 @@ Your task is to generate a Markdown-formatted response to the user's latest prom
 
     If it is not a branch, treat it as a progression to the next stage of the conversation.
 
-Your response should be structured, professional, and reflect the graph’s conversational logic. Do not repeat the chat history. Do not include the earliest chat history, which is introducing VizThinker to help user understand how to use the application, as it is not relevant to the current conversation.
+Your response should be structured, professional, and reflect the graph’s conversational logic. Do not repeat the chat history. Do not include the earliest chat history, which is introducing VizThinker to help user understand how to use the application, as it is not relevant to the current conversation. Do not include your thinking process.
 
 Use Markdown formatting to improve clarity. For example:
 
@@ -46,10 +46,12 @@ async def generate_markdown(user_id: int, user_prompt: str, provider: str, paren
 
 async def call_llm(user_id: int, user_prompt: str, provider: str, parent_id: Optional[int] = None, chatrecord_id: Optional[int] = None, isbranch: Optional[bool] = False, ismarkdown: Optional[bool] = False,model: Optional[str] = None):
     
-    api_key = await get_user_api_key(user_id, provider)
-
-    if not api_key:
-        raise RuntimeError(provider+" API key not set.")
+    api_key = None
+    # Ollama runs locally and does not require an API key
+    if provider != "ollama":
+        api_key = await get_user_api_key(user_id, provider)
+        if not api_key:
+            raise RuntimeError(f"{provider} API key not set.")
     
     if parent_id is not None:
         # get_path_history now expects only message_id
@@ -75,7 +77,7 @@ async def call_llm(user_id: int, user_prompt: str, provider: str, parent_id: Opt
     # For each Provider
     if provider == "google":
         try:
-            genai.configure(api_key=api_key_map["google"])
+            genai.configure(api_key=api_key)
             # Use provided model or default
             model_name = model or 'gemini-1.5-flash-latest'
             gemini_model = genai.GenerativeModel(
@@ -137,14 +139,14 @@ async def call_llm(user_id: int, user_prompt: str, provider: str, parent_id: Opt
     elif provider == "openai":
         try:
             import openai
-            openai.api_key = api_key_map["openai"]
+            openai.api_key = api_key
             
             # Use provided model or default
             model_name = model or 'gpt-4o'
             logger.info(f"Calling OpenAI with user_prompt: {user_prompt}, provider: {provider}, model: {model_name}")
             
             # Create OpenAI client
-            client = openai.OpenAI(api_key=api_key_map["openai"])
+            client = openai.OpenAI(api_key=api_key)
             
             # Prepare messages for OpenAI
             messages = [{"role": "system", "content": system_prompt}]
@@ -178,7 +180,7 @@ async def call_llm(user_id: int, user_prompt: str, provider: str, parent_id: Opt
             logger.info(f"Calling Anthropic with user_prompt: {user_prompt}, provider: {provider}, model: {model_name}")
             
             # Create Anthropic client
-            client = anthropic.Anthropic(api_key=api_key_map["anthropic"])
+            client = anthropic.Anthropic(api_key=api_key)
             
             response = client.messages.create(
                 model=model_name,
@@ -209,7 +211,7 @@ async def call_llm(user_id: int, user_prompt: str, provider: str, parent_id: Opt
             
             # Create OpenAI-compatible client for X/Grok
             client = openai.OpenAI(
-                api_key=api_key_map["x"],
+                api_key=api_key,
                 base_url="https://api.x.ai/v1"
             )
             

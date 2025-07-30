@@ -16,7 +16,7 @@ export PATH := /usr/local/bin:$(PATH)
 default: help
 
 # Variables
-OLLAMA_MODEL = gemma3 
+OLLAMA_MODEL = gemma3:latest
 VENV_DIR = .venv
 PYTHON = $(VENV_DIR)/bin/python
 PIP = $(VENV_DIR)/bin/pip

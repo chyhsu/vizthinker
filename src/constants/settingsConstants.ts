@@ -63,10 +63,8 @@ export const MODEL_OPTIONS = {
     { value: 'grok-1', label: 'Grok-1' },
   ],
   ollama: [
-    { value: 'gemma2:latest', label: 'Gemma 2' },
-    { value: 'gemma3:latest', label: 'Gemma 3n' },
-    { value: 'llama3.2:latest', label: 'Llama 3.2' },
-    { value: 'llama3:latest', label: 'Llama 3' },
+    { value: 'gemma3:latest', label: 'Gemma 3 (Latest)' },
+    { value: 'gemma3n:latest', label: 'Gemma 3n (Latest)' },
   ],
 } as const;
 

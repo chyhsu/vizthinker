@@ -2,7 +2,9 @@
 services:
   # Main VizThinker application
   app:
-    build: .
+    build:
+      context: .
+      no_cache: true
     ports:
       - "8000:8000"
     environment:
@@ -70,8 +72,8 @@ services:
     command: >
       "
         echo 'Pulling models...' &&
-        echo 'Pulling gemma3n:e2b...' &&
-        ollama pull gemma3n:e2b &&
+        echo 'Pulling gemma3n:latest...' &&
+        ollama pull gemma3n:latest &&
         echo 'Pulling gemma3:latest...' &&
         ollama pull gemma3:latest &&
         ollama list &&

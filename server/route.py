@@ -248,7 +248,7 @@ def setup_routes(app: FastAPI):
                 raise HTTPException(status_code=400, detail="Prompt is required")
             
             # Call LLM
-            response = await generate_markdown(user_prompt=prompt, provider=provider, parent_id=parent_id, chatrecord_id=chatrecord_id, isbranch=isbranch, model=model)
+            response = await generate_markdown(user_id=user_id,user_prompt=prompt, provider=provider, parent_id=parent_id, chatrecord_id=chatrecord_id, isbranch=isbranch, model=model)
             
             return {
                 "response": response,
