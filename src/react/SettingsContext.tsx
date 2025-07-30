@@ -78,7 +78,7 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         openai: 'gpt-4o',
         anthropic: 'claude-3-5-sonnet-20241022',
         x: 'grok-beta',
-        ollama: 'gemma3n:latest'
+        ollama: 'gemma3:latest'
       };
     } catch {
       return {
@@ -86,7 +86,7 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         openai: 'gpt-4o',
         anthropic: 'claude-3-5-sonnet-20241022',
         x: 'grok-beta',
-        ollama: 'gemma3n:latest'
+        ollama: 'gemma3:latest'
       };
     }
   });

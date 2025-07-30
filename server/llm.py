@@ -109,7 +109,7 @@ async def call_llm(user_prompt: str, provider: str, parent_id: Optional[int] = N
     elif provider == "ollama":
         try:
             # Use provided model or default
-            model_name = model or 'gemma3n:latest'
+            model_name = model or 'gemma3:latest'
             logger.info(f"Calling Ollama with user_prompt: {user_prompt}, provider: {provider}, model: {model_name}")
             
             # Use ollama.chat for better control over the conversation

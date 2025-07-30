@@ -11,8 +11,8 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-      ollama:
-        condition: service_started
+      ollama-init:
+        condition: service_completed_successfully
     restart: on-failure
     volumes:
       - ./.env:/app/.env:ro
@@ -66,12 +66,16 @@ services:
       - ollama_data:/root/.ollama
     environment:
       - OLLAMA_HOST=http://ollama:11434
+    entrypoint: ["/bin/sh", "-c"]
     command: >
-      sh -c "
-        echo 'Pulling Gemma3N model...' &&
+      "
+        echo 'Pulling models...' &&
+        echo 'Pulling gemma3n:e2b...' &&
+        ollama pull gemma3n:e2b &&
+        echo 'Pulling gemma3:latest...' &&
         ollama pull gemma3:latest &&
-        ollama pull gemma2:latest &&
-        echo 'Model ready!'
+        ollama list &&
+        echo 'Models ready!'
       "
     restart: "no"
 

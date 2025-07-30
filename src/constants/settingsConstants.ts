@@ -15,7 +15,7 @@ export const DEFAULT_SETTINGS = {
     openai: 'gpt-4o',
     anthropic: 'claude-3-5-sonnet-20240620',
     x: 'grok-1',
-    ollama: 'gemma3n:latest'
+    ollama: 'gemma3:latest'
   }
 } as const;
 
@@ -64,7 +64,7 @@ export const MODEL_OPTIONS = {
   ],
   ollama: [
     { value: 'gemma2:latest', label: 'Gemma 2' },
-    { value: 'gemma3n:latest', label: 'Gemma 3n' },
+    { value: 'gemma3:latest', label: 'Gemma 3n' },
     { value: 'llama3.2:latest', label: 'Llama 3.2' },
     { value: 'llama3:latest', label: 'Llama 3' },
   ],

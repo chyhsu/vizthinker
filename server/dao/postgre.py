@@ -60,6 +60,10 @@ CREATE TABLE IF NOT EXISTS users (
     id       serial PRIMARY KEY,
     username text UNIQUE NOT NULL,
     password text NOT NULL,
+    google_api_key text,
+    openai_api_key text,
+    x_api_key text,
+    anthropic_api_key text,
     chatrecords integer[]
 
 );
@@ -317,3 +321,22 @@ async def _get_all_descendants(conn: asyncpg.Connection, parent_id: int) -> List
         descendants.extend(await _get_all_descendants(conn, cid))
     return descendants
 
+async def update_user_api_key(user_id: int, provider: str, api_key: str) -> None:
+    pool = await _get_pool()
+    async with pool.acquire() as conn:
+        await conn.execute("UPDATE users SET " + provider + "_api_key = $1 WHERE id = $2", api_key, user_id)
+
+async def get_user_api_key(user_id: int, provider: str) -> Optional[str]:
+    pool = await _get_pool()
+    async with pool.acquire() as conn:
+        row = await conn.fetchrow("SELECT " + provider + "_api_key FROM users WHERE id = $1", user_id)
+        if row is None:
+            return None
+        return row[provider + "_api_key"]
+    
+
+async def delete_user_api_key(user_id: int, provider: str) -> None:
+    pool = await _get_pool()
+    async with pool.acquire() as conn:
+        await conn.execute("UPDATE users SET " + provider + "_api_key = NULL WHERE id = $1", user_id)
+    
