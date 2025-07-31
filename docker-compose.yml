@@ -4,6 +4,8 @@ services:
   app:
     build:
       context: .
+      args:
+        - VITE_BASE_URL=http://34.66.47.3:8000
     ports:
       - "8000:8000"
     environment:
