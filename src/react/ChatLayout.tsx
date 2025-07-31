@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import { useToast } from '@chakra-ui/react';
 import { Outlet } from 'react-router-dom';
 import { useReactFlow, ReactFlowProvider } from 'reactflow';
 import useStore from '../typejs/store';
@@ -22,6 +23,21 @@ const ChatLayoutFlow: React.FC = () => {
 };
 
 const ChatLayout: React.FC = () => {
+  const toast = useToast();
+
+  // Show signup success toast once after redirect
+  useEffect(() => {
+    if (localStorage.getItem('signup_success')) {
+      toast({
+        title: 'Account created',
+        description: 'Welcome to VizThinker! Don\'t forget to set up your API keys in the settings.',
+        status: 'success',
+        duration: 4000,
+        isClosable: true,
+      });
+      localStorage.removeItem('signup_success');
+    }
+  }, [toast]);
   return (
     <ReactFlowProvider>
       <ChatLayoutFlow />

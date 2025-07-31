@@ -327,7 +327,7 @@ ALLOWED_PROVIDERS = {
     "openai": "openai_api_key", 
     "anthropic": "anthropic_api_key",
     "x": "x_api_key",
-    "ollama":  None
+    # "ollama":  None
 }
 
 async def update_user_api_key(user_id: int, provider: str, api_key: str) -> None:

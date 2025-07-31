@@ -83,7 +83,8 @@ export const handleSignup = async (
     }
     localStorage.setItem('user_id', String(user_id));
     localStorage.setItem('chatrecord_id', String(chatrecord_id));
-    toast({ title: 'Account created', status: 'success', duration: 1500, isClosable: true });
+    // Flag so main page can show welcome toast once
+    localStorage.setItem('signup_success', '1');
     navigate('/main', { replace: true });
   } catch (err: any) {
     toast({ title: err.message, status: 'error', duration: 2000, isClosable: true });
