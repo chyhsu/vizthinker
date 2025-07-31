@@ -208,6 +208,16 @@ const useStore = create<StoreState>()(
 
     deleteNode: async (nodeId: string) => {
       try {
+
+        if (nodeId.startsWith('temp')) {
+          set((state) => {
+            state.nodes = state.nodes.filter(node => node.id !== nodeId);
+            state.edges = state.edges.filter(edge => edge.source !== nodeId && edge.target !== nodeId);
+          });
+          return;
+        }
+
+
         // Call backend API to delete the node and its descendants
         const chatrecord_id= localStorage.getItem('chatrecord_id')
         const res = await axios.delete(`http://127.0.0.1:8000/chat/records/${chatrecord_id}/${nodeId}`);
@@ -328,6 +338,11 @@ const useStore = create<StoreState>()(
     sendMessage: async (prompt: string, provider: string, parentId?: string, isbranch: boolean = false, model?: string) => {
       const { nodes, reactFlowInstance } = get();
       let lastNode: Node | undefined;
+
+      if (parentId && parentId.startsWith('temp')) {
+        console.error('Parent node is temporary, please delete it first');
+        return;
+      }
 
       if (parentId) {
         lastNode = nodes.find((n) => n.id === parentId);
