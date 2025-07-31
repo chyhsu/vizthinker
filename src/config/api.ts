@@ -1,27 +1,26 @@
 /**
- * API配置文件
- * 根據環境設定API基礎URL
+ * API configuration
+ * Automatically select API URL based on environment
  */
 
-// 根據環境決定API基礎URL
-const getApiBaseUrl = (): string => {
-  // 優先使用環境變量
-  if (import.meta.env.VITE_API_BASE_URL) {
-    return import.meta.env.VITE_API_BASE_URL;
+export function getBaseApiUrl(): string {
+  // In production, return the current server address
+  if (import.meta.env.PROD) {
+    return 'http://140.114.88.157:8000';
   }
   
-  // 如果是開發環境，使用localhost
+  // Development environment
   if (import.meta.env.DEV) {
     return 'http://127.0.0.1:8000';
   }
   
-  // 生產環境使用服務器IP
-  return 'http://140.114.88.157:8000';
-};
+  // Default return localhost
+  return 'http://127.0.0.1:8000';
+}
 
-export const API_BASE_URL = getApiBaseUrl();
+export const API_BASE_URL = getBaseApiUrl();
 
-// API端點
+// API endpoints
 export const API_ENDPOINTS = {
   CHAT: `${API_BASE_URL}/chat`,
   CHAT_POSITIONS: `${API_BASE_URL}/chat/positions`,
@@ -35,8 +34,8 @@ export const API_ENDPOINTS = {
   HEALTH: `${API_BASE_URL}/health`,
 } as const;
 
-// 調試信息（僅在開發環境）
+// Debug info (development only)
 if (import.meta.env.DEV) {
   console.log('API Base URL:', API_BASE_URL);
   console.log('Environment:', import.meta.env.MODE);
-} 
+}
