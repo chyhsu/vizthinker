@@ -1,5 +1,4 @@
 node_modules
-dist
 .venv
 server/__pycache__
 server/dao/__pycache__
