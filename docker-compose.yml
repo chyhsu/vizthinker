@@ -5,12 +5,12 @@ services:
     build:
       context: .
       args:
-        - VITE_BASE_URL=http://34.66.47.3:8000
+        - VITE_BASE_URL=https://viz-thinker.com
     ports:
       - "8000:8000"
     environment:
       - DATABASE_URL=postgresql://vizthinker:password@postgres:5432/vizthinker
-      - VITE_BASE_URL=http://34.66.47.3:8000
+      - VITE_BASE_URL=https://viz-thinker.com
       # - OLLAMA_HOST=http://ollama:11434
     depends_on:
       postgres:
