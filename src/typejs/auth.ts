@@ -1,6 +1,6 @@
 import React from 'react';
 import { UseToastOptions } from '@chakra-ui/react';
-import useStore from './store';
+import useStore, { BASE_URL } from './store';
 
 interface LoginData {
   username: string;
@@ -25,7 +25,7 @@ export const handleLogin = async (
 ) => {
   e.preventDefault();
   try {
-    const res = await fetch('http://127.0.0.1:8000/auth/login', {
+    const res = await fetch(`${BASE_URL}/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -64,7 +64,7 @@ export const handleSignup = async (
       toast({ title: 'Passwords do not match', status: 'error', duration: 3000, isClosable: true });
       return;
     }
-    const res = await fetch('http://127.0.0.1:8000/auth/signup', {
+    const res = await fetch(`${BASE_URL}/auth/signup`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({

@@ -44,7 +44,7 @@ import {
   settingsResetButtonStyle
 } from '../typejs/style';
 import { useSettings } from './SettingsContext';
-import useStore from '../typejs/store';
+import useStore, { BASE_URL } from '../typejs/store';
 import { useToast } from '@chakra-ui/react';
 import {
   DEFAULT_SETTINGS,
@@ -62,6 +62,8 @@ interface SettingsModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
+
+
 
 const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
   // global context
@@ -166,7 +168,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
           throw new Error('User not authenticated');
         }
         
-        await axios.post('http://127.0.0.1:8000/settings/api-keys', {
+        await axios.post(`${BASE_URL}/settings/api-keys`, {
           api_keys: draftApiKeys,
           user_id: parseInt(user_id)
         });

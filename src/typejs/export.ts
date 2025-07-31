@@ -1,6 +1,6 @@
 import html2canvas from 'html2canvas';
 import { getNodesBounds } from 'reactflow';
-import useStore from './store';
+import useStore, { BASE_URL } from './store';
 import axios from 'axios';
 
 export const exportAsMarkdown = async () => {
@@ -42,7 +42,7 @@ export const exportAsMarkdown = async () => {
             isbranch: false
         };
         
-        const response = await axios.post('http://127.0.0.1:8000/markdown', postData);
+        const response = await axios.post(`${BASE_URL}/markdown`, postData);
         const markdown = response.data.response;
         
         // Create and download the markdown file

@@ -43,7 +43,7 @@ export interface StoreState {
   clearAllConversations: (provider?: string, model?: string) => Promise<void>; // Add this
   updateNodeStyle: (nodeId: string, style: React.CSSProperties) => void;
 }
-
+export const BASE_URL = import.meta.env.VITE_BASE_URL || 'http://127.0.0.1:8000';
 const useStore = create<StoreState>()(
   immer((set, get) => ({
     nodes: [],
@@ -116,7 +116,7 @@ const useStore = create<StoreState>()(
       const chatrecord_id = localStorage.getItem('chatrecord_id');
       console.log('Saving positions for chatrecord %s : %s', chatrecord_id, JSON.stringify(positions));
       try {
-        await axios.post('http://127.0.0.1:8000/chat/positions', { chatrecord_id, positions: JSON.stringify(positions) });
+        await axios.post(`${BASE_URL}/chat/positions`, { chatrecord_id, positions: JSON.stringify(positions) });
         console.log('Positions saved successfully');
       } catch (err) {
         console.error('Error saving positions:', err);
@@ -133,7 +133,7 @@ const useStore = create<StoreState>()(
       //   return;
       // }      
       const chatrecord_id = localStorage.getItem('chatrecord_id');
-      let response = await axios.post('http://127.0.0.1:8000/welcome', { chatrecord_id });
+      let response = await axios.post(`${BASE_URL}/welcome`, { chatrecord_id });
       const node_id = response.data.message_id?.toString() ?? '0';
       const welcomePrompt = 'Hi there! What is VizThinker?';
       const welcomeResponse = response.data.response as string;
@@ -172,7 +172,7 @@ const useStore = create<StoreState>()(
       try {
         // Clear backend data
         const chatrecord_id= localStorage.getItem('chatrecord_id')
-        await axios.delete(`http://127.0.0.1:8000/chat/records/${chatrecord_id}`);
+        await axios.delete(`${BASE_URL}/chat/records/${chatrecord_id}`);
         
         // Clear frontend state
         set((state) => {
@@ -220,7 +220,7 @@ const useStore = create<StoreState>()(
 
         // Call backend API to delete the node and its descendants
         const chatrecord_id= localStorage.getItem('chatrecord_id')
-        const res = await axios.delete(`http://127.0.0.1:8000/chat/records/${chatrecord_id}/${nodeId}`);
+        const res = await axios.delete(`${BASE_URL}/chat/records/${chatrecord_id}/${nodeId}`);
 
         // Get all descendant node IDs recursively
         const getAllDescendants = (parentId: string, nodes: Node[], edges: Edge[]): string[] => {
@@ -276,7 +276,7 @@ const useStore = create<StoreState>()(
       try {
         // Fetch chat records from backend
         const chatrecord_id = localStorage.getItem('chatrecord_id');
-        const response = await axios.get(`http://127.0.0.1:8000/chat/records/${chatrecord_id}`);
+        const response = await axios.get(`${BASE_URL}/chat/records/${chatrecord_id}`);
         const chatRecords = response.data.records; // Backend returns {records}
         console.log("chatrecord length: ", chatRecords.length);
         const { reactFlowInstance } = get();
@@ -409,7 +409,7 @@ const useStore = create<StoreState>()(
         if (model) {
           postData.model = model;
         }
-        const response = await axios.post('http://127.0.0.1:8000/chat', postData);
+        const response = await axios.post(`${BASE_URL}/chat`, postData);
         const aiResponse = response.data.response;
         const actualNewId = response.data.message_id.toString();
 
