@@ -1,6 +1,6 @@
 import os
 import google.generativeai as genai
-import ollama
+# import ollama
 from server.logger import logger
 from server.dao.postgre import get_path_history, get_messages
 from typing import Optional
@@ -48,10 +48,9 @@ async def call_llm(user_id: int, user_prompt: str, provider: str, parent_id: Opt
     
     api_key = None
     # Ollama runs locally and does not require an API key
-    if provider != "ollama":
-        api_key = await get_user_api_key(user_id, provider)
-        if not api_key:
-            raise RuntimeError(f"{provider} API key not set.")
+    api_key = await get_user_api_key(user_id, provider)
+    if not api_key:
+        raise RuntimeError(f"{provider} API key not set.")
     
     if parent_id is not None:
         # get_path_history now expects only message_id
@@ -106,35 +105,35 @@ async def call_llm(user_id: int, user_prompt: str, provider: str, parent_id: Opt
             logger.error(f"An unexpected error occurred when calling Google Gemini API: {e}", exc_info=True)
             raise RuntimeError(f"Failed to generate content: {e}")
 
-    elif provider == "ollama":
-        try:
-            # Use provided model or default
-            model_name = model or 'gemma3:latest'
-            logger.info(f"Calling Ollama with user_prompt: {user_prompt}, provider: {provider}, model: {model_name}")
+    # elif provider == "ollama":
+    #     try:
+    #         # Use provided model or default
+    #         model_name = model or 'gemma3:latest'
+    #         logger.info(f"Calling Ollama with user_prompt: {user_prompt}, provider: {provider}, model: {model_name}")
             
-            # Use ollama.chat for better control over the conversation
-            response = ollama.chat(
-                model=model_name,
-                messages=[
-                    {
-                        'role': 'system',
-                        'content': system_prompt
-                    },
-                    {
-                        'role': 'user', 
-                        'content': user_prompt
-                    }
-                ]
-            )
+    #         # Use ollama.chat for better control over the conversation
+    #         response = ollama.chat(
+    #             model=model_name,
+    #             messages=[
+    #                 {
+    #                     'role': 'system',
+    #                     'content': system_prompt
+    #                 },
+    #                 {
+    #                     'role': 'user', 
+    #                     'content': user_prompt
+    #                 }
+    #             ]
+    #         )
             
-            response_text = response['message']['content']
-            logger.info(f"Received response from Ollama: {len(response_text)} tokens")
+    #         response_text = response['message']['content']
+    #         logger.info(f"Received response from Ollama: {len(response_text)} tokens")
 
-            return response_text
+    #         return response_text
             
-        except Exception as e:
-            logger.error(f"An unexpected error occurred when calling Ollama: {e}", exc_info=True)
-            raise RuntimeError(f"Failed to generate content from Ollama: {e}")
+    #     except Exception as e:
+    #         logger.error(f"An unexpected error occurred when calling Ollama: {e}", exc_info=True)
+    #         raise RuntimeError(f"Failed to generate content from Ollama: {e}")
     
     elif provider == "openai":
         try:

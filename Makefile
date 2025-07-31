@@ -68,20 +68,20 @@ install: setup install-postgre
 	@npm install react-icons@^5.5.0
 	@echo "Installing Python dependencies..."
 	@$(PIP) install -r res/requirements.txt
-	@echo "Installing additional Python packages (ollama)..."
-	@$(PIP) install ollama
-	@echo "Checking and installing $(OLLAMA_MODEL) model..."
-	@if command -v ollama >/dev/null 2>&1; then \
-		echo "Checking if $(OLLAMA_MODEL) model is available..."; \
-		if ! ollama list | grep -q "$(OLLAMA_MODEL)"; then \
-			echo "Downloading $(OLLAMA_MODEL) model (this may take a while)..."; \
-			ollama pull $(OLLAMA_MODEL); \
-		else \
-			echo "$(OLLAMA_MODEL) model already installed."; \
-		fi; \
-	else \
-		echo "Warning: ollama command not found. Please install Ollama manually and run 'ollama pull $(OLLAMA_MODEL)'"; \
-	fi
+	# @echo "Installing additional Python packages (ollama)..."
+	# @$(PIP) install ollama
+	# @echo "Checking and installing $(OLLAMA_MODEL) model..."
+	# @if command -v ollama >/dev/null 2>&1; then \
+	# 	echo "Checking if $(OLLAMA_MODEL) model is available..."; \
+	# 	if ! ollama list | grep -q "$(OLLAMA_MODEL)"; then \
+	# 		echo "Downloading $(OLLAMA_MODEL) model (this may take a while)..."; \
+	# 		ollama pull $(OLLAMA_MODEL); \
+	# 	else \
+	# 		echo "$(OLLAMA_MODEL) model already installed."; \
+	# 	fi; \
+	# else \
+	# 	echo "Warning: ollama command not found. Please install Ollama manually and run 'ollama pull $(OLLAMA_MODEL)'"; \
+	# fi
 	@echo "Building frontend application..."
 	@npm run build
 	@echo "All dependencies installed and frontend built successfully."

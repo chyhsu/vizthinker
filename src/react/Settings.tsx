@@ -316,7 +316,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
             </FormControl>
 
                          {/* API Key - Skip for Ollama */}
-             {(provider as string) !== 'ollama' && (
+             {(
                <FormControl>
                 <HStack justify="space-between" align="center" mb={2}>
                   <FormLabel mb={0} fontSize="sm" fontWeight="medium">
