@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState } from 'react';
 
 // Types ----------------------------------------------------
-type Provider = 'google' | 'ollama' | 'openai' | 'x' | 'anthropic';
+type Provider = 'google' | 'openai' | 'x' | 'anthropic';
 
 interface ApiKeys {
   google: string;
@@ -15,7 +15,7 @@ interface ProviderModels {
   openai: string;
   anthropic: string;
   x: string;
-  ollama: string;
+  // ollama: string;
 }
 
 interface SettingsContextProps {
@@ -50,7 +50,7 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     return localStorage.getItem('viz_font_color') ?? '#ffffff';
   });
   const [provider, setProvider] = useState<Provider>(() => {
-    return (localStorage.getItem('viz_provider') as Provider) ?? 'ollama';
+    return (localStorage.getItem('viz_provider') as Provider) ?? 'google';
   });
   const [apiKeys, setApiKeysState] = useState<ApiKeys>(() => {
     try {
@@ -78,7 +78,7 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         openai: 'gpt-4o',
         anthropic: 'claude-3-5-sonnet-20241022',
         x: 'grok-beta',
-        ollama: 'gemma3:latest'
+        // ollama: 'gemma3:latest'
       };
     } catch {
       return {
@@ -86,7 +86,7 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         openai: 'gpt-4o',
         anthropic: 'claude-3-5-sonnet-20241022',
         x: 'grok-beta',
-        ollama: 'gemma3:latest'
+        // ollama: 'gemma3:latest'
       };
     }
   });

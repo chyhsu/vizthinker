@@ -167,7 +167,7 @@ const useStore = create<StoreState>()(
 
     },
 
-    clearAllConversations: async (provider = 'ollama', model?: string) => {
+    clearAllConversations: async (provider = 'google', model?: string) => {
       const { reactFlowInstance } = get();
       try {
         // Clear backend data

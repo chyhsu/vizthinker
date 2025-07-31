@@ -100,7 +100,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
     openai: true,
     anthropic: true,
     x: true,
-    ollama: true,
+    // ollama: true,
   });
 
   // Reset draft state when modal opens
@@ -120,7 +120,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
         openai: true,
         anthropic: true,
         x: true,
-        ollama: true,
+        // ollama: true,
       });
     }
   }, [isOpen, backgroundImage, chatNodeColor, fontColor, provider, apiKeys, providerModels]);
@@ -401,7 +401,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
               </Heading>
               <VStack spacing={3} align="stretch">
                 {Object.keys(API_KEY_CONFIG).map(renderProviderSection)}
-                {/* Ollama Section */}
+                {/* Ollama Section
                 <Box border="1px" borderColor="gray.200" borderRadius="md" p={4} bg="gray.50">
                   <HStack justify="space-between" align="center" mb={collapsedSections['ollama'] ? 0 : 4}>
                     <Heading size="sm" color="gray.700">
@@ -439,7 +439,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
                       </Text>
                     </FormControl>
                   </Collapse>
-                </Box>
+                </Box> */}
               </VStack>
             </Box>
 

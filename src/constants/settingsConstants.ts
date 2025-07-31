@@ -8,7 +8,7 @@ export const DEFAULT_SETTINGS = {
   COLOR: 'rgba(0, 0, 0, 0.7)',
   BACKGROUND: '#ffffff',
   FONT_COLOR: '#ffffff',
-  PROVIDER: 'ollama',
+  PROVIDER: 'google',
   OPACITY: 0.7,
   PROVIDER_MODELS: {
     google: 'gemini-2.5-flash',
@@ -178,8 +178,8 @@ export const API_KEY_UTILS = {
         return key.startsWith('sk-ant-') && key.length > 20;
       case 'x':
         return key.length > 10; // Basic validation for X API keys
-      case 'ollama':
-        return true; // Ollama doesn't require API keys
+      // case 'ollama':
+      //   return true; // Ollama doesn't require API keys
       default:
         return key.length > 5; // Basic fallback validation
     }
