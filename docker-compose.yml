@@ -4,7 +4,6 @@ services:
   app:
     build:
       context: .
-      no_cache: true
     ports:
       - "8000:8000"
     environment:
