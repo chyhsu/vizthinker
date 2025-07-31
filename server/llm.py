@@ -28,6 +28,15 @@ Your task is to generate a response to the user's latest prompt by referencing t
   - **Lists** or **tables**, where appropriate
   - Logical sectioning for enhanced readability
 
+**Example Markdown (no code fences):**
+
+| Feature | Option A | Option B |
+|---------|----------|----------|
+| Speed   | Fast     | Slow     |
+
+- Use headings like `## Section Title` to introduce new sections.
+- Keep tables and lists in plain Markdown without surrounding triple backticks.
+
 Your response should maintain a clean and professional tone while advancing the conversation coherently and insightfully.
 """
 

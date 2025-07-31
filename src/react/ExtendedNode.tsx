@@ -197,7 +197,13 @@ const ExtendedNode: React.FC<ExtendedNodeProps> = ({ nodeId, onClose }) => {
                       {children}
                     </Text>
                   ),
-                  table: ({ children }) => <Table variant="simple" size="sm" mt={4}>{children}</Table>,
+                  table: ({ children }) => (
+                    <Box overflowX="auto" w="100%" my={4}>
+                      <Table variant="simple" size="sm" width="100%" style={{ tableLayout: 'fixed' }}>
+                        {children}
+                      </Table>
+                    </Box>
+                  ),
                   thead: ({ children }) => <Thead>{children}</Thead>,
                   tbody: ({ children }) => <Tbody>{children}</Tbody>,
                   tr: ({ children }) => <Tr>{children}</Tr>,
