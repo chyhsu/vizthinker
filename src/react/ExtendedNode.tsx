@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Box, Text, IconButton, Flex, VStack, Avatar, Input, Button, useToast, chakra, Spinner } from '@chakra-ui/react';
+import { Box, Text, IconButton, Flex, VStack, Avatar, Input, Button, useToast, chakra, Spinner, Table, Thead, Tbody, Tr, Th, Td } from '@chakra-ui/react';
 import {
   extendedNodeBackButtonStyle,
   extendedNodeCenterFlexStyle,
@@ -18,6 +18,7 @@ import {
   settingsCardBoxStyle
 } from '../typejs/style';
 import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { a11yDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import { AiOutlineArrowLeft, AiOutlineDelete } from 'react-icons/ai';
@@ -138,12 +139,14 @@ const ExtendedNode: React.FC<ExtendedNodeProps> = ({ nodeId, onClose }) => {
       zIndex={1000}
       p={4}
       borderRadius="xl"
+      borderWidth="3px"
+      borderColor="gray.400"
       boxShadow="2xl"
       bg={chatNodeColor}
       color={fontColor}
     >
-      {/* Left edge resize grip */}
-      <Box position="absolute" left="-4px" top="0" bottom="0" width="8px" cursor="ew-resize" onMouseDown={startResize} />
+     
+      <Box position="absolute" left="-6px" top="0" bottom="0" width="12px" cursor="ew-resize" onMouseDown={startResize} />
 
       <Flex justify="space-between" align="center" mb={4}>
         <IconButton
@@ -184,7 +187,7 @@ const ExtendedNode: React.FC<ExtendedNodeProps> = ({ nodeId, onClose }) => {
                   </Text>
                 </Flex>
               ) : (
-                <ReactMarkdown
+                <ReactMarkdown remarkPlugins={[remarkGfm]}
                 components={{
                   p: ({ children }) => <Text>{children}</Text>,
                   strong: ({ children }) => <Text as="strong">{children}</Text>,
@@ -194,6 +197,12 @@ const ExtendedNode: React.FC<ExtendedNodeProps> = ({ nodeId, onClose }) => {
                       {children}
                     </Text>
                   ),
+                  table: ({ children }) => <Table variant="simple" size="sm" mt={4}>{children}</Table>,
+                  thead: ({ children }) => <Thead>{children}</Thead>,
+                  tbody: ({ children }) => <Tbody>{children}</Tbody>,
+                  tr: ({ children }) => <Tr>{children}</Tr>,
+                  th: ({ children }) => <Th>{children}</Th>,
+                  td: ({ children }) => <Td>{children}</Td>,
                   code: ({ inline, className, children, ...props }: any) => {
                     const match = /language-(\w+)/.exec(className || '');
                     return !inline && match ? (
