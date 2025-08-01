@@ -3,7 +3,7 @@ services:
   # Main VizThinker application
   app:
     image:
-      gcr.io/vizthinker/vizthinker:latest
+      us-central1-docker.pkg.dev/vizthinker/vizrepo/vizthinker:latest
     ports:
       - "8000:8000"
     environment:
