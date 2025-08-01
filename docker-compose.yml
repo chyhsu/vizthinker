@@ -2,10 +2,8 @@
 services:
   # Main VizThinker application
   app:
-    build:
-      context: .
-      args:
-        - VITE_BASE_URL=https://viz-thinker.com
+    image:
+      us-central1-docker.pkg.dev/vizthinker/vizthinker/app:latest
     ports:
       - "8000:8000"
     environment:
