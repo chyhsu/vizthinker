@@ -17,7 +17,7 @@ COPY package*.json ./
 RUN npm ci --silent
 
 # Copy the rest of the source and build for production
-ENV VITE_BASE_URL=http://localhost:8000
+ENV VITE_BASE_URL=https://viz-thinker.com
 COPY . .
 RUN npm run build
 
