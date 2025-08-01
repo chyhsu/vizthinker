@@ -17,8 +17,7 @@ COPY package*.json ./
 RUN npm ci --silent
 
 # Copy the rest of the source and build for production
-ARG VITE_BASE_URL
-ENV VITE_BASE_URL=$VITE_BASE_URL
+ENV VITE_BASE_URL=http://localhost:8000
 COPY . .
 RUN npm run build
 

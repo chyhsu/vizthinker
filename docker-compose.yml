@@ -10,7 +10,6 @@ services:
       - "8000:8000"
     environment:
       - DATABASE_URL=postgresql://vizthinker:password@postgres:5432/vizthinker
-      - VITE_BASE_URL=https://viz-thinker.com
       # - OLLAMA_HOST=http://ollama:11434
     depends_on:
       postgres:
