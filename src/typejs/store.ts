@@ -32,7 +32,6 @@ export interface StoreState {
   setNodes: (nodes: Node[]) => void;
   setEdges: (edges: Edge[]) => void;
   setReactFlowInstance: (instance: ReactFlowInstance) => void;
-  setSelectedNodeId: (nodeId: string | null) => void;
   setViewport: (viewport: Viewport) => void; // Add this
   setExtendedNodeId: (id: string | null) => void;
   Initialize: () => Promise<void>;
@@ -56,17 +55,12 @@ const useStore = create<StoreState>()(
     setReactFlowInstance: (instance) => {
       set({ reactFlowInstance: instance });
     },
-
-    setSelectedNodeId: (nodeId) => {
-      set({ selectedNodeId: nodeId });
-    },
-
     setViewport: (viewport) => {
       set({ viewport });
     },
 
     setExtendedNodeId: (id) => {
-      set({ extendedNodeId: id });
+      set({ extendedNodeId: id,selectedNodeId: id });
     },
 
     updateNodeStyle: (nodeId, style) => {
