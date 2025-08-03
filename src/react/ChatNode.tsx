@@ -40,11 +40,6 @@ const ChatNode: React.FC<ChatNodeProps> = ({ data, id }) => {
   const responseTooLong = response.length > 100;
   const isSelected = selectedNodeId === id;
 
-  const handleNodeClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setSelectedNodeId(id);
-  };
-
   useEffect(() => {
     updateNodeStyle(id, {
       backgroundColor: chatNodeColor,
@@ -93,7 +88,7 @@ const ChatNode: React.FC<ChatNodeProps> = ({ data, id }) => {
         sx={{ 
           position: 'relative'
         }}
-        onClick={handleNodeClick}
+
         cursor="pointer"
       >
         {/* Delete Button - only show when selected and not loading */}

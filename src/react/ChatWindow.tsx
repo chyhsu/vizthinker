@@ -28,7 +28,7 @@ const ChatWindow: React.FC = () => {
     return false; // Default for image backgrounds
   };
   const { nodes, edges, onNodesChange, onEdgesChange, onConnect, sendMessage, viewport, setViewport, extendedNodeId, setExtendedNodeId, setSelectedNodeId } = useStore();
-    const nodeTypes = useMemo(() => ({ chatNode: ChatNode }), []);
+  const nodeTypes = useMemo(() => ({ chatNode: ChatNode }), []);
   const edgeTypes = useMemo(() => ({ branch: BranchEdge }), []);
   const clearSelection = () => {
     setExtendedNodeId(null);
