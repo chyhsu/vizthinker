@@ -27,7 +27,7 @@ const ChatWindow: React.FC = () => {
     if (bg === '#ffffff') return false;
     return false; // Default for image backgrounds
   };
-  const { nodes, edges, onNodesChange, onEdgesChange, onConnect, sendMessage, viewport, setViewport, extendedNodeId, setExtendedNodeId } = useStore();
+  const { nodes, edges, onNodesChange, onEdgesChange, onConnect, sendMessage, viewport, setViewport, extendedNodeId, setExtendedNodeId, setSelectedNodeId } = useStore();
     const nodeTypes = useMemo(() => ({ chatNode: ChatNode }), []);
   const edgeTypes = useMemo(() => ({ branch: BranchEdge }), []);
   const clearSelection = () => {
@@ -60,7 +60,10 @@ const ChatWindow: React.FC = () => {
           onConnect={onConnect}
           nodeTypes={nodeTypes}
           edgeTypes={edgeTypes}
-          onNodeClick={(_, node) => setExtendedNodeId(node.id)}
+          onNodeClick={(_, node) => {
+            setSelectedNodeId(node.id);
+            setExtendedNodeId(node.id);
+          }}
           onPaneClick={clearSelection}
           fitView={false}
           onInit={(instance) => {

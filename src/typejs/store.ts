@@ -61,7 +61,7 @@ const useStore = create<StoreState>()(
     },
 
     setExtendedNodeId: (id) => {
-      set({ selectedNodeId: id,extendedNodeId: id });
+      set({ extendedNodeId: id });
     },
 
     setSelectedNodeId: (id) => {
