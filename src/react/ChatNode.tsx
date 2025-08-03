@@ -32,12 +32,13 @@ const ChatNode: React.FC<ChatNodeProps> = ({ data, id }) => {
   const [isResponseExpanded, setIsResponseExpanded] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const { chatNodeColor, fontColor } = useSettings();
-  const { deleteNode, selectedNodeId, setSelectedNodeId, updateNodeStyle } = useStore();
+  const { deleteNode, selectedNodeId, updateNodeStyle, extendedNodeId } = useStore();
   const { prompt, response, isLoading } = data;
   const toast = useToast();
 
-  const promptTooLong = prompt.length > 100;
-  const responseTooLong = response.length > 100;
+  const isExtended = extendedNodeId === id;
+  const promptTooLong = prompt.length > 100 && !isExtended;
+  const responseTooLong = response.length > 100 && !isExtended;
   const isSelected = selectedNodeId === id;
 
   useEffect(() => {
@@ -85,8 +86,11 @@ const ChatNode: React.FC<ChatNodeProps> = ({ data, id }) => {
       <Handle type="source" position={Position.Bottom} id="bottom" style={{ bottom: '0%', left: '50%', transform: 'translate(-50%, 50%)' }} />
       <VStack
         {...chatNodeVStackStyle}
-        sx={{ 
-          position: 'relative'
+        sx={{
+          position: 'relative',
+          width: isExtended ? '80vw' : '350px',
+          height: isExtended ? '80vh' : 'auto',
+          overflowY: isExtended ? 'auto' : 'hidden',
         }}
 
         cursor="pointer"
@@ -115,7 +119,7 @@ const ChatNode: React.FC<ChatNodeProps> = ({ data, id }) => {
           {...chatNodeUserBoxStyle}
           color={fontColor}
         >
-          <Text>{promptTooLong && !isPromptExpanded ? `${prompt.slice(0, 100)}...` : prompt}</Text>
+          <Text whiteSpace={isExtended ? 'pre-wrap' : 'normal'}>{promptTooLong && !isPromptExpanded ? `${prompt.slice(0, 100)}...` : prompt}</Text>
           {promptTooLong && (
             <Button
               size="xs"
@@ -152,7 +156,7 @@ const ChatNode: React.FC<ChatNodeProps> = ({ data, id }) => {
             <>
               <ReactMarkdown
                             components={{
-                              p: ({ children }) => <Text>{children}</Text>,
+                              p: ({ children }) => <Text whiteSpace={isExtended ? 'pre-wrap' : 'normal'}>{children}</Text>,
                               strong: ({ children }) => <Text as="strong">{children}</Text>,
                               em: ({ children }) => <Text as="em">{children}</Text>,
                               li: ({ children }) => (

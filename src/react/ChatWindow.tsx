@@ -27,11 +27,13 @@ const ChatWindow: React.FC = () => {
     if (bg === '#ffffff') return false;
     return false; // Default for image backgrounds
   };
-  const { nodes, edges, onNodesChange, onEdgesChange, onConnect, sendMessage, viewport, setViewport, extendedNodeId, setExtendedNodeId, setSelectedNodeId } = useStore();
+  const { nodes, edges, onNodesChange, onEdgesChange, onConnect, sendMessage, viewport, setViewport, extendedNodeId, setExtendedNodeId, setSelectedNodeId, reactFlowInstance, setReactFlowInstance } = useStore();
   const nodeTypes = useMemo(() => ({ chatNode: ChatNode }), []);
   const edgeTypes = useMemo(() => ({ branch: BranchEdge }), []);
   const clearSelection = () => {
     setExtendedNodeId(null);
+    setSelectedNodeId(null);
+    reactFlowInstance?.fitView({ padding: 0.1, duration: 800 });
   };
 
   return (
@@ -61,12 +63,22 @@ const ChatWindow: React.FC = () => {
           nodeTypes={nodeTypes}
           edgeTypes={edgeTypes}
           onNodeClick={(_, node) => {
-            setSelectedNodeId(node.id);
-            setExtendedNodeId(node.id);
+            if (extendedNodeId === node.id) {
+              // If the clicked node is already extended, zoom out to fit all nodes
+              setExtendedNodeId(null);
+              setSelectedNodeId(null);
+              reactFlowInstance?.fitView({ padding: 0.1, duration: 800 });
+            } else {
+              // Otherwise, zoom in on the clicked node
+              setSelectedNodeId(node.id);
+              setExtendedNodeId(node.id); // We'll use this to track the 'zoomed' state
+              reactFlowInstance?.fitView({ nodes: [{ id: node.id }], duration: 800, padding: 0.1 });
+            }
           }}
           onPaneClick={clearSelection}
           fitView={false}
           onInit={(instance) => {
+            setReactFlowInstance(instance);
             if (viewport) {
               instance.setViewport(viewport);
             } else {
@@ -87,12 +99,7 @@ const ChatWindow: React.FC = () => {
         </ReactFlow>
       </Box>
 
-      {extendedNodeId && (
-        <ExtendedNode
-          nodeId={extendedNodeId}
-          onClose={() => setExtendedNodeId(null)}
-        />
-      )}
+
     </Box>
   );
 };
