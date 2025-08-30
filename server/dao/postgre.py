@@ -142,7 +142,7 @@ async def create_chatrecord(user_id: int) -> int:
         await conn.execute("UPDATE users SET chatrecords = array_append(chatrecords, $1) WHERE id = $2", row["id"], user_id)
         return row["id"]
 
-async def delete_chatrecord(chatrecord_id: int) -> None:
+async def delete_chatrecord(chatrecord_id: int, user_id: int) -> None:
     pool = await _get_pool()
     async with pool.acquire() as conn:
         await conn.execute("DELETE FROM chatrecords WHERE id = $1", chatrecord_id)

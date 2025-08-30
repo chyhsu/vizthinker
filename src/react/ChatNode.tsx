@@ -35,11 +35,14 @@ const ChatNode: React.FC<ChatNodeProps> = ({ data, id }) => {
   const { deleteNode, selectedNodeId, updateNodeStyle, extendedNodeId } = useStore();
   const { prompt, response, isLoading } = data;
   const toast = useToast();
+ 
 
   const isExtended = extendedNodeId === id;
   const promptTooLong = prompt.length > 100 && !isExtended;
   const responseTooLong = response.length > 100 && !isExtended;
   const isSelected = selectedNodeId === id;
+
+  
 
   useEffect(() => {
     updateNodeStyle(id, {
@@ -47,8 +50,12 @@ const ChatNode: React.FC<ChatNodeProps> = ({ data, id }) => {
       border: isSelected ? '3px solid #4299e1' : (isLoading ? '2px solid #3182ce' : 'none'),
       boxShadow: isSelected ? '0 0 10px rgba(66, 153, 225, 0.5)' : (isLoading ? '0 0 15px rgba(49, 130, 206, 0.4)' : 'none'),
       opacity: isLoading ? 0.8 : 1, // Explicitly reset opacity when not loading
+      // Ensure the React Flow node container resizes together with inner content
+      width: isExtended ? '90vw' : '350px',
+      height: isExtended ? '90vh' : 'auto',
+      maxWidth: isExtended ? '1200px' : '350px',
     });
-  }, [id, chatNodeColor, isSelected, isLoading, updateNodeStyle]);
+  }, [id, chatNodeColor, isSelected, isLoading, isExtended, updateNodeStyle]);
 
   const handleDeleteNode = async (e: React.MouseEvent) => {
     e.preventDefault();
@@ -88,11 +95,12 @@ const ChatNode: React.FC<ChatNodeProps> = ({ data, id }) => {
         {...chatNodeVStackStyle}
         sx={{
           position: 'relative',
-          width: isExtended ? '80vw' : '350px',
-          height: isExtended ? '80vh' : 'auto',
+          width: isExtended ? '90vw' : '350px',
+          height: isExtended ? '90vh' : 'auto',
+          maxWidth: isExtended ? '1200px' : '350px',
           overflowY: isExtended ? 'auto' : 'hidden',
+          padding: isExtended ? '2rem' : '1rem',
         }}
-
         cursor="pointer"
       >
         {/* Delete Button - only show when selected and not loading */}
@@ -156,7 +164,7 @@ const ChatNode: React.FC<ChatNodeProps> = ({ data, id }) => {
             <>
               <ReactMarkdown
                             components={{
-                              p: ({ children }) => <Text whiteSpace={isExtended ? 'pre-wrap' : 'normal'}>{children}</Text>,
+                              p: ({ children }) => <Text whiteSpace={isExtended ? 'pre-wrap' : 'normal'} w="100%">{children}</Text>,
                               strong: ({ children }) => <Text as="strong">{children}</Text>,
                               em: ({ children }) => <Text as="em">{children}</Text>,
                               li: ({ children }) => (

@@ -15,7 +15,6 @@ import ChatNode from './ChatNode';
 import HeaderBar from './HeaderBar';
 import { useSettings } from './SettingsContext';
 import useStore from '../typejs/store';
-import ExtendedNode from './ExtendedNode';
 import BranchEdge from './BranchEdge';
 
 const ChatWindow: React.FC = () => {
