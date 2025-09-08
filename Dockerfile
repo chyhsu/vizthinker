@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile:1.4
 # -----------------------------
 # VizThinker Dockerfile
 # -----------------------------
@@ -17,9 +18,10 @@ COPY package*.json ./
 RUN npm ci --silent
 
 # Copy the rest of the source and build for production
-ENV VITE_BASE_URL=https://viz-thinker.com
+ENV VITE_BASE_URL=http://viz-thinker.com
 COPY . .
-RUN npm run build
+# Build does not require network access; disable networking to avoid host iptables issues during this step
+RUN --network=none npm run build
 
 ###############################
 # ----- Stage 2: Backend -----
@@ -44,8 +46,8 @@ COPY tsconfig.json ./
 COPY res/requirements.txt ./
 
 # Install Python dependencies
-RUN pip install --no-cache-dir -r requirements.txt \
-    && pip install --no-cache-dir ollama openai
+RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir ollama openai
 
 # Copy backend source code (changes more frequently)
 COPY server ./server

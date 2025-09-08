@@ -9,7 +9,7 @@ import {
   chatWindowBranchBoxStyle
 } from '../typejs/style';
 import axios from 'axios';
-import ReactFlow, { Background, BackgroundVariant, Viewport } from 'reactflow';
+import ReactFlow, { Background, BackgroundVariant, Viewport, useReactFlow, useUpdateNodeInternals } from 'reactflow';
 import 'reactflow/dist/style.css';
 import ChatNode from './ChatNode';
 import HeaderBar from './HeaderBar';
@@ -29,6 +29,8 @@ const ChatWindow: React.FC = () => {
   const { nodes, edges, onNodesChange, onEdgesChange, onConnect, sendMessage, viewport, setViewport, extendedNodeId, setExtendedNodeId, setSelectedNodeId, reactFlowInstance, setReactFlowInstance } = useStore();
   const nodeTypes = useMemo(() => ({ chatNode: ChatNode }), []);
   const edgeTypes = useMemo(() => ({ branch: BranchEdge }), []);
+  const { getNode, setCenter } = useReactFlow();
+  const updateNodeInternals = useUpdateNodeInternals();
   const clearSelection = () => {
     setExtendedNodeId(null);
     setSelectedNodeId(null);
@@ -62,16 +64,31 @@ const ChatWindow: React.FC = () => {
           nodeTypes={nodeTypes}
           edgeTypes={edgeTypes}
           onNodeClick={(_, node) => {
+            if (!reactFlowInstance) return;
             if (extendedNodeId === node.id) {
               // If the clicked node is already extended, zoom out to fit all nodes
               setExtendedNodeId(null);
               setSelectedNodeId(null);
               reactFlowInstance?.fitView({ padding: 0.1, duration: 800 });
             } else {
-              // Otherwise, zoom in on the clicked node
               setSelectedNodeId(node.id);
-              setExtendedNodeId(node.id); // We'll use this to track the 'zoomed' state
-              reactFlowInstance?.fitView({ nodes: [{ id: node.id }], duration: 800, padding: 0.1 });
+              setExtendedNodeId(node.id);
+
+              // Defer until after the node has re-rendered and been measured
+              requestAnimationFrame(() => {
+                updateNodeInternals(node.id);
+
+                requestAnimationFrame(() => {
+                  const n = getNode(node.id);
+                  if (!n) return;
+
+                  // Use the extended dimensions
+                  const cx = (n.positionAbsolute?.x ?? n.position.x) + (n.width ?? 0) / 2;
+                  const cy = (n.positionAbsolute?.y ?? n.position.y) + (n.height ?? 0) / 2;
+
+                  setCenter(cx, cy, { zoom: 1.0, duration: 800 });
+                });
+              });
             }
           }}
           onPaneClick={clearSelection}

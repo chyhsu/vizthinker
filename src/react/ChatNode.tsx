@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
-import { Box, Flex, Text, Avatar, VStack, Button, IconButton, useToast, Spinner } from '@chakra-ui/react';
+import { Box, Flex, Text, Avatar, VStack, Button, IconButton, useToast, Spinner, Input } from '@chakra-ui/react';
 import {
   chatNodeVStackStyle,
   chatNodeUserFlexStyle,
@@ -9,6 +9,7 @@ import {
   chatNodeAIFlexStyle,
   chatNodeAIBoxStyle,
   chatNodeAIAvatarStyle,
+  extendedNodeInputStyle,
 } from '../typejs/style';
 import { useSettings } from './SettingsContext';
 import { Handle, Position } from 'reactflow';
@@ -31,10 +32,11 @@ const ChatNode: React.FC<ChatNodeProps> = ({ data, id }) => {
   const [isPromptExpanded, setIsPromptExpanded] = useState(false);
   const [isResponseExpanded, setIsResponseExpanded] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
-  const { chatNodeColor, fontColor } = useSettings();
-  const { deleteNode, selectedNodeId, updateNodeStyle, extendedNodeId } = useStore();
+  const { chatNodeColor, fontColor, provider, providerModels } = useSettings();
+  const { deleteNode, selectedNodeId, updateNodeStyle, extendedNodeId, sendMessage } = useStore();
   const { prompt, response, isLoading } = data;
   const toast = useToast();
+  const [inputValue, setInputValue] = useState('');
  
 
   const isExtended = extendedNodeId === id;
@@ -83,6 +85,32 @@ const ChatNode: React.FC<ChatNodeProps> = ({ data, id }) => {
       });
     } finally {
       setIsDeleting(false);
+    }
+  };
+
+  const handleSendMessage = async (e?: React.MouseEvent) => {
+    e?.preventDefault();
+    e?.stopPropagation();
+    if (inputValue.trim() === '') return;
+    const selectedModel = providerModels[provider as keyof typeof providerModels];
+    await sendMessage(inputValue, provider, id, false, selectedModel);
+    setInputValue('');
+  };
+
+  const handleBranch = async (e?: React.MouseEvent) => {
+    e?.preventDefault();
+    e?.stopPropagation();
+    if (inputValue.trim() === '') return;
+    const selectedModel = providerModels[provider as keyof typeof providerModels];
+    await sendMessage(inputValue, provider, id, true, selectedModel);
+    setInputValue('');
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      e.stopPropagation();
+      handleSendMessage();
     }
   };
 
@@ -211,9 +239,60 @@ const ChatNode: React.FC<ChatNodeProps> = ({ data, id }) => {
           )}
         </Box>
       </Flex>
+      {/* Input Section (only show when extended) */}
+      {isExtended && (
+        <VStack spacing={4} align="stretch" w="100%" onClick={(e) => e.stopPropagation()}>
+          <Flex>
+            <Input
+              value={inputValue}
+              onChange={(e) => setInputValue(e.target.value)}
+              onKeyUp={handleKeyPress}
+              placeholder="Type your message here..."
+              {...extendedNodeInputStyle}
+              bg="white"
+              borderColor="gray.300"
+              borderWidth="2px"
+              color="black"
+              _placeholder={{ color: "gray.500" }}
+              _hover={{ borderColor: "blue.400" }}
+              _focus={{ borderColor: "blue.500", boxShadow: "0 0 0 1px blue.500" }}
+              className="nodrag"
+            />
+          </Flex>
+          <Flex gap={2}>
+            <Button 
+              onClick={handleSendMessage}
+              flex={1}
+              bg="blue.500"
+              color="white"
+              size="sm"
+              borderRadius="md"
+              _hover={{ bg: "blue.600" }}
+              _focus={{ boxShadow: "0 0 0 2px blue.200" }}
+              isDisabled={!!isLoading || inputValue.trim() === ''}
+              className="nodrag"
+            >
+              Send
+            </Button>
+            <Button 
+              onClick={handleBranch}
+              flex={1}
+              bg="green.500"
+              color="white"
+              size="sm"
+              borderRadius="md"
+              _hover={{ bg: "green.600" }}
+              _focus={{ boxShadow: "0 0 0 2px green.200" }}
+              isDisabled={!!isLoading || inputValue.trim() === ''}
+              className="nodrag"
+            >
+              Branch
+            </Button>
+          </Flex>
+        </VStack>
+      )}
     </VStack>
-      <Handle type="source" position={Position.Bottom} />
-    </>
+      </>
   );
 };
 
