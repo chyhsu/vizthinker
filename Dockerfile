@@ -18,7 +18,7 @@ COPY package*.json ./
 RUN npm ci --silent
 
 # Copy the rest of the source and build for production
-ENV VITE_BASE_URL=http://viz-thinker.com
+ENV VITE_BASE_URL=https://viz-thinker.com
 COPY . .
 # Build does not require network access; disable networking to avoid host iptables issues during this step
 RUN --network=none npm run build
