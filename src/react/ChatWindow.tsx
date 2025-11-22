@@ -19,7 +19,7 @@ import BranchEdge from './BranchEdge';
 
 const ChatWindow: React.FC = () => {
   const { backgroundImage, provider } = useSettings();
-  
+
   // Helper function to determine if background is dark
   const isDarkBackground = (bg: string) => {
     if (bg === '#000000') return true;
@@ -42,8 +42,8 @@ const ChatWindow: React.FC = () => {
       position="relative"
       h="100vh"
       w="100%"
-      {...(backgroundImage.startsWith('#') ? 
-        { bg: backgroundImage } : 
+      {...(backgroundImage.startsWith('#') ?
+        { bg: backgroundImage } :
         {
           bgImage: backgroundImage,
           bgPosition: "center",
@@ -63,6 +63,9 @@ const ChatWindow: React.FC = () => {
           onConnect={onConnect}
           nodeTypes={nodeTypes}
           edgeTypes={edgeTypes}
+          zoomOnScroll={false}
+          zoomOnPinch={false}
+          panOnScroll={false}
           onNodeClick={(_, node) => {
             if (!reactFlowInstance) return;
             if (extendedNodeId === node.id) {
@@ -106,11 +109,11 @@ const ChatWindow: React.FC = () => {
           }}
           onMoveEnd={(e, vp: Viewport) => setViewport(vp)}
         >
-          <Background 
-            variant={BackgroundVariant.Dots} 
-            gap={24} 
-            size={1} 
-            color={isDarkBackground(backgroundImage) ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.15)"} 
+          <Background
+            variant={BackgroundVariant.Dots}
+            gap={24}
+            size={1}
+            color={isDarkBackground(backgroundImage) ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.15)"}
           />
         </ReactFlow>
       </Box>

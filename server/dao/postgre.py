@@ -17,9 +17,9 @@ from server.logger import logger
 config = {
     "host": "localhost",
     "port": 5432,
-    "user": "postgres",
-    "password": "postgres",
-    "dbname": "postgres",
+    "user": "vizthinker",
+    "password": "password",
+    "dbname": "vizthinker",
 }
 
 # Global connection pool

@@ -42,9 +42,9 @@ export const PROVIDER_OPTIONS = [
 export const MODEL_OPTIONS = {
   google: [
     { value: 'gemini-2.5-flash', label: 'Gemini 2.5 Flash' },
-    { value: 'gemini-1.5-flash-latest', label: 'Gemini 1.5 Flash' },
-    { value: 'gemini-1.5-pro-latest', label: 'Gemini 1.5 Pro' },
-    { value: 'gemini-1.0-pro', label: 'Gemini 1.0 Pro' },
+    { value: 'gemini-2.5-pro', label: 'Gemini 2.5 Pro' },
+    { value: 'gemini-2.0-flash', label: 'Gemini 2.0 Flash' },
+    { value: 'gemini-1.5-flash', label: 'Gemini 1.5 Flash' },
   ],
   openai: [
     { value: 'gpt-4o', label: 'GPT-4o' },
@@ -168,7 +168,7 @@ export const API_KEY_UTILS = {
   },
   validateApiKey: (provider: string, key: string) => {
     if (!key) return false;
-    
+
     switch (provider) {
       case 'openai':
         return key.startsWith('sk-') && key.length > 20;

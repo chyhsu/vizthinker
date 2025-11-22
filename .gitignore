@@ -4,6 +4,4 @@ server/__pycache__
 server/dao/__pycache__
 vizthink.db
 .env
-docker-compose.yml
-Dockerfile
 dist

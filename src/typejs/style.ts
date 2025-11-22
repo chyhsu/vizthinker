@@ -1,5 +1,5 @@
 import { BoxProps, FlexProps, ButtonProps, InputProps, HeadingProps, StackProps } from '@chakra-ui/react';
-import { LinkProps } from 'react-router-dom';
+import type { LinkProps } from 'react-router-dom';
 
 //////////////////////ChatWindow/////////////////////////////
 // Outer Flex (root container)
@@ -232,53 +232,100 @@ export const extendedNodeSendButtonStyle = {
 
 ///////////////ChatNode///////////////////////////////////
 
-// Root VStack style for ChatNode
-export const chatNodeVStackStyle = {
-  spacing: 4,
-  align: 'stretch',
+// Root Container for ChatNode
+export const chatNodeContainerStyle: BoxProps = {
+  position: 'relative',
+  display: 'flex',
+  flexDirection: 'column',
+  bg: 'rgba(255, 255, 255, 0.75)', // Glassmorphism background
+  backdropFilter: 'blur(16px)',
+  borderRadius: '24px',
+  border: '1px solid rgba(255, 255, 255, 0.5)',
+  boxShadow: '0 10px 40px -10px rgba(0, 0, 0, 0.15)',
+  overflow: 'hidden',
+  transition: 'all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1)',
+  _hover: {
+    boxShadow: '0 20px 50px -12px rgba(0, 0, 0, 0.25)',
+    transform: 'translateY(-2px)',
+  }
 };
 
-// User prompt Flex
-export const chatNodeUserFlexStyle = {
+// Header (User Info)
+export const chatNodeHeaderStyle: FlexProps = {
+  p: 4,
+  align: 'center',
+  justify: 'space-between',
+  bg: 'rgba(255, 255, 255, 0.4)',
+  borderBottom: '1px solid rgba(0, 0, 0, 0.06)',
+};
+
+// Scrollable Content Area
+export const chatNodeContentStyle: BoxProps = {
+  flex: 1,
+  overflowY: 'auto',
+  p: 5,
   w: '100%',
-  justify: 'flex-end',
+  css: {
+    '&::-webkit-scrollbar': {
+      width: '6px',
+    },
+    '&::-webkit-scrollbar-track': {
+      background: 'transparent',
+    },
+    '&::-webkit-scrollbar-thumb': {
+      background: 'rgba(0, 0, 0, 0.1)',
+      borderRadius: '10px',
+    },
+    '&::-webkit-scrollbar-thumb:hover': {
+      background: 'rgba(0, 0, 0, 0.2)',
+    },
+  },
 };
 
-// User prompt Box
-export const chatNodeUserBoxStyle = {
-  px: 4,
-  py: 2,
+// Sticky Footer (Input Area)
+export const chatNodeFooterStyle: BoxProps = {
+  p: 4,
+  bg: 'rgba(255, 255, 255, 0.8)',
+  borderTop: '1px solid rgba(0, 0, 0, 0.06)',
+  backdropFilter: 'blur(10px)',
+};
+
+// Modern Input Style
+export const chatNodeInputStyle: InputProps = {
+  bg: 'white',
+  border: '1px solid rgba(0,0,0,0.1)',
+  borderRadius: 'xl',
+  py: 5,
+  _placeholder: { color: 'gray.400' },
+  _focus: {
+    borderColor: 'blue.400',
+    boxShadow: '0 0 0 3px rgba(66, 153, 225, 0.2)',
+  },
+};
+
+// Message Bubble Styles
+export const chatNodeUserBubbleStyle: BoxProps = {
+  bg: 'blue.50',
+  color: 'gray.800',
+  p: 4,
   borderRadius: '2xl',
-  maxWidth: '70%',
+  borderTopRightRadius: 'sm',
+  boxShadow: 'sm',
+  maxW: '85%',
+  ml: 'auto',
+  mb: 4,
 };
 
-// User Avatar
-export const chatNodeUserAvatarStyle = {
-  size: 'sm',
-  ml: 2,
-  name: 'You',
-  bg: 'blue.500',
-};
-
-// AI response Flex
-export const chatNodeAIFlexStyle = {
-  w: '100%',
-  justify: 'flex-start',
-};
-
-// AI response Box
-export const chatNodeAIBoxStyle = {
-  px: 4,
-  py: 2,
-  borderRadius: 'lg',
-  maxWidth: '70%',
-};
-
-// AI Avatar
-export const chatNodeAIAvatarStyle = {
-  size: 'sm',
-  mr: 2,
-  name: 'VizThinker AI',
+export const chatNodeAIBubbleStyle: BoxProps = {
+  bg: 'white',
+  color: 'gray.800',
+  p: 4,
+  borderRadius: '2xl',
+  borderTopLeftRadius: 'sm',
+  boxShadow: 'sm',
+  maxW: '85%',
+  mr: 'auto',
+  border: '1px solid rgba(0,0,0,0.05)',
 };
 
 //////////////////////////////////////////////////////////

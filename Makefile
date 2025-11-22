@@ -55,10 +55,12 @@ setup:
     fi
 # Target to install all dependencies
 install: setup install-postgre
-	@sudo -iu postgres psql -tc "SELECT 1 FROM pg_roles WHERE rolname='root';" | grep -q 1 || \
-	  sudo -iu postgres psql -c "CREATE ROLE root SUPERUSER LOGIN;"
-	@sudo -iu postgres psql -tc "SELECT 1 FROM pg_database WHERE datname='mydb';" | grep -q 1 || \
-	  sudo -iu postgres createdb mydb -O root
+	# @sudo -iu postgres psql -tc "SELECT 1 FROM pg_roles WHERE rolname='root';" | grep -q 1 || \
+	#   sudo -iu postgres psql -c "CREATE ROLE root SUPERUSER LOGIN;"
+	# @sudo -iu postgres psql -tc "SELECT 1 FROM pg_database WHERE datname='mydb';" | grep -q 1 || \
+	#   sudo -iu postgres createdb mydb -O root
+	# @sudo -iu postgres psql -c "CREATE ROLE vizthinker WITH LOGIN PASSWORD 'password';"
+	# @sudo -iu postgres psql -c "CREATE DATABASE vizthinker OWNER vizthinker;"
 	@echo "Checking for Node.js and npm..."
 	@command -v npm >/dev/null 2>&1 || { echo "Error: npm is not installed. Please install Node.js (which includes npm) and try again."; exit 1; }
 	@echo "Installing Node.js dependencies..."

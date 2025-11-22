@@ -1,15 +1,15 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import ReactMarkdown from 'react-markdown';
-import { Box, Flex, Text, Avatar, VStack, Button, IconButton, useToast, Spinner, Input } from '@chakra-ui/react';
+import remarkGfm from 'remark-gfm';
+import { Box, Flex, Text, Avatar, VStack, Button, IconButton, useToast, Spinner, Input, HStack } from '@chakra-ui/react';
 import {
-  chatNodeVStackStyle,
-  chatNodeUserFlexStyle,
-  chatNodeUserBoxStyle,
-  chatNodeUserAvatarStyle,
-  chatNodeAIFlexStyle,
-  chatNodeAIBoxStyle,
-  chatNodeAIAvatarStyle,
-  extendedNodeInputStyle,
+  chatNodeContainerStyle,
+  chatNodeHeaderStyle,
+  chatNodeContentStyle,
+  chatNodeFooterStyle,
+  chatNodeInputStyle,
+  chatNodeUserBubbleStyle,
+  chatNodeAIBubbleStyle,
 } from '../typejs/style';
 import { useSettings } from './SettingsContext';
 import { Handle, Position } from 'reactflow';
@@ -37,34 +37,32 @@ const ChatNode: React.FC<ChatNodeProps> = ({ data, id }) => {
   const { prompt, response, isLoading } = data;
   const toast = useToast();
   const [inputValue, setInputValue] = useState('');
- 
+  const scrollRef = useRef<HTMLDivElement | null>(null);
+
 
   const isExtended = extendedNodeId === id;
   const promptTooLong = prompt.length > 100 && !isExtended;
   const responseTooLong = response.length > 100 && !isExtended;
   const isSelected = selectedNodeId === id;
 
-  
+
 
   useEffect(() => {
     updateNodeStyle(id, {
-      backgroundColor: chatNodeColor,
-      border: isSelected ? '3px solid #4299e1' : (isLoading ? '2px solid #3182ce' : 'none'),
-      boxShadow: isSelected ? '0 0 10px rgba(66, 153, 225, 0.5)' : (isLoading ? '0 0 15px rgba(49, 130, 206, 0.4)' : 'none'),
-      opacity: isLoading ? 0.8 : 1, // Explicitly reset opacity when not loading
-      // Ensure the React Flow node container resizes together with inner content
+      // We override some styles here for dynamic sizing, but base styles are in chatNodeContainerStyle
       width: isExtended ? '90vw' : '350px',
       height: isExtended ? '90vh' : 'auto',
       maxWidth: isExtended ? '1200px' : '350px',
+      zIndex: isExtended ? 1000 : undefined,
     });
-  }, [id, chatNodeColor, isSelected, isLoading, isExtended, updateNodeStyle]);
+  }, [id, isExtended, updateNodeStyle]);
 
   const handleDeleteNode = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    
+
     if (isDeleting) return;
-    
+
     setIsDeleting(true);
     try {
       await deleteNode(id);
@@ -119,180 +117,177 @@ const ChatNode: React.FC<ChatNodeProps> = ({ data, id }) => {
       <Handle type="target" position={Position.Top} style={{ top: '0%', transform: 'translate(-50%, -50%)' }} />
       <Handle type="source" position={Position.Right} id="right" style={{ top: '50%', right: '0%', transform: 'translate(50%, -50%)' }} />
       <Handle type="source" position={Position.Bottom} id="bottom" style={{ bottom: '0%', left: '50%', transform: 'translate(-50%, 50%)' }} />
-      <VStack
-        {...chatNodeVStackStyle}
-        sx={{
-          position: 'relative',
-          width: isExtended ? '90vw' : '350px',
-          height: isExtended ? '90vh' : 'auto',
-          maxWidth: isExtended ? '1200px' : '350px',
-          overflowY: isExtended ? 'auto' : 'hidden',
-          padding: isExtended ? '2rem' : '1rem',
-        }}
-        cursor="pointer"
+
+      <Box
+        {...chatNodeContainerStyle}
+        width={isExtended ? '90vw' : '350px'}
+        height={isExtended ? '90vh' : 'auto'}
+        maxWidth={isExtended ? '1200px' : '350px'}
+        cursor={isExtended ? 'default' : 'pointer'}
+        borderColor={isSelected ? 'blue.400' : 'rgba(255, 255, 255, 0.5)'}
+        boxShadow={isSelected ? '0 0 0 3px rgba(66, 153, 225, 0.4)' : chatNodeContainerStyle.boxShadow}
       >
-        {/* Delete Button - only show when selected and not loading */}
-        {isSelected && !isLoading && (
-          <IconButton
-            aria-label="Delete Node"
-            icon={<AiOutlineDelete />}
-            size="xs"
-            colorScheme="red"
-            variant="solid"
-            position="absolute"
-            top="2px"
-            right="2px"
-            onClick={handleDeleteNode}
-            isLoading={isDeleting}
-            zIndex={10}
-            _hover={{ transform: 'scale(1.1)' }}
-          />
-        )}
-
-      {/* User Prompt */}
-      <Flex {...chatNodeUserFlexStyle}>
-        <Box
-          {...chatNodeUserBoxStyle}
-          color={fontColor}
-        >
-          <Text whiteSpace={isExtended ? 'pre-wrap' : 'normal'}>{promptTooLong && !isPromptExpanded ? `${prompt.slice(0, 100)}...` : prompt}</Text>
-          {promptTooLong && (
-            <Button
+        {/* Header */}
+        <Flex {...chatNodeHeaderStyle}>
+          <HStack>
+            <Avatar size="xs" name="VizThinker" src="/logo.png" bg="blue.500" />
+            <Text fontSize="xs" fontWeight="bold" color="gray.500">VizThinker Node</Text>
+          </HStack>
+          {isSelected && !isLoading && (
+            <IconButton
+              aria-label="Delete Node"
+              icon={<AiOutlineDelete />}
               size="xs"
-              variant="link"
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                setIsPromptExpanded(!isPromptExpanded);
-              }}
-              mt={1}
-            >
-              {isPromptExpanded ? 'Show Less' : 'Show More'}
-            </Button>
-          )}
-        </Box>
-        <Avatar {...chatNodeUserAvatarStyle} />
-      </Flex>
-
-      {/* AI Response */}
-      <Flex {...chatNodeAIFlexStyle}>
-        <Avatar {...chatNodeAIAvatarStyle} />
-        <Box
-          {...chatNodeAIBoxStyle}
-          color={fontColor}
-        >
-          {isLoading ? (
-            <Flex align="center" gap={3}>
-              <Spinner size="sm" color="blue.500" />
-              <Text color={fontColor} fontStyle="italic">
-                {response}
-              </Text>
-            </Flex>
-          ) : (
-            <>
-              <ReactMarkdown
-                            components={{
-                              p: ({ children }) => <Text whiteSpace={isExtended ? 'pre-wrap' : 'normal'} w="100%">{children}</Text>,
-                              strong: ({ children }) => <Text as="strong">{children}</Text>,
-                              em: ({ children }) => <Text as="em">{children}</Text>,
-                              li: ({ children }) => (
-                                <Text as="li" ml={4} listStyleType="disc">
-                                  {children}
-                                </Text>
-                              ),
-                              code: ({ inline, className, children, ...props }: any) => {
-                                const match = /language-(\w+)/.exec(className || '');
-                                return !inline && match ? (
-                                  <SyntaxHighlighter
-                                    style={a11yDark}
-                                    language={match[1]}
-                                    PreTag="div"
-                                    {...props}
-                                  >
-                                    {String(children).replace(/\n$/, '')}
-                                  </SyntaxHighlighter>
-                                ) : (
-                                  <chakra.code className={className} {...props}>
-                                    {children}
-                                  </chakra.code>
-                                );
-                              },
-                            }}
-                            >
-                             {responseTooLong && !isResponseExpanded ? `${response.slice(0, 150)}...` : response}
-                            </ReactMarkdown>
-              {responseTooLong && (
-                <Button
-                  size="xs"
-                  variant="link"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    setIsResponseExpanded(!isResponseExpanded);
-                  }}
-                  mt={1}
-                >
-                  {isResponseExpanded ? 'Show Less' : 'Show More'}
-                </Button>
-              )}
-            </>
-          )}
-        </Box>
-      </Flex>
-      {/* Input Section (only show when extended) */}
-      {isExtended && (
-        <VStack spacing={4} align="stretch" w="100%" onClick={(e) => e.stopPropagation()}>
-          <Flex>
-            <Input
-              value={inputValue}
-              onChange={(e) => setInputValue(e.target.value)}
-              onKeyUp={handleKeyPress}
-              placeholder="Type your message here..."
-              {...extendedNodeInputStyle}
-              bg="white"
-              borderColor="gray.300"
-              borderWidth="2px"
-              color="black"
-              _placeholder={{ color: "gray.500" }}
-              _hover={{ borderColor: "blue.400" }}
-              _focus={{ borderColor: "blue.500", boxShadow: "0 0 0 1px blue.500" }}
-              className="nodrag"
+              colorScheme="red"
+              variant="ghost"
+              onClick={handleDeleteNode}
+              isLoading={isDeleting}
             />
-          </Flex>
-          <Flex gap={2}>
-            <Button 
-              onClick={handleSendMessage}
-              flex={1}
-              bg="blue.500"
-              color="white"
-              size="sm"
-              borderRadius="md"
-              _hover={{ bg: "blue.600" }}
-              _focus={{ boxShadow: "0 0 0 2px blue.200" }}
-              isDisabled={!!isLoading || inputValue.trim() === ''}
-              className="nodrag"
-            >
-              Send
-            </Button>
-            <Button 
-              onClick={handleBranch}
-              flex={1}
-              bg="green.500"
-              color="white"
-              size="sm"
-              borderRadius="md"
-              _hover={{ bg: "green.600" }}
-              _focus={{ boxShadow: "0 0 0 2px green.200" }}
-              isDisabled={!!isLoading || inputValue.trim() === ''}
-              className="nodrag"
-            >
-              Branch
-            </Button>
-          </Flex>
-        </VStack>
-      )}
-    </VStack>
-      </>
+          )}
+        </Flex>
+
+        {/* Scrollable Content */}
+        <Box
+          {...chatNodeContentStyle}
+          ref={scrollRef}
+          className={isExtended ? 'nodrag' : ''}
+          onWheelCapture={(e) => {
+            if (!isExtended) return;
+            e.stopPropagation();
+          }}
+        >
+          {/* User Prompt Bubble */}
+          <Box {...chatNodeUserBubbleStyle}>
+            <Flex align="center" mb={2} gap={2}>
+              <Avatar size="xs" name="You" bg="blue.600" />
+              <Text fontSize="xs" fontWeight="bold" color="gray.500">You</Text>
+            </Flex>
+            <Text whiteSpace={isExtended ? 'pre-wrap' : 'normal'} fontSize="md">
+              {promptTooLong && !isPromptExpanded ? `${prompt.slice(0, 100)}...` : prompt}
+            </Text>
+            {promptTooLong && (
+              <Button
+                size="xs"
+                variant="link"
+                colorScheme="blue"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setIsPromptExpanded(!isPromptExpanded);
+                }}
+                mt={1}
+              >
+                {isPromptExpanded ? 'Show Less' : 'Show More'}
+              </Button>
+            )}
+          </Box>
+
+          {/* AI Response Bubble */}
+          <Box {...chatNodeAIBubbleStyle}>
+            <Flex align="center" mb={2} gap={2}>
+              <Avatar size="xs" name="AI" bg="green.500" />
+              <Text fontSize="xs" fontWeight="bold" color="gray.500">AI</Text>
+            </Flex>
+            {isLoading ? (
+              <Flex align="center" gap={3}>
+                <Spinner size="sm" color="blue.500" />
+                <Text fontStyle="italic" color="gray.500">Thinking...</Text>
+              </Flex>
+            ) : (
+              <Box fontSize="md">
+                <ReactMarkdown
+                  remarkPlugins={[remarkGfm]}
+                  components={{
+                    p: ({ children }) => <Text whiteSpace={isExtended ? 'pre-wrap' : 'normal'} mb={2}>{children}</Text>,
+                    strong: ({ children }) => <Text as="strong" fontWeight="bold">{children}</Text>,
+                    em: ({ children }) => <Text as="em" fontStyle="italic">{children}</Text>,
+                    li: ({ children }) => <Text as="li" ml={4} listStyleType="disc">{children}</Text>,
+                    code: ({ inline, className, children, ...props }: any) => {
+                      const match = /language-(\w+)/.exec(className || '');
+                      return !inline && match ? (
+                        <SyntaxHighlighter
+                          style={a11yDark}
+                          language={match[1]}
+                          PreTag="div"
+                          {...props}
+                        >
+                          {String(children).replace(/\n$/, '')}
+                        </SyntaxHighlighter>
+                      ) : (
+                        <chakra.code className={className} bg="gray.100" px={1} py={0.5} borderRadius="sm" {...props}>
+                          {children}
+                        </chakra.code>
+                      );
+                    },
+                  }}
+                >
+                  {responseTooLong && !isResponseExpanded ? `${response.slice(0, 150)}...` : response}
+                </ReactMarkdown>
+                {responseTooLong && (
+                  <Button
+                    size="xs"
+                    variant="link"
+                    colorScheme="blue"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      setIsResponseExpanded(!isResponseExpanded);
+                    }}
+                    mt={2}
+                  >
+                    {isResponseExpanded ? 'Show Less' : 'Show More'}
+                  </Button>
+                )}
+              </Box>
+            )}
+          </Box>
+        </Box>
+
+        {/* Sticky Footer (Input) - Only when extended */}
+        {isExtended && (
+          <Box
+            {...chatNodeFooterStyle}
+            className="nodrag"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <VStack spacing={3} align="stretch">
+              <Input
+                value={inputValue}
+                onChange={(e) => setInputValue(e.target.value)}
+                onKeyUp={handleKeyPress}
+                placeholder="Type your message here..."
+                {...chatNodeInputStyle}
+                className="nodrag"
+              />
+              <Flex gap={3}>
+                <Button
+                  onClick={handleSendMessage}
+                  flex={1}
+                  colorScheme="blue"
+                  size="md"
+                  borderRadius="xl"
+                  isDisabled={!!isLoading || inputValue.trim() === ''}
+                  className="nodrag"
+                >
+                  Send
+                </Button>
+                <Button
+                  onClick={handleBranch}
+                  flex={1}
+                  colorScheme="green"
+                  size="md"
+                  borderRadius="xl"
+                  isDisabled={!!isLoading || inputValue.trim() === ''}
+                  className="nodrag"
+                >
+                  Branch
+                </Button>
+              </Flex>
+            </VStack>
+          </Box>
+        )}
+      </Box>
+    </>
   );
 };
 

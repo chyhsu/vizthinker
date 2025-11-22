@@ -91,6 +91,25 @@ make run
 
 The application will be available at `http://127.0.0.1:8000`.
 
+## Running with Docker
+
+Alternatively, you can run the entire application using Docker Compose.
+
+**1. Clone the repository:**
+```bash
+git clone https://github.com/jasoncyhsu/vizthinker.git
+cd vizthinker
+```
+
+**2. Configure Environment Variables:**
+Create a `.env` file in the root directory as described in the manual installation section.
+
+**3. Run with Docker Compose:**
+```bash
+docker-compose up --build
+```
+The application will be available at `http://localhost:8000`.
+
 ## License
 
 This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
