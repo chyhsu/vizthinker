@@ -76,9 +76,11 @@ CREATE TABLE IF NOT EXISTS messages (
     response   text,
     parent_id  integer,
     positions  jsonb,
-    isbranch   boolean
+    isbranch   boolean,
+    files      jsonb
 );
 """
+
 
 async def init_db() -> None:
     """Ensure schema exists."""
@@ -90,6 +92,8 @@ async def init_db() -> None:
         await conn.execute(CREATE_MESSAGES)
         await conn.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS chatrecords integer[] REFERENCES chatrecords(id) ON DELETE CASCADE;")
         await conn.execute("ALTER TABLE chatrecords ADD COLUMN IF NOT EXISTS messages integer[] REFERENCES messages(id) ON DELETE CASCADE;")
+        await conn.execute("ALTER TABLE messages ADD COLUMN IF NOT EXISTS files jsonb;")
+
     # sanity-check credentials
     async with pool.acquire() as con:
         who = await con.fetchval("select current_user")
@@ -149,11 +153,11 @@ async def delete_chatrecord(chatrecord_id: int, user_id: int) -> None:
         await conn.execute("DELETE FROM messages WHERE chatrecord_id = $1", chatrecord_id)
         await conn.execute("UPDATE users SET chatrecords = array_remove(chatrecords, $1) WHERE id = $2", chatrecord_id, user_id)
 
-async def get_messages(chatrecord_id: int) -> Optional[List[Tuple[int, int, str, str, Any, Optional[int], bool]]]:
+async def get_messages(chatrecord_id: int) -> Optional[List[Tuple[int, int, str, str, Any, Optional[int], bool, Any]]]:
     pool = await _get_pool()
     async with pool.acquire() as conn:
         rows = await conn.fetch(
-            "SELECT id, chatrecord_id, prompt, response, parent_id,positions,isbranch FROM messages WHERE chatrecord_id = $1",
+            "SELECT id, chatrecord_id, prompt, response, parent_id, positions, isbranch, files FROM messages WHERE chatrecord_id = $1",
             chatrecord_id,
         )
         if rows is None:
@@ -176,6 +180,17 @@ async def get_messages(chatrecord_id: int) -> Optional[List[Tuple[int, int, str,
                 logger.warning("Failed to parse position '%s': %s", pos_str, e)
                 return None
         
+        def parse_files(files_data):
+            if not files_data:
+                return None
+            try:
+                if isinstance(files_data, str):
+                    return json.loads(files_data)
+                return files_data
+            except (json.JSONDecodeError, TypeError) as e:
+                logger.warning("Failed to parse files '%s': %s", files_data, e)
+                return None
+        
         return [
             (
                 row["id"],
@@ -185,9 +200,11 @@ async def get_messages(chatrecord_id: int) -> Optional[List[Tuple[int, int, str,
                 parse_position(row["positions"]),
                 row["parent_id"],
                 row["isbranch"],
+                parse_files(row["files"]),
             )
             for row in rows
         ]
+
 
 async def store_one_message(
     chatrecord_id: int,
@@ -196,13 +213,14 @@ async def store_one_message(
     parent_id: Optional[int] = None,
     position: Optional[dict] = None,
     isbranch: bool = False,
+    files: Optional[List[Dict]] = None,
 ) -> int:
     pool = await _get_pool()
     async with pool.acquire() as conn:
         row = await conn.fetchrow(
             """
-            INSERT INTO messages (chatrecord_id, prompt, response, parent_id, positions, isbranch)
-            VALUES ($1, $2, $3, $4, $5, $6)
+            INSERT INTO messages (chatrecord_id, prompt, response, parent_id, positions, isbranch, files)
+            VALUES ($1, $2, $3, $4, $5, $6, $7)
             RETURNING id
             """,
             chatrecord_id,
@@ -211,6 +229,7 @@ async def store_one_message(
             parent_id,
             position,
             isbranch,
+            json.dumps(files) if files else None,
         )
         await conn.execute("UPDATE chatrecords SET messages = array_append(messages, $1) WHERE id = $2", row["id"], chatrecord_id)
 

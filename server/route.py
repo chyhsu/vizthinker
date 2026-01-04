@@ -1,13 +1,14 @@
 
-from fastapi import FastAPI, HTTPException, Request, Query
+from fastapi import FastAPI, HTTPException, Request, Query, Form, File, UploadFile
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from pathlib import Path
 from pydantic import BaseModel
-from typing import Dict
+from typing import Dict, List, Optional
 from server.llm import call_llm, generate_markdown
 from server.logger import logger
 from server.dao.postgre import create_user, search_user, store_one_message, store_all_positions, get_messages, delete_all_messages, delete_single_message, create_chatrecord,update_user_api_key,get_user_api_key,delete_user_api_key
+
 
 # Define the directory for static files (the 'dist' folder)
 static_files_dir = Path(__file__).resolve().parent.parent / "dist"
@@ -53,30 +54,41 @@ def setup_routes(app: FastAPI):
 
             
     @app.post("/chat")
-    async def chat_endpoint(request: Request):
-        """Handle chat requests and store conversation records."""
+    async def chat_endpoint(
+        user_id: int = Form(...),
+        chatrecord_id: int = Form(...),
+        prompt: str = Form(...),
+        provider: str = Form("google"),
+        position: str = Form(...),
+        parent_id: int = Form(None),
+        isbranch: bool = Form(False),
+        model: Optional[str] = Form(None),
+        files: Optional[List[UploadFile]] = File(None)
+    ):
+        """Handle chat requests with optional file uploads and store conversation records."""
         
         try:
-            body = await request.json()
-            user_id = int(body.get("user_id"))
-            chatrecord_id = int(body.get("chatrecord_id"))
-            prompt = body.get("prompt", "")
-            provider = body.get("provider", "google")
-            position = body.get("position")
-            model = body.get("model")  # Optional model specification
-            parent_id = int(body.get("parent_id"))
-            isbranch = body.get("isbranch", False)
+            logger.info(f"Received chat request: prompt='{prompt}', provider='{provider}', model='{model}', parent_id={parent_id}, isbranch={isbranch}, positions={position}, user_id={user_id}, chatrecord_id={chatrecord_id}, files_count={len(files) if files else 0}")
             
-            logger.info(f"Received chat request: prompt='{prompt}', provider='{provider}', model='{model}', parent_id={parent_id}, isbranch={isbranch}, positions={position},user_id={user_id}, chatrecord_id={chatrecord_id}")
+            # Process uploaded files first
+            from server.file_utils import process_uploaded_files
+            processed_files = await process_uploaded_files(files)
             
-            if not prompt:
-                raise HTTPException(status_code=400, detail="Prompt is required")
+            # Require either prompt or files (or both)
+            if not prompt and not processed_files:
+                raise HTTPException(status_code=400, detail="Either prompt or files are required")
             
-            # Call LLM
-            response = await call_llm(user_id, prompt, provider, parent_id, chatrecord_id, isbranch, False, model)
+            # Call LLM with files
+            response = await call_llm(
+                user_id, prompt, provider, parent_id, chatrecord_id, 
+                isbranch, False, model, files=processed_files
+            )
             
-            # Store the conversation
-            message_id = await store_one_message(chatrecord_id, prompt, response, parent_id, position,isbranch)
+            # Store the conversation with files
+            message_id = await store_one_message(
+                chatrecord_id, prompt, response, parent_id, position, 
+                isbranch, files=processed_files
+            )
             
             return {
                 "response": response,
@@ -90,6 +102,7 @@ def setup_routes(app: FastAPI):
             if "API key not set" in error_message:
                 raise HTTPException(status_code=400, detail=f"API key not configured for {provider}. Please set it in the settings.")
             raise HTTPException(status_code=500, detail=f"Internal server error: {error_message}")
+
 
     @app.post("/chat/positions")
     async def save_positions_endpoint(request: Request):

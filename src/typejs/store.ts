@@ -36,7 +36,7 @@ export interface StoreState {
   setExtendedNodeId: (id: string | null) => void;
   setSelectedNodeId: (id: string | null) => void;
   Initialize: () => Promise<void>;
-  sendMessage: (prompt: string, provider: string, parentId?: string, isbranch?: boolean, model?: string) => Promise<void>;
+  sendMessage: (prompt: string, provider: string, parentId?: string, isbranch?: boolean, model?: string, files?: File[]) => Promise<void>;
   savePositions: () => Promise<void>; // Add this
   createWelcome: () => Promise<void>; // Add this
   deleteNode: (nodeId: string) => Promise<void>; // Add this
@@ -283,14 +283,14 @@ const useStore = create<StoreState>()(
           const restoredNodes: Node[] = [];
           const restoredEdges: Edge[] = [];
           
-          chatRecords.forEach(([id, chatrecord_id, prompt, response, positions, parent_id, isbranch]: [number, number, string, string, any, number | null, boolean], index: number) => {
+          chatRecords.forEach(([id, chatrecord_id, prompt, response, positions, parent_id, isbranch, files]: [number, number, string, string, any, number | null, boolean, any], index: number) => {
             const nodeId = id.toString();
             
             const node: Node = {
               id: nodeId,
               type: 'chatNode',
               position: positions,
-              data: { prompt, response },
+              data: { prompt, response, files },  // Include files in node data
               style: { borderRadius: '1rem', padding: '1rem', width: '350px' },
             };
             restoredNodes.push(node);
@@ -334,7 +334,7 @@ const useStore = create<StoreState>()(
       }
     },
 
-    sendMessage: async (prompt: string, provider: string, parentId?: string, isbranch: boolean = false, model?: string) => {
+    sendMessage: async (prompt: string, provider: string, parentId?: string, isbranch: boolean = false, model?: string, files?: File[]) => {
       const { nodes, reactFlowInstance } = get();
       let lastNode: Node | undefined;
 
@@ -399,16 +399,37 @@ const useStore = create<StoreState>()(
       try {
         const user_id = localStorage.getItem('user_id');
         const chatrecord_id = localStorage.getItem('chatrecord_id');
-        const postData: any = { prompt, provider, isbranch, chatrecord_id, position: JSON.stringify(position), user_id};
+        
+        // Build FormData instead of JSON for file upload support
+        const formData = new FormData();
+        formData.append('prompt', prompt);
+        formData.append('provider', provider);
+        formData.append('isbranch', String(isbranch));
+        formData.append('chatrecord_id', chatrecord_id!);
+        formData.append('position', JSON.stringify(position));
+        formData.append('user_id', user_id!);
+        
         if (lastNode) {
-          postData.parent_id = lastNode.id;
-        }else{
-          postData.parent_id = null;
+          formData.append('parent_id', lastNode.id);
         }
         if (model) {
-          postData.model = model;
+          formData.append('model', model);
         }
-        const response = await axios.post(`${BASE_URL}/chat`, postData);
+        
+        // Add files to FormData
+        if (files && files.length > 0) {
+          files.forEach(file => {
+            formData.append('files', file);
+          });
+          console.log(`Uploading ${files.length} file(s)`);
+        }
+        
+        const response = await axios.post(`${BASE_URL}/chat`, formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data'
+          }
+        });
+        
         const aiResponse = response.data.response;
         const actualNewId = response.data.message_id.toString();
 
@@ -434,6 +455,8 @@ const useStore = create<StoreState>()(
         // Handle specific API key errors
         if (error.response?.status === 400 && error.response?.data?.detail?.includes('API key')) {
           errorMessage = `❗ ${error.response.data.detail}\n\nPlease configure your API key in Settings.`;
+        } else if (error.response?.status === 400 && error.response?.data?.detail?.includes('file')) {
+          errorMessage = `❗ File upload error: ${error.response.data.detail}`;
         } else if (error.response?.status === 500) {
           errorMessage = 'Sorry, the AI service is temporarily unavailable. Please try again later.';
         }

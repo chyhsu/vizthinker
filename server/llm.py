@@ -67,7 +67,7 @@ Consider implementing a message queue (e.g., RabbitMQ or Kafka) to decouple serv
 async def generate_markdown(user_id: int, user_prompt: str, provider: str, parent_id: Optional[int] = None, chatrecord_id: Optional[int] = None, isbranch: Optional[bool] = False, model: Optional[str] = None):
     return await call_llm(user_id, user_prompt, provider, parent_id, chatrecord_id, isbranch, True, model)
 
-async def call_llm(user_id: int, user_prompt: str, provider: str, parent_id: Optional[int] = None, chatrecord_id: Optional[int] = None, isbranch: Optional[bool] = False, ismarkdown: Optional[bool] = False,model: Optional[str] = None):
+async def call_llm(user_id: int, user_prompt: str, provider: str, parent_id: Optional[int] = None, chatrecord_id: Optional[int] = None, isbranch: Optional[bool] = False, ismarkdown: Optional[bool] = False, model: Optional[str] = None, files: Optional[list] = None):
     
     api_key = None
     # Ollama runs locally and does not require an API key
@@ -99,19 +99,45 @@ async def call_llm(user_id: int, user_prompt: str, provider: str, parent_id: Opt
     # For each Provider
     if provider == "google":
         try:
+            import base64
             genai.configure(api_key=api_key)
             # Use provided model or default
-            model_name = model or 'gemini-1.5-flash-latest'
+            model_name = model or 'gemini-2.5-flash'
             gemini_model = genai.GenerativeModel(
                 model_name=model_name,
                 system_instruction=system_prompt
             )
-            logger.info(f"Calling LLM with user_prompt: {user_prompt}, provider: {provider}, model: {model_name}")
+            logger.info(f"Calling LLM with user_prompt: {user_prompt}, provider: {provider}, model: {model_name}, files: {len(files) if files else 0}")
 
-            response = await gemini_model.generate_content_async(
-                user_prompt,
-                request_options={'timeout': 30}  # Set a 30-second timeout
-            )
+            # Build multimodal content if files are present
+            if files:
+                # Create parts list with images and text
+                parts = []
+                for file in files:
+                    # Decode base64 data
+                    file_bytes = base64.b64decode(file['data'])
+                    parts.append({
+                        'inline_data': {
+                            'mime_type': file['mime_type'],
+                            'data': file['data']
+                        }
+                    })
+                # Add text prompt if present, otherwise use default
+                if user_prompt and user_prompt.strip():
+                    parts.append({'text': user_prompt})
+                else:
+                    parts.append({'text': 'Describe this image in detail.'})
+                
+                response = await gemini_model.generate_content_async(
+                    parts,
+                    request_options={'timeout': 30}
+                )
+            else:
+                # Text-only path
+                response = await gemini_model.generate_content_async(
+                    user_prompt,
+                    request_options={'timeout': 30}
+                )
 
             logger.info(f"Received response from LLM: {len(response.text)} tokens")
 
@@ -127,6 +153,7 @@ async def call_llm(user_id: int, user_prompt: str, provider: str, parent_id: Opt
                 raise RuntimeError(f"API usage limit hit for {provider}. Please check your plan and billing details.")
             logger.error(f"An unexpected error occurred when calling Google Gemini API: {e}", exc_info=True)
             raise RuntimeError(f"Failed to generate content: {e}")
+
 
     # elif provider == "ollama":
     #     try:
