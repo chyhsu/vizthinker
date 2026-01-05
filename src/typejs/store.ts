@@ -361,12 +361,43 @@ const useStore = create<StoreState>()(
         { prompt, response: 'Thinking...' }
       );
 
+      // Process files for immediate display
+      let processedFiles: any[] = [];
+      if (files && files.length > 0) {
+        try {
+          const filePromises = files.map(file => {
+            return new Promise((resolve, reject) => {
+              const reader = new FileReader();
+              reader.readAsDataURL(file);
+              reader.onload = () => {
+                const base64String = (reader.result as string).split(',')[1];
+                resolve({
+                  data: base64String,
+                  mime_type: file.type,
+                  filename: file.name,
+                  size: file.size
+                });
+              };
+              reader.onerror = error => reject(error);
+            });
+          });
+          processedFiles = await Promise.all(filePromises);
+        } catch (error) {
+          console.error("Error processing files for preview:", error);
+        }
+      }
+
       const tempNewNodeId = `temp_${Date.now()}`;
       const newNode: Node = {
         id: tempNewNodeId,
         type: 'chatNode',
         position: position,
-        data: { prompt, response: 'Thinking...', isLoading: true },
+        data: { 
+          prompt, 
+          response: 'Thinking...', 
+          isLoading: true,
+          files: processedFiles // Add processed files here
+        },
         style: { borderRadius: '1rem', padding: '1rem', width: '350px' },
         draggable: false,
       };
@@ -440,6 +471,10 @@ const useStore = create<StoreState>()(
             node.data.response = aiResponse;
             node.data.isLoading = false;
             node.draggable = true;
+            // Ensure files persist after ID update (they should, but explicit check doesn't hurt)
+            if (!node.data.files) {
+                 node.data.files = processedFiles;
+            }
           }
           const edge = state.edges.find((e) => e.target === tempNewNodeId);
           if (edge) {

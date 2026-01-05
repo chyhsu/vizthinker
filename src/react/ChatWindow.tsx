@@ -63,8 +63,8 @@ const ChatWindow: React.FC = () => {
           onConnect={onConnect}
           nodeTypes={nodeTypes}
           edgeTypes={edgeTypes}
-          zoomOnScroll={false}
-          zoomOnPinch={false}
+          zoomOnScroll={true}
+          zoomOnPinch={true}
           panOnScroll={false}
           onNodeClick={(_, node) => {
             if (!reactFlowInstance) return;

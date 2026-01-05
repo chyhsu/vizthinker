@@ -195,7 +195,7 @@ const ChatNode: React.FC<ChatNodeProps> = ({ data, id }) => {
                 You
               </Text>
             </Flex>
-            <Text color={fontColor}>
+            <Text color="gray.800">
               {promptTooLong ? (
                 <>
                   {isPromptExpanded ? prompt : `${prompt.slice(0, 100)}...`}
