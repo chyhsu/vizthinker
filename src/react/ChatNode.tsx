@@ -1,6 +1,9 @@
 import React, { useEffect, useState, useRef } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import remarkMath from 'remark-math';
+import rehypeKatex from 'rehype-katex';
+import 'katex/dist/katex.min.css';
 import { Box, Flex, Text, Avatar, VStack, Button, IconButton, useToast, Spinner, Input, HStack, Image, CloseButton } from '@chakra-ui/react';
 import {
   chatNodeContainerStyle,
@@ -266,7 +269,8 @@ const ChatNode: React.FC<ChatNodeProps> = ({ data, id }) => {
             ) : (
               <Box fontSize="md">
                 <ReactMarkdown
-                  remarkPlugins={[remarkGfm]}
+                  remarkPlugins={[remarkGfm, remarkMath]}
+                  rehypePlugins={[rehypeKatex]}
                   components={{
                     p: ({ children }) => <Text whiteSpace={isExtended ? 'pre-wrap' : 'normal'} mb={2}>{children}</Text>,
                     strong: ({ children }) => <Text as="strong" fontWeight="bold">{children}</Text>,
